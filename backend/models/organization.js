@@ -62,7 +62,7 @@ organizationSchema.statics.getOrganizations = async function (options = {}) {
     return {
       success: false,
       message: "Error getting organizations",
-      data: [],
+      data: null,
     };
   }
 };
@@ -74,7 +74,7 @@ organizationSchema.statics.createOrganization = async function (orgData) {
       return {
         success: false,
         message: "Organization Name already exists",
-        data: [],
+        data: null,
       };
     }
 
@@ -82,7 +82,7 @@ organizationSchema.statics.createOrganization = async function (orgData) {
       return {
         success: false,
         message: "username  already exists",
-        data: [],
+        data: null,
       };
     }
 
@@ -91,7 +91,7 @@ organizationSchema.statics.createOrganization = async function (orgData) {
       return {
         success: false,
         message: "Mobile number already exists",
-        data: [],
+        data: null,
       };
     }
 
@@ -108,7 +108,7 @@ organizationSchema.statics.createOrganization = async function (orgData) {
     return {
       success: false,
       message: "Error creating organization",
-      data: [],
+      data: null,
     };
   }
 };
@@ -120,7 +120,7 @@ organizationSchema.statics.deleteOrganizationById = async function (orgId) {
       return {
         success: false,
         message: "Invalid organization ID",
-        data: [],
+        data: null,
       };
     }
 
@@ -129,7 +129,7 @@ organizationSchema.statics.deleteOrganizationById = async function (orgId) {
       return {
         success: false,
         message: "Organization not found",
-        data: [],
+        data: null,
       };
     }
 
@@ -144,7 +144,7 @@ organizationSchema.statics.deleteOrganizationById = async function (orgId) {
     return {
       success: false,
       message: "Error deleting organization",
-      data: [],
+      data: null,
     };
   }
 };
@@ -159,7 +159,7 @@ organizationSchema.statics.updatePasswordById = async function (
       return {
         success: false,
         message: "Invalid organization ID",
-        data: [],
+        data: null,
       };
     }
 
@@ -173,7 +173,7 @@ organizationSchema.statics.updatePasswordById = async function (
       return {
         success: false,
         message: "Organization not found",
-        data: [],
+        data: null,
       };
     }
 
@@ -188,7 +188,7 @@ organizationSchema.statics.updatePasswordById = async function (
     return {
       success: false,
       message: "Error updating password",
-      data: [],
+      data: null,
     };
   }
 };

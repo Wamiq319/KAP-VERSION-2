@@ -2,13 +2,13 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+
 import organizationRoutes from "./routes/orgRoutes.js";
 import departmentRoutes from "./routes/deptRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
-// Initialize configuration
 dotenv.config();
 
-// Create Express app
 const app = express();
 
 // Request logging middleware
@@ -61,6 +61,7 @@ mongoose
 // Register routes
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
+app.use("/api/users", userRoutes);
 
 // Basic error handler
 app.use((err, req, res, next) => {

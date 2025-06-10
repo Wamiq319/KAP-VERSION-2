@@ -32,7 +32,7 @@ export const deleteDepartment = async (req, res) => {
     res.status(500).json({
       message: "Failed to delete department",
       success: false,
-      data: [],
+      data: null,
     });
   }
 };
@@ -61,7 +61,7 @@ export const getDepartments = async (req, res) => {
     res.status(500).json({
       message: "Failed to get departments",
       success: false,
-      data: [],
+      data: null,
     });
   }
 };

@@ -47,7 +47,7 @@ export const deleteOrganization = async (req, res) => {
     res.status(500).json({
       message: "Failed to delete organization",
       success: false,
-      data: [],
+      data: null,
     });
   }
 };
@@ -74,7 +74,7 @@ export const getOrganizations = async (req, res) => {
     res.status(500).json({
       message: "Failed to get organizations",
       success: false,
-      data: [],
+      data: null,
     });
   }
 };
@@ -94,7 +94,7 @@ export const updateOrganizationPassword = async (req, res) => {
     res.status(500).json({
       message: "Failed to update password",
       success: false,
-      data: [],
+      data: null,
     });
   }
 };

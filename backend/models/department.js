@@ -21,7 +21,7 @@ departmentSchema.statics.createDepartment = async function (departmentData) {
       return {
         success: false,
         message: "Department Name for this organization already exist",
-        data: [],
+        data: null,
       };
     }
 
@@ -38,7 +38,7 @@ departmentSchema.statics.createDepartment = async function (departmentData) {
     return {
       success: false,
       message: "Error creating department",
-      data: [],
+      data: null,
     };
   }
 };
@@ -51,7 +51,7 @@ departmentSchema.statics.deleteDepartmentById = async function (departmentId) {
       return {
         success: false,
         message: "Department not found",
-        data: [],
+        data: null,
       };
     }
 
@@ -67,7 +67,7 @@ departmentSchema.statics.deleteDepartmentById = async function (departmentId) {
     return {
       success: false,
       message: "Error deleting department",
-      data: [],
+      data: null,
     };
   }
 };
@@ -125,7 +125,7 @@ departmentSchema.statics.getDepartments = async function (options = {}) {
     return {
       success: false,
       message: "Error getting departments",
-      data: [],
+      data: null,
     };
   }
 };
