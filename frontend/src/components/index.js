@@ -15,6 +15,7 @@ import Loader from "./Loader";
 import UserForm from "./Forms/userForm";
 import PasswordUpdateForm from "./Forms/passUpdateForm";
 import AddOrgForm from "./Forms/OrgForm";
+import DepartmentForm from "./Forms/DeptForm";
 
 export {
   Button,
@@ -32,4 +33,5 @@ export {
   UserForm,
   PasswordUpdateForm,
   AddOrgForm,
+  DepartmentForm,
 };

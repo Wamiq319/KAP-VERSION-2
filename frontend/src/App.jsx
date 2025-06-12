@@ -8,8 +8,9 @@ import {
 import { useSelector } from "react-redux";
 import {
   // New V2
-  AddUserPage,
-  AddOrgPage,
+  UserPage,
+  OrganizationPage,
+  DepartmentPage,
   // Authentication Routes
   LoginPage,
 
@@ -129,7 +130,7 @@ const App = () => {
                 path="/manage-admin-users"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                    <AddUserPage />
+                    <UserPage />
                   </ProtectedRoute>
                 }
               />
@@ -138,7 +139,16 @@ const App = () => {
                 path="/manage-admin-orgs"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                    <AddOrgPage />
+                    <OrganizationPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/manage-admin-depts"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                    <DepartmentPage />
                   </ProtectedRoute>
                 }
               />

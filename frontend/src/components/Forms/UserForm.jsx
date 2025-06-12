@@ -8,27 +8,33 @@ const defaultFormData = {
   username: "",
   mobile: "",
   password: "",
-  userType: "ORG_EMPLOYEE", // 'KAP_EMPLOYEE' or 'ORG_EMPLOYEE'
-  role: "",
-  kapRole: "",
-  orgType: undefined,
-  organization: undefined,
-  department: undefined,
+  role: "", // Will be one of: GOV_MANAGER, OP_MANAGER, GOV_EMPLOYEE, OP_EMPLOYEE
+  kapRole: "", // Only for KAP employees
+  organization: "",
+  department: "",
 };
 
 const UserForm = ({
-  formData = defaultFormData,
-  onChange,
+  initialFormData = defaultFormData,
   onSubmit,
   onCancel,
   isLoading,
   errorMessage,
   words,
-  Mode = "ADMIN", // 'ADMIN' or 'MANAGER'
+  Mode = "ADMIN",
 }) => {
   const dispatch = useDispatch();
   const { entities } = useSelector((state) => state.crud);
   const [localLoading, setLocalLoading] = useState(false);
+  const [formData, setFormData] = useState(initialFormData);
+  const [validationError, setValidationError] = useState("");
+
+  // UI state (not sent to backend)
+  const [uiState, setUiState] = useState({
+    userType: "", // 'KAP_EMPLOYEE' or 'ORG_EMPLOYEE'
+    orgType: "", // 'GOVERNMENT' or 'COMPANY'
+    selectedRole: "", // 'MANAGER' or 'EMPLOYEE' (UI selection)
+  });
 
   // KAP Role options
   const kapRoleOptions = [
@@ -46,39 +52,15 @@ const UserForm = ({
     },
   ];
 
-  // Organization role options based on organization type
-  const orgRoleOptions = {
-    GOVERNMENT: [
-      {
-        value: "GOV_MANAGER",
-        label: words["Government Manager"] || "Government Manager",
-      },
-      {
-        value: "GOV_EMPLOYEE",
-        label: words["Government Employee"] || "Government Employee",
-      },
-    ],
-    COMPANY: [
-      {
-        value: "OP_MANAGER",
-        label: words["Operation Manager"] || "Operation Manager",
-      },
-      {
-        value: "OP_EMPLOYEE",
-        label: words["Operation Employee"] || "Operation Employee",
-      },
-    ],
-  };
-
-  // Organization type options
-  const orgTypeOptions = [
-    { value: "GOVERNMENT", label: words["Government"] || "Government" },
-    { value: "COMPANY", label: words["Company"] || "Company" },
+  // Simplified UI role options
+  const uiRoleOptions = [
+    { value: "MANAGER", label: words["Manager"] || "Manager" },
+    { value: "EMPLOYEE", label: words["Employee"] || "Employee" },
   ];
 
   // Fetch organizations when org type changes
   useEffect(() => {
-    if (formData.userType === "ORG_EMPLOYEE" && formData.orgType) {
+    if (uiState.userType === "ORG_EMPLOYEE" && uiState.orgType) {
       const fetchOrgs = async () => {
         setLocalLoading(true);
         try {
@@ -86,7 +68,7 @@ const UserForm = ({
             fetchEntities({
               entityType: "organizations",
               params: {
-                type: formData.orgType,
+                type: uiState.orgType,
                 fields: "name _id",
               },
             })
@@ -97,11 +79,11 @@ const UserForm = ({
       };
       fetchOrgs();
     }
-  }, [formData.orgType, formData.userType, dispatch]);
+  }, [uiState.orgType, uiState.userType, dispatch]);
 
   // Fetch departments when organization changes
   useEffect(() => {
-    if (formData.userType === "ORG_EMPLOYEE" && formData.organization) {
+    if (uiState.userType === "ORG_EMPLOYEE" && formData.organization) {
       const fetchDepts = async () => {
         setLocalLoading(true);
         try {
@@ -120,67 +102,129 @@ const UserForm = ({
       };
       fetchDepts();
     }
-  }, [formData.organization, formData.userType, dispatch]);
+  }, [formData.organization, uiState.userType, dispatch]);
+
+  // Update the actual role based on UI selections
+  useEffect(() => {
+    if (uiState.userType === "KAP_EMPLOYEE") {
+      setFormData((prev) => ({ ...prev, role: "KAP_EMPLOYEE" }));
+    } else if (
+      uiState.userType === "ORG_EMPLOYEE" &&
+      uiState.orgType &&
+      uiState.selectedRole
+    ) {
+      const roleMap = {
+        GOVERNMENT: {
+          MANAGER: "GOV_MANAGER",
+          EMPLOYEE: "GOV_EMPLOYEE",
+        },
+        COMPANY: {
+          MANAGER: "OP_MANAGER",
+          EMPLOYEE: "OP_EMPLOYEE",
+        },
+      };
+      setFormData((prev) => ({
+        ...prev,
+        role: roleMap[uiState.orgType][uiState.selectedRole],
+      }));
+    }
+  }, [uiState.userType, uiState.orgType, uiState.selectedRole]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    onChange({ target: { name, value } });
+    if (name === "userType" || name === "orgType") {
+      setUiState((prev) => ({ ...prev, [name]: value }));
+      // Reset dependent fields
+      if (name === "userType") {
+        setFormData((prev) => ({
+          ...prev,
+          kapRole: "",
+          organization: "",
+          department: "",
+          role: "",
+        }));
+      } else if (name === "orgType") {
+        setFormData((prev) => ({
+          ...prev,
+          organization: "",
+          department: "",
+          role: "",
+        }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+    if (validationError) setValidationError("");
   };
 
   const handleDropdownChange = (name, value) => {
-    if (name === "userType" && value !== formData.userType) {
-      // Reset all related fields when user type changes
-      onChange({
-        target: {
-          name: "userType",
-          value,
-          resetFields: true,
-        },
-      });
-    } else if (name === "orgType") {
-      // Reset organization and department when org type changes
-      onChange({
-        target: {
-          name: "orgType",
-          value,
-          resetOrgFields: true,
-        },
-      });
+    if (name === "selectedRole") {
+      setUiState((prev) => ({ ...prev, selectedRole: value }));
     } else {
-      onChange({ target: { name, value } });
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      // Reset dependent fields
+      if (name === "organization") {
+        setFormData((prev) => ({ ...prev, department: "" }));
+      }
     }
+    if (validationError) setValidationError("");
+  };
+
+  const validateForm = () => {
+    const requiredFields = ["name", "username", "mobile", "password", "role"];
+    const missingFields = requiredFields.filter((field) => !formData[field]);
+
+    if (missingFields.length) {
+      return `${
+        words["Please fill all required fields"] ||
+        "Please fill all required fields"
+      }: ${missingFields.join(", ")}`;
+    }
+
+    if (!uiState.userType) {
+      return words["Please select user type"] || "Please select user type";
+    }
+
+    if (uiState.userType === "KAP_EMPLOYEE" && !formData.kapRole) {
+      return words["Please select a KAP Role"] || "Please select a KAP Role";
+    }
+
+    if (uiState.userType === "ORG_EMPLOYEE") {
+      if (!uiState.orgType)
+        return (
+          words["Please select organization type"] ||
+          "Please select organization type"
+        );
+      if (!formData.organization)
+        return (
+          words["Please select an organization"] ||
+          "Please select an organization"
+        );
+      if (!uiState.selectedRole)
+        return words["Please select a role"] || "Please select a role";
+    }
+
+    return "";
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Prepare the final data to submit
-    const submitData = {
-      ...formData,
-      // For KAP employees, set role to KAP_EMPLOYEE and clear org fields
-      ...(formData.userType === "KAP_EMPLOYEE" && {
-        role: "KAP_EMPLOYEE",
-        organization: undefined,
-        department: undefined,
-        orgType: undefined,
-      }),
-      // For org employees, clear kapRole
-      ...(formData.userType === "ORG_EMPLOYEE" && {
-        kapRole: undefined,
-      }),
-    };
-
-    onSubmit(submitData);
+    const error = validateForm();
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+    onSubmit(formData);
   };
 
-  // Prepare organization options
+  // Get filtered organizations based on selected type
   const organizationOptions =
     entities.organizations?.map((org) => ({
       value: org._id,
       label: org.name,
     })) || [];
 
-  // Prepare department options
+  // Get department options
   const departmentOptions =
     entities.departments?.map((dept) => ({
       value: dept._id,
@@ -192,158 +236,227 @@ const UserForm = ({
       onSubmit={handleSubmit}
       className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-10"
     >
-      <InputField
-        label={words["Full Name"]}
-        name="name"
-        placeholder={words["Enter full name"]}
-        value={formData.name}
-        onChange={handleChange}
-        required
-      />
+      {/* Common fields - will automatically adjust columns based on screen size */}
+      <div className="space-y-4 md:space-y-0">
+        <InputField
+          label={words["Full Name"]}
+          name="name"
+          placeholder={words["Enter full name"]}
+          value={formData.name}
+          onChange={handleChange}
+          required
+          className="w-full"
+        />
 
-      <InputField
-        label={words["Username"]}
-        name="username"
-        placeholder={words["Choose a username"]}
-        value={formData.username}
-        onChange={handleChange}
-        required
-      />
+        <InputField
+          label={words["Username"]}
+          name="username"
+          placeholder={words["Choose a username"]}
+          value={formData.username}
+          onChange={handleChange}
+          required
+          className="w-full"
+        />
+      </div>
 
-      <InputField
-        label={words["Mobile Number"]}
-        name="mobile"
-        placeholder="+9665XXXXXXXX"
-        type="tel"
-        value={formData.mobile}
-        onChange={handleChange}
-        required
-      />
+      <div className="space-y-4 md:space-y-0">
+        <InputField
+          label={words["Mobile Number"]}
+          name="mobile"
+          placeholder="+9665XXXXXXXX"
+          type="tel"
+          value={formData.mobile}
+          onChange={handleChange}
+          required
+          className="w-full"
+        />
 
-      <InputField
-        label={words["Password"]}
-        name="password"
-        placeholder={words["Set a password"]}
-        type="password"
-        value={formData.password}
-        onChange={handleChange}
-        required
-      />
+        <InputField
+          label={words["Password"]}
+          name="password"
+          placeholder={words["Set a password"]}
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          className="w-full"
+        />
+      </div>
 
-      {/* User Type Radio Input */}
-      {Mode === "ADMIN" && (
-        <div className="space-y-2 col-span-2">
-          <label className="block text-sm font-bold text-gray-700">
-            {words["User Type"] || "User Type"}
-            <span className="text-red-500 ml-1">*</span>
+      {/* User Type Radio Buttons - full width on mobile, then normal on desktop */}
+      <div className="col-span-1 md:col-span-2 space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          {words["User Type"] || "User Type"}{" "}
+          <span className="text-red-500">*</span>
+        </label>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              name="userType"
+              value="KAP_EMPLOYEE"
+              checked={uiState.userType === "KAP_EMPLOYEE"}
+              onChange={handleChange}
+              className="h-4 w-4 text-green-600 focus:ring-green-500"
+              required
+            />
+            <span className="ml-2 text-gray-700">
+              {words["KAP Employee"] || "KAP Employee"}
+            </span>
           </label>
-          <div className="flex space-x-4">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="userType"
-                value="KAP_EMPLOYEE"
-                checked={formData.userType === "KAP_EMPLOYEE"}
-                onChange={handleChange}
-                className="form-radio h-4 w-4 text-green-600"
-                required
-              />
-              <span className="ml-2 text-gray-700">
-                {words["KAP Employee"] || "KAP Employee"}
-              </span>
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              name="userType"
+              value="ORG_EMPLOYEE"
+              checked={uiState.userType === "ORG_EMPLOYEE"}
+              onChange={handleChange}
+              className="h-4 w-4 text-green-600 focus:ring-green-500"
+            />
+            <span className="ml-2 text-gray-700">
+              {words["Organization Employee"] || "Organization Employee"}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {/* KAP Employee Fields - full width */}
+      {uiState.userType === "KAP_EMPLOYEE" && (
+        <div className="col-span-1 md:col-span-2">
+          <Dropdown
+            label={words["KAP Role"] || "KAP Role"}
+            options={kapRoleOptions}
+            selectedValue={formData.kapRole}
+            onChange={(value) => handleDropdownChange("kapRole", value)}
+            required
+            className="w-full"
+          />
+        </div>
+      )}
+
+      {/* Organization Employee Fields */}
+      {uiState.userType === "ORG_EMPLOYEE" && (
+        <>
+          {/* Organization Type Radio Buttons - full width */}
+          <div className="col-span-1 md:col-span-2 space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              {words["Organization Type"] || "Organization Type"}{" "}
+              <span className="text-red-500">*</span>
             </label>
-            {Mode === "ADMIN" && (
+            <div className="flex flex-col sm:flex-row gap-4">
               <label className="inline-flex items-center">
                 <input
                   type="radio"
-                  name="userType"
-                  value="ORG_EMPLOYEE"
-                  checked={formData.userType === "ORG_EMPLOYEE"}
+                  name="orgType"
+                  value="GOVERNMENT"
+                  checked={uiState.orgType === "GOVERNMENT"}
                   onChange={handleChange}
-                  className="form-radio h-4 w-4 text-green-600"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500"
+                  required
                 />
                 <span className="ml-2 text-gray-700">
-                  {words["Org Employee"] || "Org Employee"}
+                  {words["Government"] || "Government"}
                 </span>
               </label>
-            )}
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="orgType"
+                  value="COMPANY"
+                  checked={uiState.orgType === "COMPANY"}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500"
+                />
+                <span className="ml-2 text-gray-700">
+                  {words["Company"] || "Company"}
+                </span>
+              </label>
+            </div>
           </div>
-        </div>
-      )}
-      {/* KAP Employee Role Dropdown */}
-      {formData.userType === "KAP_EMPLOYEE" && (
-        <Dropdown
-          label={words["KAP Role"] || "KAP Role"}
-          options={kapRoleOptions}
-          selectedValue={formData.kapRole}
-          onChange={(value) => handleDropdownChange("kapRole", value)}
-          required
-        />
-      )}
 
-      {/* Org Employee Fields */}
-      {formData.userType === "ORG_EMPLOYEE" && (
-        <>
-          <Dropdown
-            label={words["Organization Type"]}
-            options={orgTypeOptions}
-            selectedValue={formData.orgType}
-            onChange={(value) => handleDropdownChange("orgType", value)}
-            required
-          />
-
-          {formData.orgType && (
-            <Dropdown
-              label={words["Organization"]}
-              options={organizationOptions}
-              selectedValue={formData.organization}
-              onChange={(value) => handleDropdownChange("organization", value)}
-              required
-              isLoading={localLoading}
-              disabled={!formData.orgType}
-            />
+          {/* Organization Dropdown - full width on mobile, normal on desktop */}
+          {uiState.orgType && (
+            <div className="col-span-1 md:col-span-1">
+              <Dropdown
+                label={words["Organization"] || "Organization"}
+                options={organizationOptions}
+                selectedValue={formData.organization}
+                onChange={(value) =>
+                  handleDropdownChange("organization", value)
+                }
+                required
+                isLoading={localLoading}
+                className="w-full"
+              />
+            </div>
           )}
 
-          {formData.orgType && (
-            <Dropdown
-              label={words["Role"]}
-              options={orgRoleOptions[formData.orgType]}
-              selectedValue={formData.role}
-              onChange={(value) => handleDropdownChange("role", value)}
-              required
-            />
+          {/* Role Dropdown - full width on mobile, normal on desktop */}
+          {formData.organization && (
+            <div className="col-span-1 md:col-span-1">
+              <Dropdown
+                label={words["Role"] || "Role"}
+                options={uiRoleOptions}
+                selectedValue={uiState.selectedRole}
+                onChange={(value) =>
+                  handleDropdownChange("selectedRole", value)
+                }
+                required
+                className="w-full"
+              />
+            </div>
           )}
 
-          {formData.organization && formData.role === "OP_EMPLOYEE" && (
-            <Dropdown
-              label={words["Department"]}
-              options={departmentOptions}
-              selectedValue={formData.department}
-              onChange={(value) => handleDropdownChange("department", value)}
-              required
-              isLoading={localLoading}
-              disabled={!formData.organization}
-            />
+          {/* Department Dropdown - full width */}
+          {formData.organization && (
+            <div className="col-span-1 md:col-span-2">
+              <Dropdown
+                label={words["Department"] || "Department"}
+                options={departmentOptions}
+                selectedValue={formData.department}
+                onChange={(value) => handleDropdownChange("department", value)}
+                required
+                isLoading={localLoading}
+                className="w-full"
+              />
+            </div>
           )}
         </>
       )}
 
-      {errorMessage && (
-        <p className="text-red-500 text-sm col-span-2">{errorMessage}</p>
+      {/* Debug view - always full width */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="col-span-1 md:col-span-2 p-2 bg-gray-100 rounded">
+          <p className="text-sm">
+            <strong>UI State:</strong> {JSON.stringify(uiState)}
+            <br />
+            <strong>Form Data:</strong> {JSON.stringify(formData)}
+          </p>
+        </div>
       )}
 
-      <div className="col-span-2 flex justify-end gap-2 mt-4">
+      {/* Error display - always full width */}
+      {(errorMessage || validationError) && (
+        <div className="col-span-1 md:col-span-2">
+          <p className="text-red-500 text-sm">
+            {errorMessage || validationError}
+          </p>
+        </div>
+      )}
+
+      {/* Form actions - always full width */}
+      <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-500 hover:bg-gray-700 text-white rounded"
+          className="px-4 py-2 bg-gray-500 hover:bg-gray-700 text-white rounded w-full sm:w-auto"
         >
           {words["Cancel"]}
         </button>
         <button
           type="submit"
           disabled={isLoading || localLoading}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50 w-full sm:w-auto"
         >
           {isLoading || localLoading ? words["Creating..."] : words["Create"]}
         </button>

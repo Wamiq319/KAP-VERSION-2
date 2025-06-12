@@ -19,7 +19,7 @@ import {
   PasswordUpdateForm,
 } from "../../components";
 
-const AddOrgPage = ({
+const OrganizationPage = ({
   buttonText = "Add Organization",
   buttonClassName = "bg-slate-600 hover:bg-slate-700 text-white ",
   tableHeaderBgColor = "bg-slate-200",
@@ -338,4 +338,4 @@ const AddOrgPage = ({
   );
 };
 
-export default AddOrgPage;
+export default OrganizationPage;

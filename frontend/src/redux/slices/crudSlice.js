@@ -106,13 +106,13 @@ export const deleteEntity = createAsyncThunk(
 
 export const updateEntityPassword = createAsyncThunk(
   "entityManage/updatePassword",
-  async ({ entityType, id, passwordData }, { rejectWithValue }) => {
+  async ({ entityType, id, formData }, { rejectWithValue }) => {
     try {
       const url = `${API_URL}/api/${entityType}/${id}/password`;
       const { data, success, message } = await makeEntityRequest(
         url,
         "PUT",
-        passwordData
+        formData
       );
       return { entityType, id, data, success, message };
     } catch (error) {

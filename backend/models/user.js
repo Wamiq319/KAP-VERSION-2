@@ -57,10 +57,14 @@ userSchema.statics.getUserData = function (user) {
     username: user.username,
     mobile: user.mobile,
     role: user.role,
-    kapRole: user.kapRole,
-    organization: user.organization,
-    department: user.department,
-    createdAt: user.createdAt,
+    kapRole: user.kapRole || null,
+    organization: user.organization
+      ? { id: user.organization._id, name: user.organization.name }
+      : null,
+    department: user.department
+      ? { id: user.department._id, name: user.department.name }
+      : null,
+    password: user.password,
   };
 };
 
@@ -68,11 +72,11 @@ userSchema.statics.getUserData = function (user) {
 userSchema.statics.getUsers = async function (options = {}) {
   try {
     const {
-      role = null, // filter by role
-      organization = null, // filter by organization ID
-      fields = null, // selected fields
-      limit = null, // for pagination
-      skip = null, // for pagination
+      role = null,
+      organization = null,
+      fields = null,
+      limit = null,
+      skip = null,
     } = options;
 
     // Build query
@@ -80,24 +84,45 @@ userSchema.statics.getUsers = async function (options = {}) {
     if (role) query.role = { $eq: role, $ne: "ADMIN" };
     if (organization) query.organization = organization;
 
-    // Build projection
+    // Always include these fields
+    const baseFields =
+      "name username mobile role kapRole organization department password";
+    const selectedFields = fields ? `${baseFields} ${fields}` : baseFields;
+
     const projection = {};
-    if (fields) {
-      fields.split(" ").forEach((field) => {
-        projection[field] = 1;
-      });
-    }
+    selectedFields.split(" ").forEach((field) => {
+      projection[field] = 1;
+    });
 
     const data = await this.find(query, projection)
       .limit(Number(limit) || 0)
       .skip(Number(skip) || 0)
-      .populate("organization", "name")
-      .populate("department", "name");
+      .populate("organization", "name _id")
+      .populate("department", "name _id");
+
+    // Format the response data
+    const formattedData = data.map((user) => ({
+      id: user._id,
+      name: user.name,
+      username: user.username,
+      mobile: user.mobile,
+      role: user.role,
+      kapRole: user.kapRole,
+      organization: user.organization
+        ? { id: user.organization._id, name: user.organization.name }
+        : null,
+      department: user.department
+        ? { id: user.department._id, name: user.department.name }
+        : null,
+      password: user.password,
+    }));
 
     return {
       success: true,
-      message: data.length ? "Users retrieved successfully" : "No users found",
-      data,
+      message: formattedData.length
+        ? "Users retrieved successfully"
+        : "No users found",
+      data: formattedData,
     };
   } catch (error) {
     console.error("Error getting users:", error);
@@ -169,7 +194,9 @@ userSchema.statics.createUser = async function (userData) {
 // User Login
 userSchema.statics.loginUser = async function (username, password) {
   try {
-    const user = await this.findOne({ username });
+    const user = await this.findOne({ username })
+      .populate("organization", "name _id")
+      .populate("department", "name _id");
 
     if (!user) {
       return {
@@ -249,6 +276,38 @@ userSchema.statics.deleteUserById = async function (userId) {
   }
 };
 
+// Add this to your User model (userSchema.statics)
+
+// Delete users by department(s) - returns true on success, false on failure
+userSchema.statics.deleteUsersByDepartment = async function (departmentIds) {
+  try {
+    // Convert single ID to array if needed
+    const ids = Array.isArray(departmentIds) ? departmentIds : [departmentIds];
+
+    // Validate all IDs
+    for (const id of ids) {
+      if (!ObjectId.isValid(id)) {
+        return false;
+      }
+    }
+
+    // Delete users with these departments
+    await this.deleteMany({
+      department: { $in: ids },
+      // Don't delete admin or KAP employees
+      role: {
+        $nin: ["ADMIN", "KAP_EMPLOYEE"],
+        $in: ["GOV_MANAGER", "OP_MANAGER", "GOV_EMPLOYEE", "OP_EMPLOYEE"],
+      },
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting users by department:", error);
+    return false;
+  }
+};
+
 // Update Password by ID
 userSchema.statics.updatePasswordById = async function (userId, newPassword) {
   try {
@@ -273,11 +332,11 @@ userSchema.statics.updatePasswordById = async function (userId, newPassword) {
         data: null,
       };
     }
-
+    const allUsers = await this.find({});
     return {
       success: true,
       message: "Password updated successfully",
-      data: this.getUserData(updatedUser),
+      data: allUsers,
     };
   } catch (error) {
     console.error("Error updating password:", error);

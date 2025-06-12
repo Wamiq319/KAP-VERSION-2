@@ -29,8 +29,10 @@ export const createUser = async (req, res) => {
       mobile,
       role,
       kapRole: role === "KAP_EMPLOYEE" ? kapRole : undefined,
-      organization: role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? organization : undefined,
-      department: role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? department : undefined,
+      organization:
+        role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? organization : undefined,
+      department:
+        role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? department : undefined,
     });
 
     if (!success) {

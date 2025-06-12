@@ -1,5 +1,6 @@
 import Organization from "../models/organization.js";
 import { uploadLogoImage } from "../Utils/uploadCloudinary.js";
+import Department from "../models/department.js";
 
 export const createOrganization = async (req, res) => {
   try {
@@ -45,11 +46,17 @@ export const createOrganization = async (req, res) => {
 export const deleteOrganization = async (req, res) => {
   try {
     const { orgId } = req.params;
+
+    // First delete all departments (and their users) for this organization
+    await Department.deleteDepartmentsByOrganization(orgId);
+
+    // Then delete the organization itself
     const { message, success, data } =
       await Organization.deleteOrganizationById(orgId);
+
     res.status(200).json({ message, success, data });
   } catch (error) {
-    console.log(error);
+    console.error("Error deleting organization:", error);
     res.status(500).json({
       message: "Failed to delete organization",
       success: false,

@@ -20,12 +20,12 @@ import {
   Dropdown,
 } from "../../components";
 
-const AddUserPage = ({
+const UserPage = ({
   buttonText = "Add User",
   buttonClassName = "bg-slate-600 hover:bg-slate-700 text-white ",
   tableHeaderBgColor = "bg-slate-200",
   tableBorderColor = "border-slate-200",
-  Mode = "MANAGER", // 'ADMIN' or 'MANAGER'
+  Mode = "ADMIN",
 }) => {
   const dispatch = useDispatch();
   const { entities } = useSelector((state) => state.crud);
@@ -54,7 +54,6 @@ const AddUserPage = ({
     orgType: "",
     organization: "",
     department: "",
-    userType: "",
   });
 
   // Table configuration
@@ -62,22 +61,21 @@ const AddUserPage = ({
     { key: "index", label: words["#"] },
     { key: "name", label: words["Employee Name"] },
     { key: "username", label: words["Username"] },
-    { key: "password", label: words["Password"] },
     { key: "mobile", label: words["Mobile No"] },
     { key: "role", label: words["Role"] },
+    { key: "organization", label: words["Organization"] },
+    { key: "department", label: words["Department"] },
   ];
 
   // Data fetching with filters
   const fetchUsers = async () => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
-
       const params = {};
       if (filters.role) params.role = filters.role;
       if (filters.orgType) params.orgType = filters.orgType;
       if (filters.organization) params.organization = filters.organization;
       if (filters.department) params.department = filters.department;
-      if (filters.userType) params.userType = filters.userType;
 
       await dispatch(
         fetchEntities({
@@ -124,45 +122,17 @@ const AddUserPage = ({
     }
   }, [filters.organization, dispatch]);
 
-  const tableData = entities.users?.map((item, index) => {
-    const baseData = {
-      index: index + 1,
-      id: item._id,
-      name: item.name,
-      mobile: item.mobile,
-      username: item.username,
-      password: item.password || "N/A",
-    };
-
-    if (item.role === "KAP_EMPLOYEE") {
-      return {
-        ...baseData,
-        role: item.kapRole || words["KAP Employee"],
-      };
-    } else if (item.role === "ORG_EMPLOYEE") {
-      if (filters.organization) {
-        if (filters.department) {
-          return {
-            ...baseData,
-            role: `${item.roleName}${
-              item.isManager ? ` (${words["Manager"]})` : ""
-            }`,
-          };
-        } else {
-          return {
-            ...baseData,
-            role: item.departmentName || words["Department"],
-          };
-        }
-      } else {
-        return {
-          ...baseData,
-          role: item.organizationName || words["Organization"],
-        };
-      }
-    }
-    return baseData;
-  });
+  const tableData = entities.users?.map((item, index) => ({
+    index: index + 1,
+    id: item.id,
+    name: item.name,
+    mobile: item.mobile,
+    username: item.username,
+    password: item.password,
+    role: item.role === "KAP_EMPLOYEE" ? "KAP_" + item.kapRole : item.role,
+    organization: item.organization?.name || "N/A",
+    department: item.department?.name || "N/A",
+  }));
 
   // Filter handlers
   const handleFilterChange = (name, value) => {
@@ -191,7 +161,6 @@ const AddUserPage = ({
       orgType: "",
       organization: "",
       department: "",
-      userType: "",
     });
   };
 
@@ -209,7 +178,7 @@ const AddUserPage = ({
     }));
   };
 
-  // Modal handlers (keep existing modal handlers)
+  // Modal handlers
   const openCreateModal = () => {
     setSelectedUser(null);
     setUiState((prev) => ({
@@ -240,17 +209,20 @@ const AddUserPage = ({
     setSelectedUser(null);
   };
 
-  // Form handlers (keep existing form handlers)
+  // Form handlers
   const handleCreateUser = async (formData) => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
+
+      // For MANAGER mode, ensure we're not creating KAP employees
+      if (Mode === "MANAGER" && formData.role === "KAP_EMPLOYEE") {
+        throw new Error("Manager cannot create KAP employees");
+      }
+
       const response = await dispatch(
         createEntity({
           entityType: "users",
-          formData: {
-            ...formData,
-            role: formData.role || "KAP_EMPLOYEE",
-          },
+          formData,
         })
       ).unwrap();
 
@@ -274,7 +246,40 @@ const AddUserPage = ({
     }
   };
 
-  // Delete handlers (keep existing delete handlers)
+  const handlePasswordUpdate = async (formData) => {
+    try {
+      console.log("Password update form data:", formData); // Debug log
+      setUiState((prev) => ({ ...prev, isLoading: true }));
+      const response = await dispatch(
+        updateEntityPassword({
+          entityType: "users",
+          id: selectedUser.id,
+          formData,
+        })
+      ).unwrap();
+      console.log("Password update response:", response); // Debug log
+
+      if (response?.success) {
+        showToast(response.message || words["Password updated successfully"]);
+        closeModal();
+      } else {
+        setUiState((prev) => ({
+          ...prev,
+          errorMessage: response.message || words["Failed to update password"],
+        }));
+      }
+      await fetchUsers();
+    } catch (error) {
+      setUiState((prev) => ({
+        ...prev,
+        errorMessage: error.message || words["Server error"],
+      }));
+    } finally {
+      setUiState((prev) => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  // Delete handlers
   const handleDelete = (entity) => {
     setConfirmDelete({
       ids: [entity.id],
@@ -330,8 +335,6 @@ const AddUserPage = ({
     { value: "", label: words["All Roles"] || "All Roles" },
     { value: "KAP_EMPLOYEE", label: words["KAP Employee"] },
     { value: "ORG_EMPLOYEE", label: words["Organization Employee"] },
-    { value: "GOV_EMPLOYEE", label: words["Government Employee"] },
-    { value: "COMPANY_EMPLOYEE", label: words["Company Employee"] },
   ];
 
   const orgTypeOptions = [
@@ -354,12 +357,6 @@ const AddUserPage = ({
       value: dept._id,
       label: dept.name,
     })) || []),
-  ];
-
-  const userTypeOptions = [
-    { value: "", label: words["All Types"] || "All Types" },
-    { value: "EMPLOYEE", label: words["Employee"] },
-    { value: "MANAGER", label: words["Manager"] },
   ];
 
   return (
@@ -389,6 +386,7 @@ const AddUserPage = ({
           onClose={() => setUiState((prev) => ({ ...prev, showToast: false }))}
         />
       )}
+
       {Mode === "MANAGER" && (
         <div className="flex justify-center gap-2 mb-4">
           <Button
@@ -400,6 +398,7 @@ const AddUserPage = ({
           />
         </div>
       )}
+
       {Mode === "ADMIN" && (
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <div className="flex justify-between items-center gap-2 mb-4">
@@ -417,7 +416,7 @@ const AddUserPage = ({
                 icon={<FaSearch className="h-3 w-3" />}
                 className="bg-blue-500 hover:bg-blue-600 text-white"
                 size="small"
-                isLoading={uiState.isLoading} // Pass loading state when searching
+                isLoading={uiState.isLoading}
               />
               <Button
                 text={words[buttonText] || buttonText}
@@ -429,7 +428,7 @@ const AddUserPage = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <Dropdown
               label={words["Role"]}
               options={roleOptions}
@@ -460,13 +459,6 @@ const AddUserPage = ({
               onChange={(value) => handleFilterChange("department", value)}
               disabled={!filters.organization}
             />
-
-            <Dropdown
-              label={words["User Type"]}
-              options={userTypeOptions}
-              selectedValue={filters.userType}
-              onChange={(value) => handleFilterChange("userType", value)}
-            />
           </div>
         </div>
       )}
@@ -484,6 +476,7 @@ const AddUserPage = ({
         >
           {uiState.activeModal === "password" ? (
             <PasswordUpdateForm
+              oldPassword={selectedUser.password}
               onSubmit={handlePasswordUpdate}
               onCancel={closeModal}
               isLoading={uiState.isLoading}
@@ -492,23 +485,6 @@ const AddUserPage = ({
             />
           ) : (
             <UserForm
-              formData={selectedUser || {}}
-              onChange={(e) => {
-                if (e.target.resetOrgFields) {
-                  setSelectedUser({
-                    ...(selectedUser || {}),
-                    [e.target.name]: e.target.value,
-                    orgType: undefined,
-                    organization: undefined,
-                    department: undefined,
-                  });
-                } else {
-                  setSelectedUser({
-                    ...(selectedUser || {}),
-                    [e.target.name]: e.target.value,
-                  });
-                }
-              }}
               onSubmit={handleCreateUser}
               onCancel={closeModal}
               isLoading={uiState.isLoading}
@@ -527,7 +503,7 @@ const AddUserPage = ({
         </div>
       ) : (
         <DataTable
-          heading={words["KAP Employees"]}
+          heading={words["Users"]}
           tableHeader={tableHeader}
           tableData={tableData}
           headerBgColor={tableHeaderBgColor}
@@ -560,4 +536,4 @@ const AddUserPage = ({
   );
 };
 
-export default AddUserPage;
+export default UserPage;

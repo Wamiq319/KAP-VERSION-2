@@ -7,9 +7,10 @@ const PasswordUpdateForm = ({
   isLoading,
   errorMessage,
   words,
+  oldPassword,
 }) => {
   const [passwordData, setPasswordData] = React.useState({
-    oldPassword: "",
+    oldPassword: oldPassword,
     newPassword: "",
     confirmPassword: "",
   });

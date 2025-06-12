@@ -37,7 +37,7 @@ const AdminHomePage = () => {
 
         <Button
           text={words["Manage Department"]}
-          onClick={() => handleNavigation("/add-operatingCompany")}
+          onClick={() => handleNavigation("/manage-admin-depts")}
           className="w-full bg-orange-500 hover:bg-orange-600 text-lg py-3 shadow"
         />
 

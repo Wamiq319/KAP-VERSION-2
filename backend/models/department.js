@@ -26,7 +26,7 @@ departmentSchema.statics.createDepartment = async function (departmentData) {
     }
 
     const newDept = await this.create(departmentData);
-    const allDepts = await this.getDepartments({});
+    const allDepts = await this.getDepartments({ minimal: false });
 
     return {
       success: true,
@@ -46,6 +46,14 @@ departmentSchema.statics.createDepartment = async function (departmentData) {
 // Delete Department
 departmentSchema.statics.deleteDepartmentById = async function (departmentId) {
   try {
+    if (!ObjectId.isValid(departmentId)) {
+      return {
+        success: false,
+        message: "Invalid department ID",
+        data: null,
+      };
+    }
+
     const deletedDept = await this.findByIdAndDelete(departmentId);
     if (!deletedDept) {
       return {
@@ -54,6 +62,9 @@ departmentSchema.statics.deleteDepartmentById = async function (departmentId) {
         data: null,
       };
     }
+
+    // Delete all users in this department
+    await mongoose.model("User").deleteUsersByDepartment(departmentId);
 
     const remainingDepts = await this.getDepartments({});
 
@@ -72,45 +83,132 @@ departmentSchema.statics.deleteDepartmentById = async function (departmentId) {
   }
 };
 
-// Enhanced Get Departments Function
+// Delete Departments by Organization
+departmentSchema.statics.deleteDepartmentsByOrganization = async function (
+  organizationId
+) {
+  try {
+    if (!ObjectId.isValid(organizationId)) {
+      return false;
+    }
+
+    const departments = await this.find({ organization: organizationId });
+    const departmentIds = departments.map((dept) => dept._id);
+
+    // Delete all departments
+    const result = await this.deleteMany({ organization: organizationId });
+
+    // Delete all users in these departments if any departments existed
+    if (departmentIds.length > 0) {
+      await mongoose.model("User").deleteUsersByDepartment(departmentIds);
+    }
+
+    return;
+    true;
+  } catch (error) {
+    console.error("Error deleting departments by organization:", error);
+    return false;
+  }
+};
+
+// Get Departments Function (unchanged)
 departmentSchema.statics.getDepartments = async function (options = {}) {
   try {
     const {
-      organization = null, // Filter by organization ID
-      minimal = false, // Return only _id and name if true
-      search = null, // Search term for department name
-      limit = null, // Pagination limit
-      skip = null, // Pagination skip
+      organization = null,
+      orgType = null,
+      minimal = false,
+      search = null,
+      limit = null,
+      skip = null,
     } = options;
 
-    // Build query
+    if (orgType) {
+      const pipeline = [];
+
+      const matchStage = {};
+      if (organization) matchStage.organization = new ObjectId(organization);
+      if (search) matchStage.name = { $regex: search, $options: "i" };
+      pipeline.push({ $match: matchStage });
+
+      pipeline.push({
+        $lookup: {
+          from: "organizations",
+          localField: "organization",
+          foreignField: "_id",
+          as: "organization",
+        },
+      });
+
+      pipeline.push({
+        $unwind: { path: "$organization", preserveNullAndEmptyArrays: true },
+      });
+
+      pipeline.push({
+        $match: { "organization.type": orgType },
+      });
+
+      pipeline.push({
+        $project: {
+          _id: 1,
+          name: 1,
+          organization: {
+            $cond: {
+              if: { $eq: ["$organization", null] },
+              then: null,
+              else: {
+                _id: "$organization._id",
+                name: "$organization.name",
+                type: "$organization.type",
+              },
+            },
+          },
+        },
+      });
+
+      if (limit) pipeline.push({ $limit: Number(limit) });
+      if (skip) pipeline.push({ $skip: Number(skip) });
+
+      const departments = await this.aggregate(pipeline);
+
+      return {
+        success: true,
+        message: departments.length
+          ? "Departments retrieved successfully"
+          : "No departments found",
+        data: departments,
+      };
+    }
+
+    // Default behavior when no orgType filtering
     const query = {};
     if (organization) query.organization = organization;
     if (search) query.name = new RegExp(search, "i");
 
-    // Build projection
     const projection = minimal ? "_id name" : "_id name organization";
-    const populate = minimal ? null : { path: "organization", select: "name" };
+    const populate = minimal
+      ? null
+      : { path: "organization", select: "name type" };
 
-    // Execute query
     let queryBuilder = this.find(query).select(projection).sort({ name: 1 });
-
     if (populate) queryBuilder = queryBuilder.populate(populate);
     if (limit) queryBuilder = queryBuilder.limit(Number(limit));
     if (skip) queryBuilder = queryBuilder.skip(Number(skip));
 
     const departments = await queryBuilder.lean();
 
-    // Transform data if not minimal
     const data = minimal
       ? departments
       : departments.map((dept) => ({
           _id: dept._id,
           name: dept.name,
-          organization: {
-            _id: dept.organization._id,
-            name: dept.organization.name,
-          },
+          organization: dept.organization
+            ? {
+                _id: dept.organization._id,
+                name: dept.organization.name,
+                type: dept.organization.type,
+              }
+            : null,
         }));
 
     return {

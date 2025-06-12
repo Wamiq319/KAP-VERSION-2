@@ -18,8 +18,9 @@ import GovEmployeeHomePage from "./Home/GovEmployee.jsx";
 // ======================
 // Admin Management Pages
 // ======================
-import AddUserPage from "./Admin/AddUserPage.jsx";
-import AddOrgPage from "./Admin/AddOrgPage.jsx";
+import UserPage from "./Admin/UserPage.jsx";
+import OrganizationPage from "./Admin/OrgPage.jsx";
+import DepartmentPage from "./Admin/DeptPage.jsx";
 
 // ======================
 // Operational Pages
@@ -34,12 +35,14 @@ import ManageTicketsGovPage from "./GovernmentManager/govTickets.jsx";
 import ManageGovTicketsEmployeePage from "./GovEmployee/ManageTicket.jsx";
 import AllGovTicketsPage from "./GovEmployee/SectorTickets.jsx";
 import TrackKapTicketPage from "./kapEmployee/TicketTracking.jsx";
+
 // ======================
 // Export All Components
 // ======================
 export {
-  AddUserPage,
-  AddOrgPage,
+  UserPage,
+  OrganizationPage,
+  DepartmentPage,
 
   // Authentication
   LoginPage,

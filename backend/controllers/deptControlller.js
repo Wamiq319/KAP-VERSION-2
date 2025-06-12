@@ -40,6 +40,7 @@ export const deleteDepartment = async (req, res) => {
 export const getDepartments = async (req, res) => {
   try {
     const {
+      orgType, // Filter by organization Type
       organization, // Filter by organization ID
       minimal, // Return minimal data (true/false)
       search, // Search term
@@ -48,6 +49,7 @@ export const getDepartments = async (req, res) => {
     } = req.query;
 
     const { success, data, message } = await Department.getDepartments({
+      orgType,
       organization,
       minimal: minimal === "true", // Convert string to boolean
       search,
