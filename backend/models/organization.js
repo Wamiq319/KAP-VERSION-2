@@ -8,7 +8,10 @@ const organizationSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   mobile: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  logo: { type: String },
+  logo: {
+    public_id: { type: String },
+    url: { type: String },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -48,14 +51,25 @@ organizationSchema.statics.getOrganizations = async function (options = {}) {
 
     const data = await this.find(query, projection)
       .limit(Number(limit) || 0)
-      .skip(Number(skip) || 0);
+      .skip(Number(skip) || 0)
+      .lean();
+
+    const transformedData = data.map((org) => {
+      if (org.logo) {
+        return {
+          ...org,
+          logoUrl: org.logo.url,
+        };
+      }
+      return org;
+    });
 
     return {
       success: true,
       message: data.length
         ? "Organizations retrieved successfully"
         : "No organizations found",
-      data,
+      data: transformedData,
     };
   } catch (error) {
     console.error("Error getting organizations:", error);
@@ -107,7 +121,7 @@ organizationSchema.statics.createOrganization = async function (orgData) {
     console.error("Error creating organization:", error);
     return {
       success: false,
-      message: "Error creating organization",
+      message: "Internal Error creating organization",
       data: null,
     };
   }

@@ -44,11 +44,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
+const allowedOrigins = process.env.CORS_ORIGIN?.split(",");
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type"],
+    origin: allowedOrigins,
+    credentials: true,
   })
 );
 

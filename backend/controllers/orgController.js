@@ -6,14 +6,16 @@ export const createOrganization = async (req, res) => {
     const { name, type, adminName, username, mobile, password } = req.body;
     const logoImage = req.file;
 
-    // Upload logo if provided
-    let logoUrl = "";
-    let logoPublicId = "";
-    // if (logoImage) {
-    //   const uploaded = await uploadLogoImage(logoImage.path);
-    //   logoUrl = uploaded.url;
-    //   logoPublicId = uploaded.public_id;
-    // }
+    // Prepare logo data object
+    let logo = null;
+
+    if (logoImage) {
+      const uploaded = await uploadLogoImage(logoImage.path);
+      logo = {
+        public_id: uploaded.public_id,
+        url: uploaded.url,
+      };
+    }
 
     const { success, data, message } = await Organization.createOrganization({
       name,
@@ -22,16 +24,20 @@ export const createOrganization = async (req, res) => {
       username,
       mobile,
       password,
-      logo: "how are you",
+      logo, // Pass the full logo object with public_id and url
     });
 
-    res.status(200).json({ message, success, data });
+    if (!success) {
+      return res.status(400).json({ message, success, data });
+    }
+
+    res.status(201).json({ message, success, data });
   } catch (error) {
-    console.log(error);
+    console.error("Error creating organization:", error);
     res.status(500).json({
-      message: "Error creating organization",
+      message: "Internal server error while creating organization",
       success: false,
-      data: [],
+      data: null,
     });
   }
 };

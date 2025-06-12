@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
   },
   kapRole: {
     type: String,
+    enum: ["GOVERNMENT_INTEGRATION", "SECURITY_SAFETY", "PLANNING_DEVELOPMENT"],
     required: function () {
       return this.role === "KAP_EMPLOYEE";
     },
@@ -75,8 +76,8 @@ userSchema.statics.getUsers = async function (options = {}) {
     } = options;
 
     // Build query
-    const query = {};
-    if (role) query.role = role;
+    const query = { role: { $ne: "ADMIN" } };
+    if (role) query.role = { $eq: role, $ne: "ADMIN" };
     if (organization) query.organization = organization;
 
     // Build projection
