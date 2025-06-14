@@ -48,9 +48,19 @@ const OrganizationPage = ({
 
   const [selectedOrg, setSelectedOrg] = useState(null);
 
+  const [formData, setFormData] = useState({
+    name: "",
+    adminName: "",
+    username: "",
+    mobile: "",
+    password: "",
+    type: "GOVERNMENT",
+  });
+
   // Table configuration
   const tableHeader = [
     { key: "index", label: words["#"] },
+    { key: "image", label: words["Logo"] },
     { key: "name", label: words["Name"] },
     { key: "type", label: words["Type"] },
     { key: "adminName", label: words["Admin Name"] },
@@ -75,11 +85,13 @@ const OrganizationPage = ({
   const tableData = entities.organizations?.map((item, index) => ({
     index: index + 1,
     id: item._id,
+    image: item.logo?.url || item.logoUrl,
     name: item.name,
     type: item.type === "GOVERNMENT" ? words["Government"] : words["Company"],
     adminName: item.adminName || "N/A",
     username: item.username,
     mobile: item.mobile,
+    password: item.password,
   }));
 
   // Toast notification helper
@@ -104,6 +116,7 @@ const OrganizationPage = ({
   };
 
   const openPasswordModal = (org) => {
+    console.log("Selected Organization:", org);
     setSelectedOrg(org);
     setUiState((prev) => ({
       ...prev,
@@ -124,26 +137,18 @@ const OrganizationPage = ({
   };
 
   // Form handlers
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleCreateOrg = async (formData) => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
 
-      if (
-        !formData.name ||
-        !formData.adminName ||
-        !formData.username ||
-        !formData.mobile ||
-        !formData.password
-      ) {
-        console.log(formData);
-        setUiState((prev) => ({
-          ...prev,
-          errorMessage: words["Fill All the Fields"],
-        }));
-        return;
-      }
-
-      console.log(formData);
       const response = await dispatch(
         createEntity({
           entityType: "organizations",
@@ -222,6 +227,49 @@ const OrganizationPage = ({
     }
   };
 
+  // Add this new handler for password updates
+  const handlePasswordUpdate = async (passwordData) => {
+    try {
+      setUiState((prev) => ({ ...prev, isLoading: true }));
+
+      // If there's an error in the form data
+      if (passwordData.error) {
+        setUiState((prev) => ({
+          ...prev,
+          errorMessage: passwordData.error,
+        }));
+        return;
+      }
+
+      const response = await dispatch(
+        updateEntityPassword({
+          entityType: "organizations",
+          id: selectedOrg.id,
+          newPassword: passwordData.newPassword,
+        })
+      ).unwrap();
+
+      if (response?.success) {
+        showToast(response.message || "Password updated successfully");
+        closeModal();
+        await fetchOrganizations();
+      } else {
+        setUiState((prev) => ({
+          ...prev,
+          errorMessage: response?.message || "Failed to update password",
+        }));
+      }
+    } catch (error) {
+      console.error("Password update error:", error);
+      setUiState((prev) => ({
+        ...prev,
+        errorMessage: error.message || "Server error occurred",
+      }));
+    } finally {
+      setUiState((prev) => ({ ...prev, isLoading: false }));
+    }
+  };
+
   return (
     <div className="p-4">
       {/* Confirmation Modal */}
@@ -273,6 +321,7 @@ const OrganizationPage = ({
         >
           {uiState.activeModal === "password" ? (
             <PasswordUpdateForm
+              oldPassword={selectedOrg?.password}
               onSubmit={handlePasswordUpdate}
               onCancel={closeModal}
               isLoading={uiState.isLoading}
@@ -281,13 +330,6 @@ const OrganizationPage = ({
             />
           ) : (
             <AddOrgForm
-              formData={selectedOrg || {}}
-              onChange={(e) => {
-                setSelectedOrg({
-                  ...(selectedOrg || {}),
-                  [e.target.name]: e.target.value,
-                });
-              }}
               onSubmit={handleCreateOrg}
               onCancel={closeModal}
               isLoading={uiState.isLoading}

@@ -254,7 +254,7 @@ const UserPage = ({
         updateEntityPassword({
           entityType: "users",
           id: selectedUser.id,
-          formData,
+          newPassword: formData.newPassword,
         })
       ).unwrap();
       console.log("Password update response:", response); // Debug log

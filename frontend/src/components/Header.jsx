@@ -20,18 +20,18 @@ const Header = () => {
     }
 
     switch (user.role) {
-      case "admin":
-      case "kap_employee":
+      case "ADMIN":
+      case "KAP_EMPLOYEE":
         setHeaderText("KAP");
         break;
-      case "gov_manager":
-      case "gov_employee":
+      case "GOV_MANAGER":
+      case "GOV_EMPLOYEE":
         setHeaderText(user.sector?.name);
         break;
-      case "op_manager":
+      case "OP_MANAGER":
         setHeaderText(user.company?.name || words["Operating"]);
         break;
-      case "op_employee":
+      case "OP_EMPLOYEE":
         setHeaderText(user.entity?.name || words["Operating"]);
         break;
       default:
@@ -53,12 +53,12 @@ const Header = () => {
     }
 
     const roleRoutes = {
-      admin: "/admin-home",
-      op_manager: "/op-manager-home",
-      op_employee: "/employee-home",
-      kap_employee: "/kap-employee-home",
-      gov_manager: "/govsector-manager-home",
-      gov_employee: "/gov-employee-home",
+      ADMIN: "/admin-home",
+      OP_MANAGER: "/op-manager-home",
+      OP_EMPLOYEE: "/employee-home",
+      KAP_EMPLOYEE: "/kap-employee-home",
+      GOV_MANAGER: "/govsector-manager-home",
+      GOV_EMPLYEE: "/gov-employee-home",
     };
     navigate(roleRoutes[user.role] || "/login");
   };

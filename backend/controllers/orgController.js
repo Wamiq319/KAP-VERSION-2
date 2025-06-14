@@ -1,5 +1,8 @@
 import Organization from "../models/organization.js";
-import { uploadLogoImage } from "../Utils/uploadCloudinary.js";
+import {
+  uploadLogoImage,
+  deleteFromCloudinary,
+} from "../utils/uploadCloudinary.js";
 import Department from "../models/department.js";
 
 export const createOrganization = async (req, res) => {
@@ -11,11 +14,20 @@ export const createOrganization = async (req, res) => {
     let logo = null;
 
     if (logoImage) {
-      const uploaded = await uploadLogoImage(logoImage.path);
-      logo = {
-        public_id: uploaded.public_id,
-        url: uploaded.url,
-      };
+      try {
+        const uploaded = await uploadLogoImage(logoImage.path);
+        logo = {
+          public_id: uploaded.public_id,
+          url: uploaded.url,
+        };
+      } catch (uploadError) {
+        console.error("Logo upload error:", uploadError);
+        return res.status(400).json({
+          message: "Failed to upload logo image",
+          success: false,
+          data: null,
+        });
+      }
     }
 
     const { success, data, message } = await Organization.createOrganization({
@@ -25,7 +37,7 @@ export const createOrganization = async (req, res) => {
       username,
       mobile,
       password,
-      logo, // Pass the full logo object with public_id and url
+      logo,
     });
 
     if (!success) {
@@ -47,7 +59,27 @@ export const deleteOrganization = async (req, res) => {
   try {
     const { orgId } = req.params;
 
-    // First delete all departments (and their users) for this organization
+    // First get the organization to access its logo public_id
+    const org = await Organization.findById(orgId);
+    if (!org) {
+      return res.status(404).json({
+        message: "Organization not found",
+        success: false,
+        data: null,
+      });
+    }
+
+    // Delete logo from Cloudinary if it exists
+    if (org.logo && org.logo.public_id) {
+      try {
+        await deleteFromCloudinary(org.logo.public_id);
+      } catch (cloudinaryError) {
+        console.error("Error deleting logo from Cloudinary:", cloudinaryError);
+        // Continue with organization deletion even if logo deletion fails
+      }
+    }
+
+    // Delete all departments (and their users) for this organization
     await Department.deleteDepartmentsByOrganization(orgId);
 
     // Then delete the organization itself

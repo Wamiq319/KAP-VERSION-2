@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -105,18 +106,24 @@ export const deleteEntity = createAsyncThunk(
 );
 
 export const updateEntityPassword = createAsyncThunk(
-  "entityManage/updatePassword",
-  async ({ entityType, id, formData }, { rejectWithValue }) => {
+  "crud/updateEntityPassword",
+  async ({ entityType, id, newPassword }, { rejectWithValue }) => {
     try {
-      const url = `${API_URL}/api/${entityType}/${id}/password`;
-      const { data, success, message } = await makeEntityRequest(
-        url,
-        "PUT",
-        formData
+      const response = await fetch(
+        `${API_URL}/api/${entityType}/${id}/password`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ newPassword }),
+          credentials: "include",
+        }
       );
-      return { entityType, id, data, success, message };
+      const { data, message, success } = await handleApiResponse(response);
+      return { data, message, success };
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || "Failed to update password");
     }
   }
 );

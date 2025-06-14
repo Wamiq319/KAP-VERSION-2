@@ -6,6 +6,7 @@ import cors from "cors";
 import organizationRoutes from "./routes/orgRoutes.js";
 import departmentRoutes from "./routes/deptRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import { testCloudinaryConfig } from "./utils/uploadCloudinary.js";
 
 dotenv.config();
 
@@ -57,6 +58,13 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// Test Cloudinary configuration
+if (!testCloudinaryConfig()) {
+  console.error(
+    "Cloudinary configuration is incomplete. Please check your .env file."
+  );
+}
 
 // Register routes
 app.use("/api/organizations", organizationRoutes);

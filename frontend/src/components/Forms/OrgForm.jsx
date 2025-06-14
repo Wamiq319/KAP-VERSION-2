@@ -1,30 +1,65 @@
 import React, { useState } from "react";
 import { InputField, ImageInput } from "../../components";
 
-const AddOrgForm = ({
-  formData = {},
-  onChange,
-  onSubmit,
-  onCancel,
-  isLoading,
-  errorMessage,
-  words,
-}) => {
+const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    adminName: "",
+    username: "",
+    mobile: "",
+    password: "",
+    type: "GOVERNMENT",
+  });
   const [logoFile, setLogoFile] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    onChange({ target: { name, value } });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleLogoChange = (file) => {
     setLogoFile(file);
-    onChange({ target: { name: "logo", value: file } });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ ...formData, logo: logoFile });
+
+    // Validate all required fields
+    const requiredFields = [
+      "name",
+      "adminName",
+      "username",
+      "mobile",
+      "password",
+      "type",
+    ];
+    const missingFields = requiredFields.filter((field) => !formData[field]);
+
+    if (missingFields.length > 0) {
+      console.error("Missing required fields:", missingFields);
+      return;
+    }
+
+    const formDataToSend = new FormData();
+
+    // Add all form fields explicitly
+    Object.keys(formData).forEach((key) => {
+      formDataToSend.append(key, formData[key]);
+    });
+
+    if (logoFile) {
+      formDataToSend.append("logo", logoFile);
+    }
+
+    console.log("Submitting form data:", {
+      ...formData,
+      hasLogo: !!logoFile,
+    });
+
+    onSubmit(formDataToSend);
   };
 
   return (
@@ -36,7 +71,7 @@ const AddOrgForm = ({
           placeholder={
             words["Enter organization name"] || "Enter organization name"
           }
-          value={formData.name || ""}
+          value={formData.name}
           onChange={handleChange}
           required
         />
@@ -45,7 +80,7 @@ const AddOrgForm = ({
           label={words["Admin Name"] || "Admin Name"}
           name="adminName"
           placeholder={words["Enter admin name"] || "Enter admin name"}
-          value={formData.adminName || ""}
+          value={formData.adminName}
           onChange={handleChange}
           required
         />
@@ -54,7 +89,7 @@ const AddOrgForm = ({
           label={words["Username"] || "Username"}
           name="username"
           placeholder={words["Enter username"] || "Enter username"}
-          value={formData.username || ""}
+          value={formData.username}
           onChange={handleChange}
           required
         />
@@ -64,7 +99,7 @@ const AddOrgForm = ({
           name="mobile"
           placeholder="+9665XXXXXXXX"
           type="tel"
-          value={formData.mobile || ""}
+          value={formData.mobile}
           onChange={handleChange}
           required
         />
@@ -74,7 +109,7 @@ const AddOrgForm = ({
           name="password"
           placeholder={words["Set a password"] || "Set a password"}
           type="password"
-          value={formData.password || ""}
+          value={formData.password}
           onChange={handleChange}
           required
         />

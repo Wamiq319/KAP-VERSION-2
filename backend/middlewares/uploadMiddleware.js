@@ -67,7 +67,7 @@ export const uploadImage = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
-}).single("logoImage");
+}).single("logo");
 
 // Middleware for uploading a SINGLE ATTACHMENT
 export const uploadAttachment = multer({
