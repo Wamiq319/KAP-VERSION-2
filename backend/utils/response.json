@@ -1,0 +1,84 @@
+{
+  "success": {
+    "CREATE": {
+      "TICKET": "Ticket created successfully",
+      "USER": "User created successfully",
+      "ORGANIZATION": "Organization created successfully",
+      "DEPARTMENT": "Department created successfully"
+    },
+    "UPDATE": {
+      "TICKET": "Ticket updated successfully",
+      "USER": "User updated successfully",
+      "ORGANIZATION": "Organization updated successfully",
+      "DEPARTMENT": "Department updated successfully",
+      "PASSWORD": "Password updated successfully"
+    },
+    "DELETE": {
+      "TICKET": "Ticket deleted successfully",
+      "USER": "User deleted successfully",
+      "ORGANIZATION": "Organization deleted successfully",
+      "DEPARTMENT": "Department deleted successfully"
+    },
+    "FETCH": {
+      "TICKET": "Tickets retrieved successfully",
+      "USER": "Users retrieved successfully",
+      "ORGANIZATION": "Organizations retrieved successfully",
+      "DEPARTMENT": "Departments retrieved successfully",
+      "LOGIN": "Login successful"
+    }
+  },
+  "error": {
+    "COMMON": {
+      "REQUIRED_FIELDS": "Required fields are missing",
+      "INTERNAL_ERROR": "Internal server error",
+      "NOT_FOUND": "Resource not found",
+      "INVALID_ID": "Invalid ID provided",
+      "UNAUTHORIZED": "Unauthorized operation",
+      "DUPLICATE": "Resource already exists"
+    },
+    "TICKET": {
+      "CREATE": "Error creating ticket",
+      "UPDATE": "Error updating ticket",
+      "DELETE": "Error deleting ticket",
+      "FETCH": "Error retrieving tickets",
+      "SCHEDULED_DATE_REQUIRED": "Scheduled date is required for scheduled tickets",
+      "INVALID_TYPE": "Invalid ticket type",
+      "INVALID_PRIORITY": "Invalid priority level",
+      "INVALID_STATUS": "Invalid ticket status"
+    },
+    "USER": {
+      "CREATE": "Error creating user",
+      "UPDATE": "Error updating user",
+      "DELETE": "Error deleting user",
+      "FETCH": "Error retrieving users",
+      "LOGIN": "Error during login",
+      "INVALID_CREDENTIALS": "Invalid credentials",
+      "USERNAME_EXISTS": "Username already exists",
+      "MOBILE_EXISTS": "Mobile number already exists",
+      "ADMIN_EXISTS": "Only one admin user is allowed",
+      "CANNOT_DELETE_ADMIN": "Cannot delete admin user",
+      "INVALID_ROLE": "Invalid user role",
+      "KAP_ROLE_REQUIRED": "KAP role is required for KAP employees"
+    },
+    "ORGANIZATION": {
+      "CREATE": "Error creating organization",
+      "UPDATE": "Error updating organization",
+      "DELETE": "Error deleting organization",
+      "FETCH": "Error retrieving organizations",
+      "NAME_EXISTS": "Organization name already exists",
+      "USERNAME_EXISTS": "Username already exists",
+      "MOBILE_EXISTS": "Mobile number already exists",
+      "INVALID_TYPE": "Invalid organization type",
+      "FILE_ERROR": "Error processing organization file",
+      "CLOUDINARY_ERROR": "Error processing organization image"
+    },
+    "DEPARTMENT": {
+      "CREATE": "Error creating department",
+      "UPDATE": "Error updating department",
+      "DELETE": "Error deleting department",
+      "FETCH": "Error retrieving departments",
+      "NAME_EXISTS": "Department name already exists for this organization",
+      "INVALID_ORG": "Invalid organization reference"
+    }
+  }
+}

@@ -1,39 +1,38 @@
 import Department from "../models/department.js";
+import {
+  handleModelResponse,
+  handleInternalError,
+  handleValidationError,
+} from "../utils/responseHandler.js";
 
 export const createDepartment = async (req, res) => {
   try {
     const { name, organization } = req.body;
 
-    const { success, data, message } = await Department.createDepartment({
+    if (!name || !organization) {
+      return res
+        .status(400)
+        .json(handleValidationError("DEPARTMENT", "REQUIRED_FIELDS"));
+    }
+
+    const response = await Department.createDepartment({
       name,
       organization,
     });
 
-    res.status(200).json({ message, success, data });
+    res.status(200).json(handleModelResponse(response, "CREATE", "DEPARTMENT"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Error creating department",
-      success: false,
-      data: [],
-    });
+    res.status(500).json(handleInternalError("DEPARTMENT", error));
   }
 };
 
 export const deleteDepartment = async (req, res) => {
   try {
     const { deptId } = req.params;
-    const { message, success, data } = await Department.deleteDepartmentById(
-      deptId
-    );
-    res.status(200).json({ message, success, data });
+    const response = await Department.deleteDepartmentById(deptId);
+    res.status(200).json(handleModelResponse(response, "DELETE", "DEPARTMENT"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to delete department",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("DEPARTMENT", error));
   }
 };
 
@@ -48,7 +47,7 @@ export const getDepartments = async (req, res) => {
       skip, // Pagination
     } = req.query;
 
-    const { success, data, message } = await Department.getDepartments({
+    const response = await Department.getDepartments({
       orgType,
       organization,
       minimal: minimal === "true", // Convert string to boolean
@@ -57,13 +56,8 @@ export const getDepartments = async (req, res) => {
       skip,
     });
 
-    res.status(200).json({ data, message, success });
+    res.status(200).json(handleModelResponse(response, "FETCH", "DEPARTMENT"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to get departments",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("DEPARTMENT", error));
   }
 };

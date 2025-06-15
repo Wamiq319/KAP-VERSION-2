@@ -1,4 +1,22 @@
 import User from "../models/user.js";
+import {
+  handleModelResponse,
+  handleInternalError,
+  handleValidationError,
+} from "../utils/responseHandler.js";
+
+// Common error messages
+const ERROR_MESSAGES = {
+  REQUIRED_FIELDS: "Required fields are missing",
+  INTERNAL_ERROR: "Internal server error while processing user",
+  MODEL_ERROR: "Error in user operation",
+  NOT_FOUND: "User not found",
+  INVALID_DATA: "Invalid user data provided",
+  DUPLICATE: "User already exists",
+  AUTH_ERROR: "Authentication failed",
+  UNAUTHORIZED: "Unauthorized operation",
+  ADMIN_ERROR: "Admin operation failed",
+};
 
 export const createUser = async (req, res) => {
   try {
@@ -15,14 +33,12 @@ export const createUser = async (req, res) => {
 
     // Validate required fields based on role
     if (role === "KAP_EMPLOYEE" && !kapRole) {
-      return res.status(400).json({
-        message: "kapRole is required for KAP employees",
-        success: false,
-        data: null,
-      });
+      return res
+        .status(400)
+        .json(handleValidationError("USER", "KAP_ROLE_REQUIRED"));
     }
 
-    const { success, data, message } = await User.createUser({
+    const response = await User.createUser({
       name,
       username,
       password,
@@ -35,60 +51,27 @@ export const createUser = async (req, res) => {
         role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? department : undefined,
     });
 
-    if (!success) {
-      // Handle specific error cases
-      if (message === "Only one admin user is allowed") {
-        return res.status(400).json({ message, success, data });
-      }
-      return res.status(400).json({ message, success, data });
-    }
-
-    res.status(201).json({ message, success, data });
+    res.status(201).json(handleModelResponse(response, "CREATE", "USER"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Error creating user",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("USER", error));
   }
 };
 
 export const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { message, success, data } = await User.deleteUserById(userId);
-
-    if (!success) {
-      // Handle specific error case for admin deletion
-      if (message === "Cannot delete admin user") {
-        return res.status(403).json({ message, success, data });
-      }
-      return res.status(400).json({ message, success, data });
-    }
-
-    res.status(200).json({ message, success, data });
+    const response = await User.deleteUserById(userId);
+    res.status(200).json(handleModelResponse(response, "DELETE", "USER"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to delete user",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("USER", error));
   }
 };
 
 export const getUsers = async (req, res) => {
   try {
-    const {
-      role, // Filter by role
-      organization, // Filter by organization ID
-      fields, // Control returned fields
-      limit, // Pagination
-      skip, // Pagination
-    } = req.query;
+    const { role, organization, fields, limit, skip } = req.query;
 
-    const { success, data, message } = await User.getUsers({
+    const response = await User.getUsers({
       role,
       organization,
       fields,
@@ -96,14 +79,9 @@ export const getUsers = async (req, res) => {
       skip,
     });
 
-    res.status(200).json({ data, message, success });
+    res.status(200).json(handleModelResponse(response, "FETCH", "USER"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to get users",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("USER", error));
   }
 };
 
@@ -113,30 +91,15 @@ export const updateUserPassword = async (req, res) => {
     const { newPassword } = req.body;
 
     if (!newPassword) {
-      return res.status(400).json({
-        message: "New password is required",
-        success: false,
-        data: null,
-      });
+      return res
+        .status(400)
+        .json(handleValidationError("USER", "REQUIRED_FIELDS"));
     }
 
-    const { success, data, message } = await User.updatePasswordById(
-      userId,
-      newPassword
-    );
-
-    if (!success) {
-      return res.status(400).json({ message, success, data });
-    }
-
-    res.status(200).json({ message, success, data });
+    const response = await User.updatePasswordById(userId, newPassword);
+    res.status(200).json(handleModelResponse(response, "UPDATE", "USER"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to update password",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("USER", error));
   }
 };
 
@@ -145,26 +108,14 @@ export const loginUser = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({
-        message: "Username and password are required",
-        success: false,
-        data: null,
-      });
+      return res
+        .status(400)
+        .json(handleValidationError("USER", "REQUIRED_FIELDS"));
     }
 
-    const { success, data, message } = await User.loginUser(username, password);
-
-    if (!success) {
-      return res.status(401).json({ message, success, data });
-    }
-
-    res.status(200).json({ message, success, data });
+    const response = await User.loginUser(username, password);
+    res.status(200).json(handleModelResponse(response, "FETCH", "USER"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Error during login",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("USER", error));
   }
 };

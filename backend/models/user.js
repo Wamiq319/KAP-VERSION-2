@@ -52,17 +52,17 @@ userSchema.statics.getUserData = function (user) {
   if (!user) return null;
 
   return {
-    id: user._id,
+    _id: user._id,
     name: user.name,
     username: user.username,
     mobile: user.mobile,
     role: user.role,
     kapRole: user.kapRole || null,
     organization: user.organization
-      ? { id: user.organization._id, name: user.organization.name }
+      ? { _id: user.organization._id, name: user.organization.name }
       : null,
     department: user.department
-      ? { id: user.department._id, name: user.department.name }
+      ? { _id: user.department._id, name: user.department.name }
       : null,
     password: user.password,
   };
@@ -102,17 +102,17 @@ userSchema.statics.getUsers = async function (options = {}) {
 
     // Format the response data
     const formattedData = data.map((user) => ({
-      id: user._id,
+      _id: user._id,
       name: user.name,
       username: user.username,
       mobile: user.mobile,
       role: user.role,
       kapRole: user.kapRole,
       organization: user.organization
-        ? { id: user.organization._id, name: user.organization.name }
+        ? { _id: user.organization._id, name: user.organization.name }
         : null,
       department: user.department
-        ? { id: user.department._id, name: user.department.name }
+        ? { _id: user.department._id, name: user.department.name }
         : null,
       password: user.password,
     }));

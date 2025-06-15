@@ -6,41 +6,18 @@ import cors from "cors";
 import organizationRoutes from "./routes/orgRoutes.js";
 import departmentRoutes from "./routes/deptRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import tktRoutes from "./routes/tktRoutes.js";
 import { testCloudinaryConfig } from "./utils/uploadCloudinary.js";
-
 dotenv.config();
 
 const app = express();
 
-// Request logging middleware
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  const method = req.method;
-  const url = req.originalUrl;
-  const ip = req.ip || req.connection.remoteAddress;
-  const userAgent = req.get("User-Agent") || "No User Agent";
+// Environment variables for logging
+const ENV = process.env.NODE_ENV || "development";
+const DEBUG = ENV === "development";
+const LOG_PREFIX = "[API]";
 
-  console.log(`
-  [${timestamp}] 
-  📡 ${method} ${url} 
-  🌐 IP: ${ip} 
-  🖥️  User-Agent: ${userAgent}
-  `);
-
-  // Log request body (except for file uploads)
-  if (req.body && Object.keys(req.body).length > 0 && !req.file) {
-    console.log("📦 Request Body:", JSON.stringify(req.body, null, 2));
-  }
-
-  // Log query parameters
-  if (req.query && Object.keys(req.query).length > 0) {
-    console.log("🔍 Query Params:", JSON.stringify(req.query, null, 2));
-  }
-
-  next();
-});
-
-// Basic middleware
+// Basic middleware first
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -52,6 +29,49 @@ app.use(
     credentials: true,
   })
 );
+
+// Request logging middleware (moved after body parsing)
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.originalUrl;
+  const ip = req.ip || req.connection.remoteAddress;
+
+  // Create a log object with only essential information
+  const logData = {
+    endpoint: url,
+    method,
+    params: req.params,
+    query: Object.keys(req.query).length > 0 ? req.query : undefined,
+    body:
+      req.body && Object.keys(req.body).length > 0 && !req.file
+        ? req.body
+        : undefined,
+  };
+
+  // Log based on environment
+  if (DEBUG) {
+    console.log(`
+${LOG_PREFIX} ===============================================
+📡 ${method} ${url}
+⏰ ${timestamp}
+🌐 IP: ${ip}
+${
+  logData.params && Object.keys(logData.params).length > 0
+    ? `📌 Params: ${JSON.stringify(logData.params, null, 2)}`
+    : ""
+}
+${logData.query ? `🔍 Query: ${JSON.stringify(logData.query, null, 2)}` : ""}
+${logData.body ? `📦 Body: ${JSON.stringify(logData.body, null, 2)}` : ""}
+===============================================
+`);
+  } else {
+    // Production logging - minimal endpoint info
+    console.log(`${LOG_PREFIX} ${method} ${url}`);
+  }
+
+  next();
+});
 
 // MongoDB connection
 mongoose
@@ -70,10 +90,33 @@ if (!testCloudinaryConfig()) {
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/tickets", tktRoutes);
 
-// Basic error handler
+// Enhanced error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  const errorLog = {
+    endpoint: req.originalUrl,
+    method: req.method,
+    error: {
+      message: err.message,
+      stack: DEBUG ? err.stack : undefined,
+    },
+  };
+
+  if (DEBUG) {
+    console.error(`
+${LOG_PREFIX} ===============================================
+❌ Error in ${errorLog.method} ${errorLog.endpoint}
+💥 Error: ${errorLog.error.message}
+${errorLog.error.stack ? `📚 Stack: ${errorLog.error.stack}` : ""}
+===============================================
+`);
+  } else {
+    console.error(
+      `${LOG_PREFIX} Error in ${errorLog.method} ${errorLog.endpoint} - ${errorLog.error.message}`
+    );
+  }
+
   res.status(500).json({
     success: false,
     message: "Internal server error",
@@ -86,6 +129,7 @@ app.listen(PORT, () => {
   console.log(`
   ===============================================
   🚀 Server running on port ${PORT}
+  🌍 Environment: ${ENV}
   Organization API: http://localhost:${PORT}/api
   ===============================================
   `);

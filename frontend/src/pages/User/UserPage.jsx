@@ -25,7 +25,7 @@ const UserPage = ({
   buttonClassName = "bg-slate-600 hover:bg-slate-700 text-white ",
   tableHeaderBgColor = "bg-slate-200",
   tableBorderColor = "border-slate-200",
-  Mode = "ADMIN",
+  Mode = "ADMIN", //ADMIN //MANAGER
 }) => {
   const dispatch = useDispatch();
   const { entities } = useSelector((state) => state.crud);

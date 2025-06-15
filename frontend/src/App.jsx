@@ -7,44 +7,21 @@ import {
 } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
-  // New V2
-  UserPage,
+  // Authentication
+  LoginPage,
+  AdminUpdatePage,
+
+  // Home/Dashboard
+  AdminHomePage,
+  DashboardHome, //role: KAP_EMPLOYEE | GOV_MANAGER | OP_MANAGER | GOV_EMPLOYEE | OP_EMPLOYEE
+
+  // Admin Management
+  UserPage, //buttonText, buttonClassName, tableHeaderBgColor, tableBorderColor, Mode: ADMIN | MANAGER
   OrganizationPage,
   DepartmentPage,
-  // Authentication Routes
-  LoginPage,
 
-  // Admin Routes
-  AdminUpdatePage,
-  AdminHomePage,
-
-  // KAP Employee Routes
-  KAPEmployeeHomePage,
-  ManageKapTicketPage,
-  TrackKapTicketPage,
-
-  // Government Employee Routes
-  GovEmployeeHomePage,
-  ManageGovTicketsEmployeePage,
-  AllGovTicketsPage,
-
-  // Integration Employee Routes
-  IntegrationEmployeeHomePage,
-
-  // Government Manager Routes
-  GovSectorManagerHomePage,
-  AddGovEmployeePage,
-  ManageTicketsGovPage,
-
-  // Operating Manager Routes
-  OperatingManagerHomePage,
-  AddCompanyEmployeePage,
-  ManageOpTicketsPage,
-
-  // Operating Employee Routes
-  OperatingEmployeeHomePage,
-  ManageTicketsEmployeePage,
-  AllOpTicketsPage,
+  // Ticket Management
+  TicketPage,
 } from "./pages";
 import Header from "./components/Header";
 
@@ -68,7 +45,7 @@ const ROLES = {
   ADMIN: "ADMIN",
   KAP_EMPLOYEE: "KAP_EMPLOYEE",
   GOV_MANAGER: "GOV_MANAGER",
-  OP_MANAGER: "OP-MANAGER",
+  OP_MANAGER: "OP_MANAGER",
   GOV_EMPLOYEE: "GOV_EMPLOYEE",
   OP_EMPLOYEE: "OP_EMPLOYEE",
 };
@@ -84,7 +61,7 @@ const App = () => {
   const direction = lang === "ar" ? "rtl" : "ltr";
 
   return (
-    <div className="h-screen overflow-y-auto  bg-gray-100" dir={direction}>
+    <div className="h-screen overflow-y-auto bg-gray-100" dir={direction}>
       <Router>
         <div className="flex flex-col align-middle">
           <Header />
@@ -125,7 +102,6 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/manage-admin-users"
                 element={
@@ -134,7 +110,6 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/manage-admin-orgs"
                 element={
@@ -143,7 +118,6 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/manage-admin-depts"
                 element={
@@ -158,7 +132,7 @@ const App = () => {
                 path="/kap-employee-home"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.KAP_EMPLOYEE]}>
-                    <KAPEmployeeHomePage />
+                    <DashboardHome role="KAP_EMPLOYEE" />
                   </ProtectedRoute>
                 }
               />
@@ -166,15 +140,7 @@ const App = () => {
                 path="/manage-kap-tickets"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.KAP_EMPLOYEE]}>
-                    <ManageKapTicketPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/track-kap-tickets"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.KAP_EMPLOYEE]}>
-                    <TrackKapTicketPage />
+                    <TicketPage mode="KAP_EMPLOYEE" />
                   </ProtectedRoute>
                 }
               />
@@ -184,7 +150,7 @@ const App = () => {
                 path="/gov-employee-home"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.GOV_EMPLOYEE]}>
-                    <GovEmployeeHomePage />
+                    <DashboardHome role="GOV_EMPLOYEE" />
                   </ProtectedRoute>
                 }
               />
@@ -192,27 +158,7 @@ const App = () => {
                 path="/manage-gov-employee-tickets"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.GOV_EMPLOYEE]}>
-                    <ManageGovTicketsEmployeePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/gov-employee-tickets"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.GOV_EMPLOYEE]}>
-                    <AllGovTicketsPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Company Employee Routes */}
-
-              {/* Integration Employee Routes */}
-              <Route
-                path="/integration-employee-home"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.INTEGRATION_EMPLOYEE]}>
-                    <IntegrationEmployeeHomePage />
+                    <TicketPage mode="GOV_EMPLOYEE" />
                   </ProtectedRoute>
                 }
               />
@@ -222,15 +168,7 @@ const App = () => {
                 path="/govsector-manager-home"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.GOV_MANAGER]}>
-                    <GovSectorManagerHomePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/add-gov-employee"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.GOV_MANAGER]}>
-                    <AddGovEmployeePage />
+                    <DashboardHome role="GOV_MANAGER" />
                   </ProtectedRoute>
                 }
               />
@@ -238,25 +176,17 @@ const App = () => {
                 path="/manage-gov-tickets"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.GOV_MANAGER]}>
-                    <ManageTicketsGovPage />
+                    <TicketPage mode="GOV_MANAGER" />
                   </ProtectedRoute>
                 }
               />
 
               {/* Operating Manager Routes */}
               <Route
-                path="/op-manager-home"
+                path="/op_manager-home"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.OP_MANAGER]}>
-                    <OperatingManagerHomePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/add-op-employee"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.OP_MANAGER]}>
-                    <AddCompanyEmployeePage />
+                    <DashboardHome role="OP_MANAGER" />
                   </ProtectedRoute>
                 }
               />
@@ -264,7 +194,7 @@ const App = () => {
                 path="/manage-op-tickets"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.OP_MANAGER]}>
-                    <ManageOpTicketsPage />
+                    <TicketPage mode="OP_MANAGER" />
                   </ProtectedRoute>
                 }
               />
@@ -274,7 +204,7 @@ const App = () => {
                 path="/op-employee-home"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.OP_EMPLOYEE]}>
-                    <OperatingEmployeeHomePage />
+                    <DashboardHome role="OP_EMPLOYEE" />
                   </ProtectedRoute>
                 }
               />
@@ -282,15 +212,7 @@ const App = () => {
                 path="/manage-op-employee-tickets"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.OP_EMPLOYEE]}>
-                    <ManageTicketsEmployeePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/op-employee-tickets"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.OP_EMPLOYEE]}>
-                    <AllOpTicketsPage />
+                    <TicketPage mode="OP_EMPLOYEE" />
                   </ProtectedRoute>
                 }
               />

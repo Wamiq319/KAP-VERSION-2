@@ -5,6 +5,7 @@ import {
   getOrganizations,
   updateOrganizationPassword,
 } from "../controllers/orgController.js";
+
 import { uploadImage } from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();

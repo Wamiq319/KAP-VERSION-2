@@ -18,6 +18,7 @@ const AdminUpdatePage = () => {
     oldPassword: "",
     newPassword: "",
   });
+  console.log(data);
 
   const [error, setError] = useState("");
 
@@ -109,7 +110,7 @@ const AdminUpdatePage = () => {
       const roleRoutes = {
         ADMIN: "/admin-home",
         GOV_MANAGER: "/govsector-manager-home",
-        OP_MANAGER: "/op-manager-home",
+        OP_MANAGER: "/op_manager-home",
         KAP_EMPLOYEE: "/kap-employee-home",
         OP_EMPLOYEE: "/op-employee-home",
         GOV_EMPLOYEE: "/gov-employee-home",

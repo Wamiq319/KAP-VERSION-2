@@ -1,14 +1,25 @@
 import Organization from "../models/organization.js";
-import {
-  uploadLogoImage,
-  deleteFromCloudinary,
-} from "../utils/uploadCloudinary.js";
+import { uploadLogoImage } from "../utils/uploadCloudinary.js";
 import Department from "../models/department.js";
+import {
+  handleModelResponse,
+  handleInternalError,
+  handleValidationError,
+} from "../utils/responseHandler.js";
 
 export const createOrganization = async (req, res) => {
   try {
     const { name, type, adminName, username, mobile, password } = req.body;
     const logoImage = req.file;
+
+    // Validate required fields
+    if (!name || !type || !adminName || !username || !mobile || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Required fields are missing",
+        data: null,
+      });
+    }
 
     // Prepare logo data object
     let logo = null;
@@ -20,17 +31,16 @@ export const createOrganization = async (req, res) => {
           public_id: uploaded.public_id,
           url: uploaded.url,
         };
-      } catch (uploadError) {
-        console.error("Logo upload error:", uploadError);
+      } catch (error) {
         return res.status(400).json({
-          message: "Failed to upload logo image",
           success: false,
+          message: "Error processing organization image",
           data: null,
         });
       }
     }
 
-    const { success, data, message } = await Organization.createOrganization({
+    const response = await Organization.createOrganization({
       name,
       type,
       adminName,
@@ -40,16 +50,28 @@ export const createOrganization = async (req, res) => {
       logo,
     });
 
-    if (!success) {
-      return res.status(400).json({ message, success, data });
+    // Ensure we have all required fields in the response
+    if (!response || typeof response !== "object") {
+      return res.status(500).json({
+        success: false,
+        message: "Invalid response from server",
+        data: null,
+      });
     }
 
-    res.status(201).json({ message, success, data });
+    // If the model response doesn't have all required fields, add them
+    const finalResponse = {
+      success: response.success ?? false,
+      message: response.message || "Organization creation failed",
+      data: response.data ?? null,
+    };
+
+    res.status(finalResponse.success ? 201 : 400).json(finalResponse);
   } catch (error) {
     console.error("Error creating organization:", error);
     res.status(500).json({
-      message: "Internal server error while creating organization",
       success: false,
+      message: "Internal server error while creating organization",
       data: null,
     });
   }
@@ -59,68 +81,35 @@ export const deleteOrganization = async (req, res) => {
   try {
     const { orgId } = req.params;
 
-    // First get the organization to access its logo public_id
-    const org = await Organization.findById(orgId);
-    if (!org) {
-      return res.status(404).json({
-        message: "Organization not found",
-        success: false,
-        data: null,
-      });
-    }
-
-    // Delete logo from Cloudinary if it exists
-    if (org.logo && org.logo.public_id) {
-      try {
-        await deleteFromCloudinary(org.logo.public_id);
-      } catch (cloudinaryError) {
-        console.error("Error deleting logo from Cloudinary:", cloudinaryError);
-        // Continue with organization deletion even if logo deletion fails
-      }
-    }
-
-    // Delete all departments (and their users) for this organization
+    // First delete all departments (and their users) for this organization
     await Department.deleteDepartmentsByOrganization(orgId);
 
     // Then delete the organization itself
-    const { message, success, data } =
-      await Organization.deleteOrganizationById(orgId);
-
-    res.status(200).json({ message, success, data });
+    const response = await Organization.deleteOrganizationById(orgId);
+    res
+      .status(200)
+      .json(handleModelResponse(response, "DELETE", "ORGANIZATION"));
   } catch (error) {
-    console.error("Error deleting organization:", error);
-    res.status(500).json({
-      message: "Failed to delete organization",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("ORGANIZATION", error));
   }
 };
 
 export const getOrganizations = async (req, res) => {
   try {
-    const {
-      type, // Filter by type
-      fields, // Control returned fields
-      limit, // Pagination
-      skip, // Pagination
-    } = req.query;
+    const { type, fields, limit, skip } = req.query;
 
-    const { success, data, message } = await Organization.getOrganizations({
+    const response = await Organization.getOrganizations({
       type,
       fields,
       limit,
       skip,
     });
 
-    res.status(200).json({ data, message, success });
+    res
+      .status(200)
+      .json(handleModelResponse(response, "FETCH", "ORGANIZATION"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to get organizations",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("ORGANIZATION", error));
   }
 };
 
@@ -129,17 +118,17 @@ export const updateOrganizationPassword = async (req, res) => {
     const { orgId } = req.params;
     const { newPassword } = req.body;
 
-    const { success, data, message } = await Organization.updatePasswordById(
-      orgId,
-      newPassword
-    );
-    res.status(200).json({ message, success, data });
+    if (!newPassword) {
+      return res
+        .status(400)
+        .json(handleValidationError("ORGANIZATION", "REQUIRED_FIELDS"));
+    }
+
+    const response = await Organization.updatePasswordById(orgId, newPassword);
+    res
+      .status(200)
+      .json(handleModelResponse(response, "UPDATE", "ORGANIZATION"));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to update password",
-      success: false,
-      data: null,
-    });
+    res.status(500).json(handleInternalError("ORGANIZATION", error));
   }
 };

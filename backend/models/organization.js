@@ -57,11 +57,15 @@ organizationSchema.statics.getOrganizations = async function (options = {}) {
     const transformedData = data.map((org) => {
       if (org.logo) {
         return {
+          _id: org._id,
           ...org,
           logoUrl: org.logo.url,
         };
       }
-      return org;
+      return {
+        _id: org._id,
+        ...org,
+      };
     });
 
     return {
@@ -95,7 +99,7 @@ organizationSchema.statics.createOrganization = async function (orgData) {
     if (await this.findOne({ username: orgData.username })) {
       return {
         success: false,
-        message: "username  already exists",
+        message: "Username already exists",
         data: null,
       };
     }
