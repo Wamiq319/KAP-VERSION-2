@@ -29,40 +29,44 @@ const TicketInfo = ({ ticket, mode }) => {
         );
       }
 
-      return notes.map((note, index) => (
-        <div
-          key={index}
-          className="bg-white rounded-lg shadow p-4 mb-4 border-l-4 border-blue-500"
-        >
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <span className="font-semibold text-gray-700">
-                {note.sender?.name || "Unknown"}
-              </span>
-              <span className="text-gray-500 text-sm ml-2">
-                ({note.sender?.role || "Unknown Role"})
-              </span>
+      return (
+        <div className="h-[300px] overflow-y-auto pr-2">
+          {notes.map((note, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow p-3 mb-3 border-l-4 border-blue-500"
+            >
+              <div className="flex justify-between items-start mb-1">
+                <div>
+                  <span className="font-semibold text-gray-700 text-sm">
+                    {note.addedBy.name || "Unknown"}
+                  </span>
+                  <span className="text-gray-500 text-xs ml-2">
+                    ({note.sender?.role || "Unknown Role"})
+                  </span>
+                </div>
+                <span className="text-xs text-gray-500">
+                  {formatDate(note.timestamp)}
+                </span>
+              </div>
+              <p className="text-gray-700 text-sm">{note.text}</p>
             </div>
-            <span className="text-sm text-gray-500">
-              {formatDate(note.timestamp)}
-            </span>
-          </div>
-          <p className="text-gray-700">{note.content}</p>
+          ))}
         </div>
-      ));
+      );
     };
 
     return (
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
             <BsClipboardData className="w-5 h-5 text-blue-500 mr-2" />
             Notes by KAP
           </h3>
           {renderNoteSection(ticket.kapNotes, "KAP Notes")}
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
             <BsPerson className="w-5 h-5 text-green-500 mr-2" />
             Notes by Organization
           </h3>
