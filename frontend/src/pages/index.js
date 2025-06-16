@@ -8,6 +8,7 @@ import UserPage from "./User/UserPage.jsx";
 import OrganizationPage from "./Admin/OrgPage.jsx";
 import DepartmentPage from "./Admin/DeptPage.jsx";
 import TicketPage from "./Ticket/TicketPage.jsx";
+import ViewTicket from "./Ticket/ViewTicket.jsx";
 
 export {
   UserPage,
@@ -16,6 +17,7 @@ export {
   LoginPage,
   AdminUpdatePage,
   TicketPage,
+  ViewTicket,
   AdminHomePage,
   DashboardHome,
 };

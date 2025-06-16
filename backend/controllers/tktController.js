@@ -1,13 +1,10 @@
 import Ticket from "../models/ticket.js";
 import {
   createErrorResponse,
-  createSuccessResponse,
+  handleModelResponse,
 } from "../utils/responseHandler.js";
 
 export const createTicket = async (req, res) => {
-  console.log("=== Starting Ticket Creation Process ===");
-  console.log("Request body:", req.body);
-
   try {
     const {
       request,
@@ -22,15 +19,6 @@ export const createTicket = async (req, res) => {
       priority,
     } = req.body;
 
-    console.log("Extracted data:", {
-      request,
-      ticketType,
-      requestor,
-      operator,
-      creator,
-      priority,
-    });
-
     // Validate required fields
     if (
       !request ||
@@ -40,17 +28,11 @@ export const createTicket = async (req, res) => {
       !creator ||
       !priority
     ) {
-      console.log("Validation failed: Missing required fields");
-      return res
-        .status(400)
-        .json(createErrorResponse("CREATE", "TICKET", "REQUIRED_FIELDS"));
+      return res.status(400).json({});
     }
 
     // Validate scheduled date for scheduled tickets
     if (ticketType === "SCHEDULED" && !scheduledDate) {
-      console.log(
-        "Validation failed: Missing scheduled date for scheduled ticket"
-      );
       return res
         .status(400)
         .json(
@@ -75,12 +57,10 @@ export const createTicket = async (req, res) => {
       priority,
     };
 
-    console.log("Prepared ticket data for model:", ticketData);
-
     const response = await Ticket.createTicket(ticketData);
-    console.log("Model response:", response);
-
-    return res.status(201).json(response);
+    return res
+      .status(201)
+      .json(handleModelResponse(response, "CREATE", "TICKET"));
   } catch (error) {
     console.error("Error in createTicket controller:", error);
     return res
@@ -89,44 +69,46 @@ export const createTicket = async (req, res) => {
   }
 };
 
-export const getTickets = async (req, res) => {
+export const getTicketById = async (req, res) => {
   try {
-    const {
-      status,
-      ticketType,
-      requestor,
-      operator,
-      priority,
-      startDate,
-      endDate,
-      fields,
-      limit,
-      skip,
-      sortBy,
-      sortOrder,
-    } = req.query;
-
-    const response = await Ticket.getTickets({
-      status,
-      ticketType,
-      requestor,
-      operator,
-      priority,
-      startDate,
-      endDate,
-      fields,
-      limit,
-      skip,
-      sortBy,
-      sortOrder,
-    });
-
+    const { ticketId } = req.params;
+    const response = await Ticket.getTicketById(ticketId);
     return res.status(200).json(response);
   } catch (error) {
-    console.error("Error in getTickets controller:", error);
+    console.error("Error in getTicketById controller:", error);
     return res
       .status(500)
-      .json(createErrorResponse("FETCH", "TICKET", "INTERNAL_ERROR"));
+      .json({ success: false, message: "Internal Server Error", data: null });
+  }
+};
+
+export const getTickets = async (req, res) => {
+  try {
+    const { userId, role, orgId, departmentId } = req.query;
+
+    if (!userId || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters: userId and role",
+        data: [],
+      });
+    }
+
+    const response = await Ticket.getTickets({
+      userId,
+      role,
+      orgId,
+      departmentId,
+    });
+
+    return res.status(response.success ? 200 : 400).json(response);
+  } catch (error) {
+    console.error("Error in getTickets controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      data: [],
+    });
   }
 };
 
@@ -134,7 +116,9 @@ export const deleteTicket = async (req, res) => {
   try {
     const { ticketId } = req.params;
     const response = await Ticket.deleteTicketById(ticketId);
-    return res.status(200).json(response);
+    return res
+      .status(200)
+      .json(handleModelResponse(response, "DELETE", "TICKET"));
   } catch (error) {
     console.error("Error in deleteTicket controller:", error);
     return res
@@ -145,14 +129,29 @@ export const deleteTicket = async (req, res) => {
 
 export const updateTicket = async (req, res) => {
   try {
-    const { ticketId } = req.params;
-    const updateData = req.body;
-    const response = await Ticket.updateTicketById(ticketId, updateData);
+    const { tktId } = req.params;
+    const { actionType, data } = req.body;
+    let response;
+    console.log(tktId);
+
+    switch (actionType) {
+      case "ADD_NOTE":
+        response = await Ticket.addNote({ Id: tktId, noteData: data });
+
+        break;
+
+      default:
+        break;
+    }
+
+    console.log(response);
     return res.status(200).json(response);
   } catch (error) {
     console.error("Error in updateTicket controller:", error);
-    return res
-      .status(500)
-      .json(createErrorResponse("UPDATE", "TICKET", "INTERNAL_ERROR"));
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+    });
   }
 };

@@ -11,6 +11,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
     type: "GOVERNMENT",
   });
   const [logoFile, setLogoFile] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,16 +19,20 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
       ...prev,
       [name]: value,
     }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleLogoChange = (file) => {
     setLogoFile(file);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const validateSaudiMobile = (number) => {
+    const saudiRegex = /^9665\d{8}$/;
+    return saudiRegex.test(number);
+  };
 
-    // Validate all required fields
+  const validateForm = () => {
+    let errors = {};
     const requiredFields = [
       "name",
       "adminName",
@@ -36,16 +41,33 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
       "password",
       "type",
     ];
-    const missingFields = requiredFields.filter((field) => !formData[field]);
 
-    if (missingFields.length > 0) {
-      console.error("Missing required fields:", missingFields);
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        errors[field] =
+          words["This field is required"] || "This field is required";
+      }
+    });
+
+    if (formData.mobile && !validateSaudiMobile(formData.mobile)) {
+      errors.mobile =
+        words["Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)"] ||
+        "Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
     const formDataToSend = new FormData();
 
-    // Add all form fields explicitly
     Object.keys(formData).forEach((key) => {
       formDataToSend.append(key, formData[key]);
     });
@@ -74,6 +96,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
           value={formData.name}
           onChange={handleChange}
           required
+          error={formErrors.name}
         />
 
         <InputField
@@ -83,6 +106,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
           value={formData.adminName}
           onChange={handleChange}
           required
+          error={formErrors.adminName}
         />
 
         <InputField
@@ -92,16 +116,18 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
           value={formData.username}
           onChange={handleChange}
           required
+          error={formErrors.username}
         />
 
         <InputField
           label={words["Mobile Number"] || "Mobile Number"}
           name="mobile"
-          placeholder="+9665XXXXXXXX"
-          type="tel"
+          placeholder="9665XXXXXXXX"
+          type="mobile"
           value={formData.mobile}
           onChange={handleChange}
           required
+          error={formErrors.mobile}
         />
 
         <InputField
@@ -112,6 +138,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
           value={formData.password}
           onChange={handleChange}
           required
+          error={formErrors.password}
         />
 
         <div className="space-y-2">
@@ -148,6 +175,9 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
               </span>
             </label>
           </div>
+          {formErrors.type && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.type}</p>
+          )}
         </div>
       </div>
 
@@ -157,7 +187,11 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
         className="mt-4"
       />
 
-      {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+      {(errorMessage || Object.keys(formErrors).length > 0) && (
+        <p className="text-red-500 text-sm">
+          {errorMessage || Object.values(formErrors).find((e) => e) || ""}
+        </p>
+      )}
 
       <div className="flex justify-end gap-2 mt-6">
         <button

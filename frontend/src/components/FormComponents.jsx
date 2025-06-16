@@ -161,6 +161,7 @@ export const Dropdown = ({
   selectedValue,
   onChange,
   className = "",
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -199,6 +200,8 @@ export const Dropdown = ({
         className={`w-full p-3 border ${
           isFocused
             ? "border-green-500 ring-1 ring-green-200 bg-green-50"
+            : error
+            ? "border-red-500 ring-1 ring-red-200"
             : "border-gray-300"
         } rounded-md cursor-pointer flex items-center justify-between transition-all duration-200`}
         onClick={() => {
@@ -237,6 +240,7 @@ export const Dropdown = ({
           </div>
         </div>
       )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
   );
 };

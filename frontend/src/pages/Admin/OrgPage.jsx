@@ -136,15 +136,6 @@ const OrganizationPage = ({
     setSelectedOrg(null);
   };
 
-  // Form handlers
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const handleCreateOrg = async (formData) => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
@@ -163,7 +154,7 @@ const OrganizationPage = ({
       } else {
         setUiState((prev) => ({
           ...prev,
-          errorMessage: words[response.message],
+          errorMessage: response.message,
         }));
       }
     } catch (error) {

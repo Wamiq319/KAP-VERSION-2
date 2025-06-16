@@ -44,16 +44,33 @@ const makeEntityRequest = async (url, method, data = null) => {
 // Generic CRUD Thunks
 export const fetchEntities = createAsyncThunk(
   "entityManage/fetchEntities",
-  async ({ entityType, params = {} }, { rejectWithValue }) => {
+  async (
+    { entityType, params = {}, id, isSingleEntity },
+    { rejectWithValue }
+  ) => {
     try {
-      const queryString = buildQueryString(params);
-      const url = `${API_URL}/api/${entityType}${
-        queryString ? `?${queryString}` : ""
-      }`;
+      let url;
+      if (isSingleEntity && id) {
+        // For single entity fetch (like a single ticket)
+        url = `${API_URL}/api/${entityType}/${id}`;
+      } else {
+        // For multiple entities fetch
+        const queryString = buildQueryString(params);
+        url = `${API_URL}/api/${entityType}${
+          queryString ? `?${queryString}` : ""
+        }`;
+      }
+
+      console.log("Fetching from URL:", url);
       const { data, success, message } = await makeEntityRequest(url, "GET");
-      return { entityType, data, success, message };
+      console.log("API Response:", { data, success, message });
+
+      return { entityType, data, success, message, isSingleEntity };
     } catch (error) {
-      return rejectWithValue(error.message);
+      console.error("Error in fetchEntities:", error);
+      return rejectWithValue({
+        message: error.message || "Failed to fetch entities",
+      });
     }
   }
 );
@@ -70,7 +87,9 @@ export const createEntity = createAsyncThunk(
       );
       return { entityType, data, success, message };
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue({
+        message: error.message || "Failed to create entity",
+      });
     }
   }
 );
@@ -87,7 +106,9 @@ export const updateEntity = createAsyncThunk(
       );
       return { entityType, id, data, success, message };
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue({
+        message: error.message || "Failed to update entity",
+      });
     }
   }
 );
@@ -100,7 +121,9 @@ export const deleteEntity = createAsyncThunk(
       const { data, success, message } = await makeEntityRequest(url, "DELETE");
       return { entityType, id, data, success, message };
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue({
+        message: error.message || "Failed to delete entity",
+      });
     }
   }
 );
@@ -123,7 +146,9 @@ export const updateEntityPassword = createAsyncThunk(
       const { data, message, success } = await handleApiResponse(response);
       return { data, message, success };
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to update password");
+      return rejectWithValue({
+        message: error.message || "Failed to update password",
+      });
     }
   }
 );
@@ -136,7 +161,9 @@ const entityManageSlice = createSlice({
       users: [],
       organizations: [],
       departments: [],
+      tickets: [],
     },
+    currentTicket: null,
     status: "idle",
     error: null,
     lastAction: null,
@@ -147,22 +174,49 @@ const entityManageSlice = createSlice({
         users: [],
         organizations: [],
         departments: [],
+        tickets: [],
       };
+      state.currentTicket = null;
       state.status = "idle";
       state.error = null;
+    },
+    setCurrentTicket: (state, action) => {
+      state.currentTicket = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      // First, add all your specific cases
       .addCase(fetchEntities.fulfilled, (state, action) => {
-        const { entityType, data } = action.payload;
-        state.entities[entityType] = data || [];
+        const { entityType, data, isSingleEntity } = action.payload;
+        if (!state.entities[entityType]) {
+          state.entities[entityType] = [];
+        }
+
+        if (isSingleEntity && entityType === "tickets") {
+          // Store the single ticket in currentTicket
+          state.currentTicket = data;
+          // Also update the tickets array if needed
+          const existingIndex = state.entities.tickets.findIndex(
+            (ticket) => ticket._id === data._id
+          );
+          if (existingIndex >= 0) {
+            state.entities.tickets[existingIndex] = data;
+          } else {
+            state.entities.tickets.push(data);
+          }
+        } else {
+          // For multiple entities, store as array
+          state.entities[entityType] = data || [];
+        }
+
         state.status = "succeeded";
         state.lastAction = "fetch";
       })
       .addCase(createEntity.fulfilled, (state, action) => {
         const { entityType, data } = action.payload;
+        if (!state.entities[entityType]) {
+          state.entities[entityType] = [];
+        }
         if (data) {
           state.entities[entityType].push(data);
         }
@@ -214,5 +268,5 @@ const entityManageSlice = createSlice({
   },
 });
 
-export const { clearEntities } = entityManageSlice.actions;
+export const { clearEntities, setCurrentTicket } = entityManageSlice.actions;
 export default entityManageSlice.reducer;

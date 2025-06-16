@@ -4,6 +4,7 @@ import {
   getTickets,
   deleteTicket,
   updateTicket,
+  getTicketById,
 } from "../controllers/tktController.js";
 
 const router = express.Router();
@@ -11,6 +12,8 @@ const router = express.Router();
 router.post("/", createTicket);
 
 router.get("/", getTickets);
+
+router.get("/:ticketId", getTicketById);
 
 router.delete("/:tktId", deleteTicket);
 

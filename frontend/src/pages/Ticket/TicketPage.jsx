@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FaTrash, FaUndo, FaSearch, FaPlus, FaEye } from "react-icons/fa";
-import { fetchEntities, deleteEntity } from "../../redux/slices/crudSlice";
+import { FaTrash, FaPlus, FaEye } from "react-icons/fa";
+import {
+  fetchEntities,
+  deleteEntity,
+  createEntity,
+} from "../../redux/slices/crudSlice";
 import {
   DataTable,
   Button,
-  InputField,
   ToastNotification,
   Modal,
   Loader,
-  Dropdown,
   ConfirmationModal,
   TicketForm,
 } from "../../components";
+import { useNavigate } from "react-router-dom";
 
 const TicketPage = ({ mode }) => {
   const dispatch = useDispatch();
   const { entities } = useSelector((state) => state.crud);
   const user = JSON.parse(localStorage.getItem("user"));
   const words = useSelector((state) => state.lang.words);
-
-  const [requestors, setRequestors] = useState([]);
-  const [operators, setOperators] = useState([]);
+  const navigate = useNavigate();
 
   const [uiState, setUiState] = useState({
     showToast: false,
@@ -39,138 +40,97 @@ const TicketPage = ({ mode }) => {
     name: "",
   });
 
-  const [filters, setFilters] = useState({
-    operator: "",
-    requestor: "",
-    status: "",
-  });
+  const tableHeaders = [
+    { key: "index", label: words["#"] },
+    { key: "ticketNumber", label: words["Ticket Number"] },
+    { key: "request", label: words["Request Type"] },
+  ];
 
-  // Role-specific configurations
-  const roleConfig = {
-    KAP_EMPLOYEE: {
-      headerBgColor: "bg-gray-200",
-      canCreate: true,
-      canDelete: true,
-      canBulkDelete: true,
-      showCreateButton: true,
-      tableHeaders: [
-        { key: "index", label: words["#"] },
-        { key: "ticketNumber", label: words["Ticket Number"] },
-        { key: "requestType", label: words["Request Type"] },
+  switch (mode) {
+    case "KAP_EMPLOYEE":
+      tableHeaders.push(
         { key: "operator", label: words["Operator"] },
-        { key: "requestor", label: words["Requestor"] },
-        { key: "startDate", label: words["Start Date"] },
-        { key: "status", label: words["Status"] },
-        { key: "actions", label: words["Actions"] },
-      ],
-    },
-    GOV_MANAGER: {
-      headerBgColor: "bg-green-200",
-      canCreate: false,
-      canDelete: false,
-      canBulkDelete: false,
-      showCreateButton: false,
-      tableHeaders: [
-        { key: "index", label: words["#"] },
-        { key: "ticketNumber", label: words["Ticket Number"] },
-        { key: "requestType", label: words["Request Type"] },
-        { key: "operator", label: words["Operator"] },
-        { key: "startDate", label: words["Start Date"] },
-        { key: "status", label: words["Status"] },
-        { key: "actions", label: words["Actions"] },
-      ],
-    },
-    OP_MANAGER: {
-      headerBgColor: "bg-blue-200",
-      canCreate: false,
-      canDelete: false,
-      canBulkDelete: false,
-      showCreateButton: false,
-      tableHeaders: [
-        { key: "index", label: words["#"] },
-        { key: "ticketNumber", label: words["Ticket Number"] },
-        { key: "requestType", label: words["Request Type"] },
-        { key: "requestor", label: words["Requestor"] },
-        { key: "startDate", label: words["Start Date"] },
-        { key: "status", label: words["Status"] },
-        { key: "actions", label: words["Actions"] },
-      ],
-    },
-    GOV_EMPLOYEE: {
-      headerBgColor: "bg-green-200",
-      canCreate: false,
-      canDelete: false,
-      canBulkDelete: false,
-      showCreateButton: false,
-      tableHeaders: [
-        { key: "index", label: words["#"] },
-        { key: "ticketNumber", label: words["Ticket Number"] },
-        { key: "requestType", label: words["Request Type"] },
-        { key: "operator", label: words["Operator"] },
-        { key: "startDate", label: words["Start Date"] },
-        { key: "status", label: words["Status"] },
-        { key: "actions", label: words["Actions"] },
-      ],
-    },
-    OP_EMPLOYEE: {
-      headerBgColor: "bg-blue-200",
-      canCreate: false,
-      canDelete: false,
-      canBulkDelete: false,
-      showCreateButton: false,
-      tableHeaders: [
-        { key: "index", label: words["#"] },
-        { key: "ticketNumber", label: words["Ticket Number"] },
-        { key: "requestType", label: words["Request Type"] },
-        { key: "requestor", label: words["Requestor"] },
-        { key: "startDate", label: words["Start Date"] },
-        { key: "status", label: words["Status"] },
-        { key: "actions", label: words["Actions"] },
-      ],
-    },
-  };
+        { key: "requestor", label: words["Requestor"] }
+      );
+      break;
+    case "OP_MANAGER ":
+    case "OP_EMPLOYEE":
+      tableHeaders.push({ key: "requestor", label: words["Requestor"] });
+      break;
+    case "GOV MANAGER":
+    case "GOV_EMPLOYEE":
+      tableHeaders.push({ key: "operator", label: words["Operator"] });
 
-  const config = roleConfig[mode];
+      break;
+  }
 
   const fetchData = async () => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
 
-      // Fetch GOVERNMENT organizations for requestors
-      const requestorResponse = await dispatch(
-        fetchEntities({
-          entityType: "organizations",
-          params: {
-            type: "GOVERNMENT",
-            fields: "name _id",
-            minimal: true,
-          },
-        })
-      );
-      setRequestors(requestorResponse.payload?.data || []);
+      let queryParams = {
+        role: mode,
+      };
 
-      // Fetch COMPANY organizations for operators
-      const operatorResponse = await dispatch(
-        fetchEntities({
-          entityType: "organizations",
-          params: {
-            type: "COMPANY",
-            fields: "name _id",
-            minimal: true,
-          },
-        })
-      );
-      setOperators(operatorResponse.payload?.data || []);
+      switch (mode) {
+        case "KAP_EMPLOYEE":
+          queryParams = {
+            ...queryParams,
+            userId: user._id,
+          };
+          break;
+
+        case "OP_MANAGER":
+          queryParams = {
+            ...queryParams,
+            organizationId: user.organizationId,
+            departmentId: user.departmentId,
+            operatorId: user.organizationId,
+          };
+          break;
+
+        case "OP_EMPLOYEE":
+          queryParams = {
+            ...queryParams,
+            organizationId: user.organizationId,
+            departmentId: user.departmentId,
+            assigneeId: user._id,
+            operatorId: user.organizationId,
+          };
+          break;
+
+        case "GOV_MANAGER":
+          queryParams = {
+            ...queryParams,
+            organizationId: user.organizationId,
+            departmentId: user.departmentId,
+            requestorId: user.organizationId,
+          };
+          break;
+
+        case "GOV_EMPLOYEE":
+          queryParams = {
+            ...queryParams,
+            organizationId: user.organizationId,
+            departmentId: user.departmentId,
+            assigneeId: user._id,
+            requestorId: user.organizationId,
+          };
+          break;
+
+        default:
+          queryParams = {
+            ...queryParams,
+            organizationId: user.organizationId,
+            departmentId: user.departmentId,
+          };
+      }
 
       // Fetch tickets
-      await dispatch(
+      const ticketResponse = await dispatch(
         fetchEntities({
           entityType: "tickets",
-          params: {
-            userRole: mode.toLowerCase(),
-            userId: user.company?.id ?? null,
-            ...filters,
-          },
+          params: queryParams,
         })
       );
     } finally {
@@ -180,25 +140,48 @@ const TicketPage = ({ mode }) => {
 
   useEffect(() => {
     fetchData();
-  }, [dispatch, filters, mode]);
+  }, [dispatch, mode]);
 
   const tableData =
-    entities?.data?.tickets?.map((item, index) => ({
+    entities?.tickets?.map((item, index) => ({
       index: index + 1,
       id: item._id,
       ticketNumber: item.ticketNumber,
-      requestType: item.requestType,
-      operator: item.operator?.name ?? "N/A",
-      requestor: item.requestor?.name ?? "N/A",
-      startDate: item.startDate
-        ? new Date(item.startDate).toLocaleDateString()
-        : "N/A",
-      status: item.status || "Pending",
+      request: item.request,
+      operator: item.operator.orgName ?? "N/A",
+      requestor: item.requestor.orgName ?? "N/A",
     })) || [];
 
   const handleSubmit = async (formData) => {
-    // This function is no longer needed as the logic is moved to TicketForm
-    console.log("Form submitted with data:", formData);
+    try {
+      setUiState((prev) => ({ ...prev, isLoading: true, errorMessage: "" }));
+
+      const response = await dispatch(
+        createEntity({
+          entityType: "tickets",
+          formData: formData,
+        })
+      ).unwrap();
+
+      if (response.success) {
+        showToast(words["Ticket created successfully"], "success");
+        closeModal();
+        await fetchData();
+      } else {
+        setUiState((prev) => ({
+          ...prev,
+          errorMessage: response.message || words["Failed to create ticket"],
+        }));
+      }
+    } catch (error) {
+      console.error("Error creating ticket:", error);
+      setUiState((prev) => ({
+        ...prev,
+        errorMessage: error.message || words["Failed to create ticket"],
+      }));
+    } finally {
+      setUiState((prev) => ({ ...prev, isLoading: false }));
+    }
   };
 
   const showToast = (message, type) => {
@@ -229,12 +212,18 @@ const TicketPage = ({ mode }) => {
   };
 
   const handleFollowUp = (ticket) => {
-    console.log("Ticket Details:", ticket);
-    // TODO: Implement navigation to ticket details page
+    const roleUrls = {
+      KAP_EMPLOYEE: `/manage-kap-tickets/view/${ticket.id}`,
+      GOV_EMPLOYEE: `/manage-gov-employee-tickets/view/${ticket.id}`,
+      GOV_MANAGER: `/manage-gov-tickets/view/${ticket.id}`,
+      OP_MANAGER: `/manage-op-tickets/view/${ticket.id}`,
+      OP_EMPLOYEE: `/manage-op-employee-tickets/view/${ticket.id}`,
+    };
+    navigate(roleUrls[mode] || `/tickets/${ticket.id}`);
   };
 
   const handleDelete = (ticket) => {
-    if (!config.canDelete) return;
+    if (mode !== "KAP_EMPLOYEE") return;
     setConfirmDelete({
       ids: [ticket.id],
       isBulk: false,
@@ -243,7 +232,7 @@ const TicketPage = ({ mode }) => {
   };
 
   const handleBulkDelete = (selectedIds) => {
-    if (!config.canBulkDelete) return;
+    if (mode !== "KAP_EMPLOYEE") return;
     if (selectedIds.length === 0) {
       showToast(words["No tickets selected"], "warning");
       return;
@@ -285,51 +274,6 @@ const TicketPage = ({ mode }) => {
     }
   };
 
-  const handleFilterChange = (name, value) => {
-    setFilters((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      operator: "",
-      requestor: "",
-      status: "",
-    });
-  };
-
-  const handleSearch = () => {
-    fetchData();
-  };
-
-  // Filter options
-  const operatorOptions = [
-    { value: "", label: words["All Operators"] || "All Operators" },
-    ...(entities.organizations
-      ?.filter((org) => org.type === "COMPANY")
-      .map((org) => ({
-        value: org._id,
-        label: org.name,
-      })) || []),
-  ];
-
-  const requestorOptions = [
-    { value: "", label: words["All Requestors"] || "All Requestors" },
-    ...(entities.organizations
-      ?.filter((org) => org.type === "GOVERNMENT")
-      .map((org) => ({
-        value: org._id,
-        label: org.name,
-      })) || []),
-  ];
-
-  const statusOptions = [
-    { value: "", label: words["All Status"] || "All Status" },
-    { value: "PENDING", label: words["Pending"] || "Pending" },
-    { value: "IN_PROGRESS", label: words["In Progress"] || "In Progress" },
-    { value: "COMPLETED", label: words["Completed"] || "Completed" },
-    { value: "CANCELLED", label: words["Cancelled"] || "Cancelled" },
-  ];
-
   // Generate buttons based on role
   const getTableButtons = () => {
     const buttons = [
@@ -341,7 +285,7 @@ const TicketPage = ({ mode }) => {
       },
     ];
 
-    if (config.canDelete) {
+    if (mode === "KAP_EMPLOYEE") {
       buttons.push({
         text: words["Remove"],
         icon: <FaTrash className="text-white" />,
@@ -355,7 +299,7 @@ const TicketPage = ({ mode }) => {
 
   // Generate bulk actions based on role
   const getBulkActions = () => {
-    if (!config.canBulkDelete) return [];
+    if (mode !== "KAP_EMPLOYEE") return [];
     return [
       {
         text: words["Remove Selected"],
@@ -394,58 +338,16 @@ const TicketPage = ({ mode }) => {
         />
       )}
 
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="flex justify-between items-center gap-2 mb-4">
+      <div className="w-full justify-center align-center">
+        {mode === "KAP_EMPLOYEE" && (
           <Button
-            text={words["Reset Filters"]}
-            onClick={resetFilters}
-            icon={<FaUndo className="h-3 w-3" />}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800"
+            text={words["Create Ticket"]}
+            onClick={openCreateModal}
+            icon={<FaPlus className="h-3 w-3" />}
+            className="bg-blue-600 hover:bg-blue-700 text-white p-"
             size="small"
           />
-          <div className="flex gap-2">
-            <Button
-              text={words["Search"]}
-              onClick={handleSearch}
-              icon={<FaSearch className="h-3 w-3" />}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              size="small"
-              isLoading={uiState.isLoading}
-            />
-            {config.showCreateButton && (
-              <Button
-                text={words["Create Ticket"]}
-                onClick={openCreateModal}
-                icon={<FaPlus className="h-3 w-3" />}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                size="small"
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <Dropdown
-            label={words["Operator"]}
-            options={operatorOptions}
-            selectedValue={filters.operator}
-            onChange={(value) => handleFilterChange("operator", value)}
-          />
-
-          <Dropdown
-            label={words["Requestor"]}
-            options={requestorOptions}
-            selectedValue={filters.requestor}
-            onChange={(value) => handleFilterChange("requestor", value)}
-          />
-
-          <Dropdown
-            label={words["Status"]}
-            options={statusOptions}
-            selectedValue={filters.status}
-            onChange={(value) => handleFilterChange("status", value)}
-          />
-        </div>
+        )}
       </div>
 
       {/* Create Ticket Modal */}
@@ -473,12 +375,13 @@ const TicketPage = ({ mode }) => {
       ) : (
         <DataTable
           heading={words["Tickets"]}
-          tableHeader={config.tableHeaders}
+          tableHeader={tableHeaders}
           tableData={tableData}
-          headerBgColor={config.headerBgColor}
+          headerBgColor="bg-gray-200"
           rowHoverEffect={true}
           bulkActions={getBulkActions()}
           buttons={getTableButtons()}
+          showProgressBar={true}
         />
       )}
     </div>

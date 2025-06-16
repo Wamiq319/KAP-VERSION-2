@@ -27,7 +27,7 @@ const UserForm = ({
   const { entities } = useSelector((state) => state.crud);
   const [localLoading, setLocalLoading] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
-  const [validationError, setValidationError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
 
   // UI state (not sent to backend)
   const [uiState, setUiState] = useState({
@@ -134,9 +134,18 @@ const UserForm = ({
     const { name, value } = e.target;
     if (name === "userType" || name === "orgType") {
       setUiState((prev) => ({ ...prev, [name]: value }));
+      // Clear specific error for the UI state field being changed
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
       // Reset dependent fields
       if (name === "userType") {
         setFormData((prev) => ({
+          ...prev,
+          kapRole: "",
+          organization: "",
+          department: "",
+          role: "",
+        }));
+        setFormErrors((prev) => ({
           ...prev,
           kapRole: "",
           organization: "",
@@ -150,11 +159,18 @@ const UserForm = ({
           department: "",
           role: "",
         }));
+        setFormErrors((prev) => ({
+          ...prev,
+          organization: "",
+          department: "",
+          role: "",
+        }));
       }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
+      // Clear specific error for the form data field being changed
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
     }
-    if (validationError) setValidationError("");
   };
 
   const handleDropdownChange = (name, value) => {
@@ -165,55 +181,89 @@ const UserForm = ({
       // Reset dependent fields
       if (name === "organization") {
         setFormData((prev) => ({ ...prev, department: "" }));
+        setFormErrors((prev) => ({ ...prev, department: "" }));
       }
     }
-    if (validationError) setValidationError("");
+    // Clear specific error for the dropdown field
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  // Helper function to validate Saudi mobile number format
+  const validateSaudiMobile = (number) => {
+    const saudiRegex = /^9665\d{8}$/;
+    return saudiRegex.test(number);
   };
 
   const validateForm = () => {
-    const requiredFields = ["name", "username", "mobile", "password", "role"];
-    const missingFields = requiredFields.filter((field) => !formData[field]);
+    let errors = {};
+    const requiredFields = ["name", "username", "mobile", "password"];
 
-    if (missingFields.length) {
-      return `${
-        words["Please fill all required fields"] ||
-        "Please fill all required fields"
-      }: ${missingFields.join(", ")}`;
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        errors[field] =
+          words["This field is required"] || "This field is required";
+      }
+    });
+
+    // Validate mobile number format
+    if (formData.mobile && !validateSaudiMobile(formData.mobile)) {
+      errors.mobile =
+        words["Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)"] ||
+        "Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)";
     }
 
     if (!uiState.userType) {
-      return words["Please select user type"] || "Please select user type";
+      errors.userType =
+        words["Please select user type"] || "Please select user type";
     }
 
     if (uiState.userType === "KAP_EMPLOYEE" && !formData.kapRole) {
-      return words["Please select a KAP Role"] || "Please select a KAP Role";
+      errors.kapRole =
+        words["Please select a KAP Role"] || "Please select a KAP Role";
     }
 
     if (uiState.userType === "ORG_EMPLOYEE") {
       if (!uiState.orgType)
-        return (
+        errors.orgType =
           words["Please select organization type"] ||
-          "Please select organization type"
-        );
+          "Please select organization type";
       if (!formData.organization)
-        return (
+        errors.organization =
           words["Please select an organization"] ||
-          "Please select an organization"
-        );
+          "Please select an organization";
       if (!uiState.selectedRole)
-        return words["Please select a role"] || "Please select a role";
+        errors.selectedRole =
+          words["Please select a role"] || "Please select a role";
+      if (!formData.department && formData.organization)
+        // Department is required if an organization is selected
+        errors.department =
+          words["Please select a department"] || "Please select a department";
     }
 
-    return "";
+    // Ensure the final 'role' is set, as it's derived
+    if (
+      !formData.role &&
+      (uiState.userType === "KAP_EMPLOYEE" ||
+        (uiState.userType === "ORG_EMPLOYEE" &&
+          uiState.orgType &&
+          uiState.selectedRole))
+    ) {
+      // This case should ideally not happen if other fields are valid and useEffect runs correctly,
+      // but as a safeguard, we check if a derived role is missing.
+      errors.role =
+        words["A role must be assigned"] || "A role must be assigned";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const error = validateForm();
-    if (error) {
-      setValidationError(error);
+    if (!validateForm()) {
       return;
     }
+    // No need to clear errors here explicitly, as validateForm sets the full error object
     onSubmit(formData);
   };
 
@@ -246,6 +296,7 @@ const UserForm = ({
           onChange={handleChange}
           required
           className="w-full"
+          error={formErrors.name}
         />
 
         <InputField
@@ -256,6 +307,7 @@ const UserForm = ({
           onChange={handleChange}
           required
           className="w-full"
+          error={formErrors.username}
         />
       </div>
 
@@ -263,12 +315,12 @@ const UserForm = ({
         <InputField
           label={words["Mobile Number"]}
           name="mobile"
-          placeholder="+9665XXXXXXXX"
-          type="tel"
+          placeholder="9665XXXXXXXX"
+          type="mobile"
           value={formData.mobile}
           onChange={handleChange}
           required
-          className="w-full"
+          error={formErrors.mobile}
         />
 
         <InputField
@@ -280,6 +332,7 @@ const UserForm = ({
           onChange={handleChange}
           required
           className="w-full"
+          error={formErrors.password}
         />
       </div>
 
@@ -318,6 +371,9 @@ const UserForm = ({
             </span>
           </label>
         </div>
+        {formErrors.userType && (
+          <p className="mt-1 text-sm text-red-600">{formErrors.userType}</p>
+        )}
       </div>
 
       {/* KAP Employee Fields - full width */}
@@ -330,6 +386,7 @@ const UserForm = ({
             onChange={(value) => handleDropdownChange("kapRole", value)}
             required
             className="w-full"
+            error={formErrors.kapRole}
           />
         </div>
       )}
@@ -372,6 +429,9 @@ const UserForm = ({
                 </span>
               </label>
             </div>
+            {formErrors.orgType && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.orgType}</p>
+            )}
           </div>
 
           {/* Organization Dropdown - full width on mobile, normal on desktop */}
@@ -387,6 +447,7 @@ const UserForm = ({
                 required
                 isLoading={localLoading}
                 className="w-full"
+                error={formErrors.organization}
               />
             </div>
           )}
@@ -403,6 +464,7 @@ const UserForm = ({
                 }
                 required
                 className="w-full"
+                error={formErrors.selectedRole}
               />
             </div>
           )}
@@ -418,6 +480,7 @@ const UserForm = ({
                 required
                 isLoading={localLoading}
                 className="w-full"
+                error={formErrors.department}
               />
             </div>
           )}
@@ -428,18 +491,23 @@ const UserForm = ({
       {process.env.NODE_ENV === "development" && (
         <div className="col-span-1 md:col-span-2 p-2 bg-gray-100 rounded">
           <p className="text-sm">
-            <strong>UI State:</strong> {JSON.stringify(uiState)}
-            <br />
-            <strong>Form Data:</strong> {JSON.stringify(formData)}
+            <strong>UI State:</strong>{" "}
+            <pre className="whitespace-pre-wrap text-xs">
+              {JSON.stringify(uiState, null, 2)}
+            </pre>
+            <strong>Form Data:</strong>{" "}
+            <pre className="whitespace-pre-wrap text-xs">
+              {JSON.stringify(formData, null, 2)}
+            </pre>
           </p>
         </div>
       )}
 
       {/* Error display - always full width */}
-      {(errorMessage || validationError) && (
+      {(errorMessage || Object.keys(formErrors).length > 0) && (
         <div className="col-span-1 md:col-span-2">
           <p className="text-red-500 text-sm">
-            {errorMessage || validationError}
+            {errorMessage || Object.values(formErrors).find((e) => e) || ""}
           </p>
         </div>
       )}

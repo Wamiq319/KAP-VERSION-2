@@ -22,6 +22,7 @@ import {
 
   // Ticket Management
   TicketPage,
+  ViewTicket,
 } from "./pages";
 import Header from "./components/Header";
 
@@ -144,6 +145,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/manage-kap-tickets/view/:id"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.KAP_EMPLOYEE]}>
+                    <ViewTicket mode="KAP_EMPLOYEE" />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Government Employee Routes */}
               <Route
@@ -159,6 +168,14 @@ const App = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.GOV_EMPLOYEE]}>
                     <TicketPage mode="GOV_EMPLOYEE" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/manage-gov-employee-tickets/view/:id"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.GOV_EMPLOYEE]}>
+                    <ViewTicket mode="GOV_EMPLOYEE" />
                   </ProtectedRoute>
                 }
               />
@@ -180,6 +197,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/manage-gov-tickets/view/:id"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.GOV_MANAGER]}>
+                    <ViewTicket mode="GOV_MANAGER" />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Operating Manager Routes */}
               <Route
@@ -198,6 +223,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/manage-op-tickets/view/:id"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.OP_MANAGER]}>
+                    <ViewTicket mode="OP_MANAGER" />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Operating Employee Routes */}
               <Route
@@ -213,6 +246,32 @@ const App = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.OP_EMPLOYEE]}>
                     <TicketPage mode="OP_EMPLOYEE" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/manage-op-employee-tickets/view/:id"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.OP_EMPLOYEE]}>
+                    <ViewTicket mode="OP_EMPLOYEE" />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Ticket View Route - Handles all roles */}
+              <Route
+                path="/tickets/:id"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={[
+                      ROLES.KAP_EMPLOYEE,
+                      ROLES.GOV_EMPLOYEE,
+                      ROLES.GOV_MANAGER,
+                      ROLES.OP_MANAGER,
+                      ROLES.OP_EMPLOYEE,
+                    ]}
+                  >
+                    <ViewTicket mode={user?.role} />
                   </ProtectedRoute>
                 }
               />

@@ -38,13 +38,18 @@ const priorityOptions = [
   },
 ];
 
-const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
+const TicketForm = ({
+  initialFormData = defaultFormData,
+  onCancel,
+  onSubmit,
+  words,
+}) => {
   const dispatch = useDispatch();
-  const { entities } = useSelector((state) => state.crud);
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState(initialFormData);
-  const [validationError, setValidationError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
 
   // Organization state variables
   const [requestorOrganizations, setRequestorOrganizations] = useState([]);
@@ -93,7 +98,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
           setOperatorOrganizations(companyResponse.payload.data);
         }
       } catch (error) {
-        console.error("Error fetching organizations:", error);
+        setErrorMessage("Failed to fetch organizations");
       }
     };
     fetchData();
@@ -135,7 +140,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
           }
         }
       } catch (error) {
-        console.error("Error fetching departments:", error);
+        setErrorMessage("Failed to fetch departments");
       }
     };
     fetchDepartments();
@@ -144,21 +149,23 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (validationError) setValidationError("");
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleDropdownChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Reset dependent fields
     if (name === "requestor") {
       setFormData((prev) => ({ ...prev, requestorDepartment: "" }));
+      setFormErrors((prev) => ({ ...prev, requestorDepartment: "" }));
     } else if (name === "operator") {
       setFormData((prev) => ({ ...prev, operatorDepartment: "" }));
+      setFormErrors((prev) => ({ ...prev, operatorDepartment: "" }));
     }
-    if (validationError) setValidationError("");
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
+    let errors = {};
     const requiredFields = [
       "request",
       "ticketType",
@@ -169,55 +176,59 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
     if (formData.ticketType === "SCHEDULED") {
       requiredFields.push("scheduledDate");
     }
-    const missingFields = requiredFields.filter((field) => !formData[field]);
 
-    if (missingFields.length) {
-      return `${
-        words["Please fill all required fields"] ||
-        "Please fill all required fields"
-      }: ${missingFields.join(", ")}`;
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        errors[field] =
+          words["This field is required"] || "This field is required";
+      }
+    });
+
+    if (formData.requestor && !formData.requestorDepartment) {
+      errors.requestorDepartment =
+        words["This field is required"] || "This field is required";
+    }
+    if (formData.operator && !formData.operatorDepartment) {
+      errors.operatorDepartment =
+        words["This field is required"] || "This field is required";
     }
 
-    return "";
+    if (formData.ticketType === "SCHEDULED") {
+      const scheduledDate = new Date(formData.scheduledDate);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      if (scheduledDate < now) {
+        errors.scheduledDate =
+          words["Scheduled date must be in the future"] ||
+          "Scheduled date must be in the future";
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const error = validateForm();
-    if (error) {
-      setValidationError(error);
+    if (!validateForm()) {
       return;
     }
+
+    // Clean up form data before submission
+    const cleanedFormData = {
+      ...formData,
+      request: formData.request.trim(),
+      description: formData.description.trim(),
+      requestorDepartment: formData.requestorDepartment?.trim() || undefined,
+      operatorDepartment: formData.operatorDepartment?.trim() || undefined,
+    };
 
     try {
       setIsLoading(true);
       setErrorMessage("");
-
-      console.log("Submitting ticket data:", formData);
-
-      const response = await dispatch(
-        createEntity({
-          entityType: "tickets",
-          params: {
-            method: "POST",
-            data: formData,
-          },
-        })
-      ).unwrap();
-
-      console.log("Ticket creation response:", response);
-
-      if (response.success) {
-        // Reset form
-        setFormData(defaultFormData);
-        setValidationError("");
-        onCancel(); // Close modal
-      } else {
-        setErrorMessage(response.message || "Failed to create ticket");
-      }
+      onSubmit(cleanedFormData);
     } catch (error) {
-      console.error("Error creating ticket:", error);
-      setErrorMessage(error.message || "Failed to create ticket");
+      setErrorMessage(error.message || "Failed to submit form");
     } finally {
       setIsLoading(false);
     }
@@ -236,29 +247,18 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
   }));
 
   // Department options - Update to show correct departments based on selection
-  const departmentOptions = formData.requestor
-    ? requestorDepartments.map((dept) => ({
-        value: dept._id,
-        label: dept.name,
-      }))
-    : formData.operator
-    ? operatorDepartments.map((dept) => ({
-        value: dept._id,
-        label: dept.name,
-      }))
-    : [];
-
-  // Debug logging in development
-  if (process.env.NODE_ENV === "development") {
-    console.log("Processed Options:", {
-      requestorOptions,
-      operatorOptions,
-      requestorOrganizations,
-      operatorOrganizations,
-      requestorDepartments,
-      operatorDepartments,
-    });
-  }
+  const departmentOptions =
+    formData.requestor && requestorDepartments.length > 0
+      ? requestorDepartments.map((dept) => ({
+          value: dept._id,
+          label: dept.name,
+        }))
+      : formData.operator && operatorDepartments.length > 0
+      ? operatorDepartments.map((dept) => ({
+          value: dept._id,
+          label: dept.name,
+        }))
+      : [];
 
   return (
     <form
@@ -270,33 +270,51 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
         <div className="col-span-1 md:col-span-2 p-2 bg-gray-100 rounded">
           <p className="text-sm">
             <strong>Requestor Data:</strong>{" "}
-            {JSON.stringify(
-              {
-                organizations: requestorOrganizations,
-                departments: requestorDepartments,
-                selectedOrg: formData.requestor,
-                selectedDept: formData.requestorDepartment,
-              },
-              null,
-              2
-            )}
+            <pre className="whitespace-pre-wrap text-xs">
+              {JSON.stringify(
+                {
+                  organizations: requestorOrganizations,
+                  departments: requestorDepartments,
+                  selectedOrg: formData.requestor,
+                  selectedDept: formData.requestorDepartment,
+                },
+                null,
+                2
+              )}
+            </pre>
             <br />
             <strong>Operator Data:</strong>{" "}
-            {JSON.stringify(
-              {
-                organizations: operatorOrganizations,
-                departments: operatorDepartments,
-                selectedOrg: formData.operator,
-                selectedDept: formData.operatorDepartment,
-              },
-              null,
-              2
-            )}
+            <pre className="whitespace-pre-wrap text-xs">
+              {JSON.stringify(
+                {
+                  organizations: operatorOrganizations,
+                  departments: operatorDepartments,
+                  selectedOrg: formData.operator,
+                  selectedDept: formData.operatorDepartment,
+                },
+                null,
+                2
+              )}
+            </pre>
             <br />
             <strong>User:</strong>{" "}
-            {JSON.stringify(JSON.parse(localStorage.getItem("user")), null, 2)}
+            <pre className="whitespace-pre-wrap text-xs">
+              {JSON.stringify(
+                JSON.parse(localStorage.getItem("user")),
+                null,
+                2
+              )}
+            </pre>
             <br />
-            <strong>Form Data:</strong> {JSON.stringify(formData, null, 2)}
+            <strong>Form Data:</strong>{" "}
+            <pre className="whitespace-pre-wrap text-xs">
+              {JSON.stringify(formData, null, 2)}
+            </pre>
+            <br />
+            <strong>Form Errors:</strong>{" "}
+            <pre className="whitespace-pre-wrap text-xs">
+              {JSON.stringify(formErrors, null, 2)}
+            </pre>
           </p>
         </div>
       )}
@@ -311,6 +329,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
           onChange={handleChange}
           required
           className="w-full"
+          error={formErrors.request}
         />
 
         {/* Ticket Type Radio Buttons */}
@@ -331,6 +350,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
                 checked={formData.ticketType === "INSTANT"}
                 onChange={handleChange}
                 className="mr-2"
+                required
               />
               {words["Instant"] || "Instant"}
             </label>
@@ -346,6 +366,9 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
               {words["Scheduled"] || "Scheduled"}
             </label>
           </div>
+          {formErrors.ticketType && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.ticketType}</p>
+          )}
         </div>
 
         {/* Priority Selection */}
@@ -372,6 +395,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
                   checked={formData.priority === option.value}
                   onChange={handleChange}
                   className="mr-2"
+                  required
                 />
                 <span className="flex items-center gap-1">
                   {option.icon}
@@ -380,6 +404,9 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
               </label>
             ))}
           </div>
+          {formErrors.priority && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.priority}</p>
+          )}
         </div>
       </div>
 
@@ -394,6 +421,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
           required={false}
           type="textarea"
           className="w-full h-full"
+          error={formErrors.description}
         />
       </div>
 
@@ -407,6 +435,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
           required
           className="w-full"
           minDate={new Date()} // Can't schedule in the past
+          error={formErrors.scheduledDate}
         />
       )}
 
@@ -419,6 +448,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
         required
         isLoading={false}
         className="w-full"
+        error={formErrors.requestor}
       />
 
       {formData.requestor && (
@@ -432,6 +462,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
           required
           isLoading={false}
           className="w-full"
+          error={formErrors.requestorDepartment}
         />
       )}
 
@@ -444,6 +475,7 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
         required
         isLoading={false}
         className="w-full"
+        error={formErrors.operator}
       />
 
       {formData.operator && (
@@ -457,14 +489,15 @@ const TicketForm = ({ initialFormData = defaultFormData, onCancel, words }) => {
           required
           isLoading={false}
           className="w-full"
+          error={formErrors.operatorDepartment}
         />
       )}
 
       {/* Error display */}
-      {(errorMessage || validationError) && (
+      {(errorMessage || Object.keys(formErrors).length > 0) && (
         <div className="col-span-1 md:col-span-2">
           <p className="text-red-500 text-sm">
-            {errorMessage || validationError}
+            {errorMessage || Object.values(formErrors).find((e) => e) || ""}
           </p>
         </div>
       )}

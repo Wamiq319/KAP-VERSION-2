@@ -10,35 +10,52 @@ const PasswordUpdateForm = ({
   oldPassword,
 }) => {
   const [passwordData, setPasswordData] = React.useState({
-    oldPassword: oldPassword,
+    oldPassword: oldPassword || "",
     newPassword: "",
     confirmPassword: "",
   });
+  const [formErrors, setFormErrors] = React.useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validateForm = () => {
+    let errors = {};
+    const requiredFields = ["oldPassword", "newPassword", "confirmPassword"];
+
+    requiredFields.forEach((field) => {
+      if (!passwordData[field]) {
+        errors[field] =
+          words["This field is required"] || "This field is required";
+      }
+    });
+
+    if (
+      passwordData.newPassword &&
+      passwordData.confirmPassword &&
+      passwordData.newPassword !== passwordData.confirmPassword
+    ) {
+      errors.confirmPassword =
+        words["Passwords don't match"] || "Passwords don't match";
+    }
+
+    if (passwordData.newPassword && passwordData.newPassword.length < 8) {
+      errors.newPassword =
+        words["Password must be at least 8 characters"] ||
+        "Password must be at least 8 characters";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (
-      !passwordData.oldPassword ||
-      !passwordData.newPassword ||
-      !passwordData.confirmPassword
-    ) {
-      onSubmit({
-        error:
-          words["Please complete all fields"] || "Please complete all fields",
-      });
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      onSubmit({
-        error: words["Passwords don't match"] || "Passwords don't match",
-      });
+    if (!validateForm()) {
       return;
     }
 
@@ -60,6 +77,7 @@ const PasswordUpdateForm = ({
         value={passwordData.oldPassword}
         onChange={handleChange}
         required
+        error={formErrors.oldPassword}
       />
       <InputField
         label={words["New Password"] || "New Password"}
@@ -72,6 +90,7 @@ const PasswordUpdateForm = ({
         value={passwordData.newPassword}
         onChange={handleChange}
         required
+        error={formErrors.newPassword}
       />
       <InputField
         label={words["Confirm Password"] || "Confirm Password"}
@@ -81,9 +100,14 @@ const PasswordUpdateForm = ({
         value={passwordData.confirmPassword}
         onChange={handleChange}
         required
+        error={formErrors.confirmPassword}
       />
 
-      {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+      {(errorMessage || Object.keys(formErrors).length > 0) && (
+        <p className="text-red-500 text-sm">
+          {errorMessage || Object.values(formErrors).find((e) => e) || ""}
+        </p>
+      )}
 
       <div className="flex justify-end gap-2">
         <Button

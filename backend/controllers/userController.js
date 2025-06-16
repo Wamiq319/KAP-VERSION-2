@@ -38,6 +38,12 @@ export const createUser = async (req, res) => {
         .json(handleValidationError("USER", "KAP_ROLE_REQUIRED"));
     }
 
+    if (!name || !username || !password || !mobile || !role) {
+      return res
+        .status(400) // Bad Request for any missing core fields
+        .json(handleValidationError("USER", "REQUIRED_FIELDS"));
+    }
+
     const response = await User.createUser({
       name,
       username,
@@ -48,11 +54,32 @@ export const createUser = async (req, res) => {
       organization:
         role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? organization : undefined,
       department:
-        role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? department : undefined,
+        role !== "KAP_EMPLOYEE" &&
+        role !== "ADMIN" &&
+        role !== "GOV_MANAGER" &&
+        role !== "OP_MANAGER"
+          ? department
+          : undefined,
     });
 
-    res.status(201).json(handleModelResponse(response, "CREATE", "USER"));
+    if (response.success) {
+      // If user creation was successful
+      res.status(201).json(handleModelResponse(response, "CREATE", "USER"));
+    } else {
+      // If user creation failed due to business logic (e.g., duplicate username/mobile, admin limit)
+      let statusCode = 400; // Default to Bad Request
+      if (
+        response.message.includes("already exists") ||
+        response.message.includes("admin user is allowed")
+      ) {
+        statusCode = 409; // Use 409 Conflict for duplicate resource or specific conflict
+      }
+      res
+        .status(statusCode)
+        .json(handleModelResponse(response, "CREATE", "USER"));
+    }
   } catch (error) {
+    console.error("Error in createUser controller:", error); // Log the actual error for debugging
     res.status(500).json(handleInternalError("USER", error));
   }
 };
