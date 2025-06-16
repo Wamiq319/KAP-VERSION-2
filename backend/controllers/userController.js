@@ -96,11 +96,12 @@ export const deleteUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const { role, organization, fields, limit, skip } = req.query;
+    const { role, organization, department, fields, limit, skip } = req.query;
 
     const response = await User.getUsers({
       role,
       organization,
+      department,
       fields,
       limit,
       skip,

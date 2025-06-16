@@ -74,6 +74,7 @@ userSchema.statics.getUsers = async function (options = {}) {
     const {
       role = null,
       organization = null,
+      department = null,
       fields = null,
       limit = null,
       skip = null,
@@ -98,7 +99,7 @@ userSchema.statics.getUsers = async function (options = {}) {
       .limit(Number(limit) || 0)
       .skip(Number(skip) || 0)
       .populate("organization", "name _id")
-      .populate("department", "name _id");
+      .populate("department", "name _id logo");
 
     // Format the response data
     const formattedData = data.map((user) => ({
@@ -109,7 +110,11 @@ userSchema.statics.getUsers = async function (options = {}) {
       role: user.role,
       kapRole: user.kapRole,
       organization: user.organization
-        ? { _id: user.organization._id, name: user.organization.name }
+        ? {
+            _id: user.organization._id,
+            name: user.organization.name,
+            logo: user.organization.logo.url,
+          }
         : null,
       department: user.department
         ? { _id: user.department._id, name: user.department.name }
@@ -195,7 +200,7 @@ userSchema.statics.createUser = async function (userData) {
 userSchema.statics.loginUser = async function (username, password) {
   try {
     const user = await this.findOne({ username })
-      .populate("organization", "name _id")
+      .populate("organization", "name _id logo type adminName")
       .populate("department", "name _id");
 
     if (!user) {
@@ -215,10 +220,39 @@ userSchema.statics.loginUser = async function (username, password) {
       };
     }
 
+    // Get organization details if user has an organization
+    let organizationDetails = null;
+    if (user.organization) {
+      organizationDetails = {
+        _id: user.organization._id,
+        name: user.organization.name,
+        type: user.organization.type,
+        adminName: user.organization.adminName,
+        logo: user.organization.logo
+          ? {
+              url: user.organization.logo.url,
+            }
+          : null,
+      };
+    }
+
+    // Return user data with organization details
     return {
       success: true,
       message: "Login successful",
-      data: this.getUserData(user),
+      data: {
+        _id: user._id,
+        name: user.name,
+        username: user.username,
+        mobile: user.mobile,
+        role: user.role,
+        kapRole: user.kapRole || null,
+        organization: organizationDetails,
+        department: user.department
+          ? { _id: user.department._id, name: user.department.name }
+          : null,
+        password: user.password,
+      },
     };
   } catch (error) {
     console.error("Error during login:", error);

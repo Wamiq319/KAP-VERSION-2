@@ -434,8 +434,9 @@ ticketSchema.statics.getTicketById = async function (ticketId) {
       .populate("assignments.requestor.user", "name _id role department")
       .populate("assignments.operator.user", "name _id role department")
       .populate("progress.updatedBy", "name role department")
-      .populate("kapNotes.addedBy", "name role")
+      .populate("kapNotes.addedBy", "name kapRole")
       .populate("orgNotes.addedBy", "name role")
+      .populate("kapNotes.targetOrg", "name _id")
       .lean();
 
     if (!ticket) {
@@ -456,11 +457,11 @@ ticketSchema.statics.getTicketById = async function (ticketId) {
 
       requestor: {
         orgName: ticket.requestor?.org?.name || null,
-        departmentName: ticket.requestor?.department?.name || null,
+        orgId: ticket.requestor?.org?._id || null,
       },
       operator: {
         orgName: ticket.operator?.org?.name || null,
-        departmentName: ticket.operator?.department?.name || null,
+        orgId: ticket.operator?.org?._id || null,
       },
       assignments: {
         requestor: {
@@ -473,8 +474,6 @@ ticketSchema.statics.getTicketById = async function (ticketId) {
         operator: {
           user: {
             name: ticket.assignments?.operator?.user?.name || null,
-            department:
-              ticket.assignments?.operator?.user?.department?.name || null,
           },
           status: ticket.assignments?.operator?.status || null,
           assignedAt: ticket.assignments?.operator?.assignedAt || null,
@@ -487,18 +486,19 @@ ticketSchema.statics.getTicketById = async function (ticketId) {
           updatedBy: {
             name: p.updatedBy?.name || null,
             role: p.updatedBy?.role?.split("_")[0] || null,
-            department: p.updatedBy?.department?.name || null,
           },
           updatedAt: p.updatedAt,
         })) || [],
       kapNotes:
         ticket.kapNotes?.map((note) => ({
           text: note.text,
-          targetOrg: note.targetOrg,
+          targetOrg: {
+            name: note.targetOrg?.name || null,
+            id: note.targetOrg?._id || null,
+          },
           addedBy: {
             name: note.addedBy?.name || null,
             role: note.addedBy?.kapRole || null,
-            department: note.addedBy?.department?.name || null,
           },
           createdAt: note.createdAt,
         })) || [],
@@ -508,7 +508,6 @@ ticketSchema.statics.getTicketById = async function (ticketId) {
           addedBy: {
             name: note.addedBy?.name || null,
             role: note.addedBy?.role?.split("_")[0] || null,
-            department: note.addedBy?.department?.name || null,
           },
           createdAt: note.createdAt,
         })) || [],

@@ -246,19 +246,16 @@ const TicketForm = ({
     label: org.name,
   }));
 
-  // Department options - Update to show correct departments based on selection
-  const departmentOptions =
-    formData.requestor && requestorDepartments.length > 0
-      ? requestorDepartments.map((dept) => ({
-          value: dept._id,
-          label: dept.name,
-        }))
-      : formData.operator && operatorDepartments.length > 0
-      ? operatorDepartments.map((dept) => ({
-          value: dept._id,
-          label: dept.name,
-        }))
-      : [];
+  // Replace the single departmentOptions with separate options for requestor and operator
+  const requestorDepartmentOptions = requestorDepartments.map((dept) => ({
+    value: dept._id,
+    label: dept.name,
+  }));
+
+  const operatorDepartmentOptions = operatorDepartments.map((dept) => ({
+    value: dept._id,
+    label: dept.name,
+  }));
 
   return (
     <form
@@ -451,10 +448,11 @@ const TicketForm = ({
         error={formErrors.requestor}
       />
 
+      {/* Requestor Department Dropdown */}
       {formData.requestor && (
         <Dropdown
           label={words["Requestor Department"] || "Requestor Department"}
-          options={departmentOptions}
+          options={requestorDepartmentOptions}
           selectedValue={formData.requestorDepartment}
           onChange={(value) =>
             handleDropdownChange("requestorDepartment", value)
@@ -478,10 +476,11 @@ const TicketForm = ({
         error={formErrors.operator}
       />
 
+      {/* Operator Department Dropdown */}
       {formData.operator && (
         <Dropdown
           label={words["Operator Department"] || "Operator Department"}
-          options={departmentOptions}
+          options={operatorDepartmentOptions}
           selectedValue={formData.operatorDepartment}
           onChange={(value) =>
             handleDropdownChange("operatorDepartment", value)

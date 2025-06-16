@@ -19,43 +19,80 @@ const TicketInfo = ({ ticket, mode }) => {
       .join(" ");
   };
   console.log("Current Ticket In Ticket View:", ticket);
-  const renderNotes = () => {
-    const renderNoteSection = (notes, title, icon) => {
-      if (!notes || notes.length === 0) {
-        return (
-          <div className="text-gray-500 italic">
-            No {title.toLowerCase()} available
-          </div>
-        );
-      }
+  const renderKapNotes = () => {
+    if (!ticket.kapNotes || ticket.kapNotes.length === 0) {
+      return <div className="text-gray-500 italic">No KAP notes available</div>;
+    }
 
-      return (
-        <div className="h-[300px] overflow-y-auto pr-2">
-          {notes.map((note, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-lg shadow p-3 mb-3 border-l-4 border-blue-500"
-            >
-              <div className="flex justify-between items-start mb-1">
-                <div>
-                  <span className="font-semibold text-gray-700 text-sm">
-                    {note.addedBy.name || "Unknown"}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    ({note.sender?.role || "Unknown Role"})
-                  </span>
-                </div>
-                <span className="text-xs text-gray-500">
-                  {formatDate(note.timestamp)}
+    return (
+      <div className="h-[300px] overflow-y-auto pr-2">
+        {ticket.kapNotes.map((note, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-lg shadow p-3 mb-3 border-l-4 border-blue-500"
+          >
+            <div className="flex justify-between items-start mb-1">
+              <div>
+                <span className="font-semibold text-gray-700 text-sm">
+                  {note.addedBy.name || "Unknown"}
+                </span>
+                <span className="text-gray-500 text-xs ml-2">
+                  ({note.addedBy?.role || "Unknown Role"})
                 </span>
               </div>
-              <p className="text-gray-700 text-sm">{note.text}</p>
+              <span className="text-xs text-gray-500">
+                {formatDate(note.createdAt)}
+              </span>
             </div>
-          ))}
+            <div className="mb-2">
+              <span className="text-xs text-gray-500">
+                Target Organization: {note.targetOrg?.name || "N/A"}
+              </span>
+            </div>
+            <p className="text-gray-700 text-sm">{note.text}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderOrgNotes = () => {
+    if (!ticket.orgNotes || ticket.orgNotes.length === 0) {
+      return (
+        <div className="text-gray-500 italic">
+          No organization notes available
         </div>
       );
-    };
+    }
 
+    return (
+      <div className="h-[300px] overflow-y-auto pr-2">
+        {ticket.orgNotes.map((note, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-lg shadow p-3 mb-3 border-l-4 border-green-500"
+          >
+            <div className="flex justify-between items-start mb-1">
+              <div>
+                <span className="font-semibold text-gray-700 text-sm">
+                  {note.addedBy.name || "Unknown"}
+                </span>
+                <span className="text-gray-500 text-xs ml-2">
+                  ({note.addedBy?.role || "Unknown Role"})
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">
+                {formatDate(note.createdAt)}
+              </span>
+            </div>
+            <p className="text-gray-700 text-sm">{note.text}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderNotes = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-50 p-4 rounded-lg">
@@ -63,14 +100,14 @@ const TicketInfo = ({ ticket, mode }) => {
             <BsClipboardData className="w-5 h-5 text-blue-500 mr-2" />
             Notes by KAP
           </h3>
-          {renderNoteSection(ticket.kapNotes, "KAP Notes")}
+          {renderKapNotes()}
         </div>
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
             <BsPerson className="w-5 h-5 text-green-500 mr-2" />
             Notes by Organization
           </h3>
-          {renderNoteSection(ticket.orgNotes, "Organization Notes")}
+          {renderOrgNotes()}
         </div>
       </div>
     );
@@ -126,16 +163,15 @@ const TicketInfo = ({ ticket, mode }) => {
   return (
     <div className="space-y-6">
       {/* Development Raw Data */}
-      {process.env.NODE_ENV === "development" && (
+      {import.meta.env.VITE_MODE === "development" && (
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-500">
-              Development Data :: Mode ::{mode}
+              Development Data :: Ticket Info
             </h3>
             <button
               onClick={() => {
-                const dataStr = JSON.stringify(ticket, null, 2);
-                navigator.clipboard.writeText(dataStr);
+                navigator.clipboard.writeText(JSON.stringify(ticket, null, 2));
               }}
               className="text-xs text-blue-500 hover:text-blue-600"
             >

@@ -10,12 +10,16 @@ const DashboardHome = ({ role }) => {
   const { data } = useSelector((state) => state.auth);
   const words = useSelector((state) => state.lang.words);
 
+  // Get user data from localStorage
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+
   // Role-specific configurations
   const roleConfig = {
     KAP_EMPLOYEE: {
       title: words["Kap Employee Dashboard"] || "Kap Employee Dashboard",
-      logo: logo,
-      name: data?.jobTitle,
+      logo: userData?.organization?.logo?.url || logo,
+      name: userData?.organization?.name || "KAP",
+      department: userData?.department?.name || "KAP Department",
       buttons: [
         {
           text: words["Manage Tickets"] || "Manage Tickets",
@@ -27,12 +31,13 @@ const DashboardHome = ({ role }) => {
     GOV_MANAGER: {
       title:
         words["Government Manager Dashboard"] || "Government Manager Dashboard",
-      logo: data?.sector?.logo,
-      name: data?.sector?.name,
+      logo: userData?.organization?.logo?.url || logo,
+      name: userData?.organization?.name || "Organization",
+      department: userData?.department?.name || "Department",
       buttons: [
         {
           text: words["Manage Employees"] || "Manage Employees",
-          path: "/add-gov-employee",
+          path: "/manage-gov-users",
           className:
             "w-full bg-orange-600 hover:bg-orange-700 text-lg font-semibold py-3 shadow",
         },
@@ -47,8 +52,9 @@ const DashboardHome = ({ role }) => {
     OP_MANAGER: {
       title:
         words["Operating Manager Dashboard"] || "Operating Manager Dashboard",
-      logo: data?.company?.logo,
-      name: data?.company?.name,
+      logo: userData?.organization?.logo?.url || logo,
+      name: userData?.organization?.name || "Organization",
+      department: userData?.department?.name || "Department",
       buttons: [
         {
           text: words["Manage Employees"] || "Manage Employees",
@@ -67,8 +73,9 @@ const DashboardHome = ({ role }) => {
       title:
         words["Government Employee Dashboard"] ||
         "Government Employee Dashboard",
-      logo: data?.sector?.logo,
-      name: data?.sector?.name,
+      logo: userData?.organization?.logo?.url || logo,
+      name: userData?.organization?.name || "Organization",
+      department: userData?.department?.name || "Department",
       buttons: [
         {
           text: words["All Tickets"] || "All Tickets",
@@ -87,8 +94,9 @@ const DashboardHome = ({ role }) => {
     OP_EMPLOYEE: {
       title:
         words["Operating Employee Dashboard"] || "Operating Employee Dashboard",
-      logo: data?.entity?.logo,
-      name: data?.entity?.name,
+      logo: userData?.organization?.logo?.url || logo,
+      name: userData?.organization?.name || "Organization",
+      department: userData?.department?.name || "Department",
       buttons: [
         {
           text: words["All Tickets"] || "All Tickets",
@@ -112,6 +120,33 @@ const DashboardHome = ({ role }) => {
 
   return (
     <div className="flex flex-col items-center justify-center bg-gray-100 p-4">
+      {/* Development Mode Raw Data Display */}
+      {import.meta.env.VITE_MODE === "development" && (
+        <div className="w-full max-w-4xl mb-6">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-gray-500">
+                Development Data :: User Object :: {import.meta.env.VITE_MODE}
+              </h3>
+              <button
+                onClick={() => {
+                  const userData = localStorage.getItem("user");
+                  navigator.clipboard.writeText(userData);
+                }}
+                className="text-xs text-blue-500 hover:text-blue-600"
+              >
+                Copy
+              </button>
+            </div>
+            <div className="border rounded p-2 overflow-auto max-h-52">
+              <pre className="text-xs text-gray-600">
+                {JSON.stringify(userData, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Control Panel Box */}
       <div className="bg-gray-300 p-6 rounded-lg shadow-lg max-w-md md:max-w-lg lg:max-w-xl space-y-6">
         <div className="flex flex-col items-center gap-4 mb-8">
@@ -119,14 +154,17 @@ const DashboardHome = ({ role }) => {
             <img
               src={config.logo}
               alt="Organization Logo"
-              className="h-32 w-32 rounded-full"
+              className="h-32 w-32 rounded-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null; // Prevent infinite loop
+                e.target.src = logo; // Fallback to default logo
+              }}
             />
           </div>
 
           <div className="text-center">
-            <h4 className="text-2xl font-bold text-gray-800">
-              {config.name || "Organization"}
-            </h4>
+            <h4 className="text-2xl font-bold text-gray-800">{config.name}</h4>
+            <p className="text-lg text-gray-600">{config.department}</p>
             {data?.role && (
               <p className="text-sm text-gray-500 mt-1">{config.title}</p>
             )}

@@ -137,6 +137,7 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/manage-kap-tickets"
                 element={
@@ -202,6 +203,14 @@ const App = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.GOV_MANAGER]}>
                     <ViewTicket mode="GOV_MANAGER" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/manage-gov-users"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.GOV_MANAGER]}>
+                    <UserPage Mode="MANAGER" />
                   </ProtectedRoute>
                 }
               />

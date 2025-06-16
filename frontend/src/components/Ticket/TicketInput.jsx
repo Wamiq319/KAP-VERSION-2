@@ -58,20 +58,37 @@ const TicketInput = ({
   return (
     <>
       {/* Debug view - only in development */}
-      {process.env.NODE_ENV === "development" && (
+      {import.meta.env.VITE_MODE === "development" && (
         <div className="p-2 bg-gray-100 rounded mb-4">
-          <strong>Input Data:</strong>{" "}
-          <pre className="whitespace-pre-wrap text-xs">
-            {JSON.stringify(inputData)}
-          </pre>
-          <strong>User:</strong>{" "}
-          <pre className="whitespace-pre-wrap text-xs">
-            {JSON.stringify(
-              typeof user === "string" ? JSON.parse(user) : user,
-              null,
-              2
-            )}
-          </pre>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-500">
+              Development Data :: Ticket Input
+            </h3>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  JSON.stringify(inputData, null, 2)
+                );
+              }}
+              className="text-xs text-blue-500 hover:text-blue-600"
+            >
+              Copy
+            </button>
+          </div>
+          <div className="space-y-2">
+            <div>
+              <strong>Input Data:</strong>
+              <pre className="whitespace-pre-wrap text-xs">
+                {JSON.stringify(inputData, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <strong>User:</strong>
+              <pre className="whitespace-pre-wrap text-xs">
+                {JSON.stringify(user, null, 2)}
+              </pre>
+            </div>
+          </div>
         </div>
       )}
 
