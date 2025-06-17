@@ -367,29 +367,28 @@ const TicketInfo = ({ ticket, mode }) => {
         </div>
 
         {/* Assignments */}
-        {mode !== "KAP_EMPLOYEE" && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Assignments
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Requestor</p>
-                <p className="font-medium">{ticket.requestor?.name || "N/A"}</p>
-                <p className="text-sm text-gray-500">
-                  {ticket.requestor?.role || "Unknown Role"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Operator</p>
-                <p className="font-medium">{ticket.operator?.name || "N/A"}</p>
-                <p className="text-sm text-gray-500">
-                  {ticket.operator?.role || "Unknown Role"}
-                </p>
-              </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Assignments
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Requestor</p>
+              <p className="font-medium">{ticket.requestor?.name || "N/A"}</p>
+              <p className="text-sm text-gray-500">
+                {ticket.requestor?.role || "Unknown Role"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Operator</p>
+              <p className="font-medium">{ticket.operator?.name || "N/A"}</p>
+              <p className="text-sm text-gray-500">
+                {ticket.operator?.role || "Unknown Role"}
+              </p>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Transfer History Section */}
         <div className="bg-white rounded-lg shadow p-6 w-full h-52 flex flex-col">

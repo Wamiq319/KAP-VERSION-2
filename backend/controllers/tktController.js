@@ -152,15 +152,23 @@ export const updateTicket = async (req, res) => {
         response = await Ticket.addNote({
           Id: tktId,
           noteData: data,
-          userId: userId,
+          addedBy: userId,
         });
         break;
 
-      case "ACCEPT_TICKET":
-        response = await Ticket.updateStatus({
+      case "ADD_PROGRESS":
+        if (data.percentage < 20 || data.percentage > 100) {
+          return res.status(400).json({
+            success: false,
+            message: "Progress percentage must be between 20% and 100%",
+            data: null,
+          });
+        }
+
+        response = await Ticket.updateProgress({
           Id: tktId,
-          progrssData: data,
-          userId: userId,
+          progressData: data,
+          addedBy: userId,
         });
         break;
 
@@ -168,7 +176,7 @@ export const updateTicket = async (req, res) => {
         response = await Ticket.updateStatus({
           Id: tktId,
           newStatus: data.newStatus,
-          userId: userId,
+          updatedBy: userId,
         });
         break;
 

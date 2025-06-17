@@ -164,7 +164,7 @@ const ViewTicket = ({ mode }) => {
       console.log("Ticket ID:", currentTicket._id);
       console.log("Submitting payload:", payload);
 
-      await dispatch(
+      const response = await dispatch(
         updateEntity({
           entityType: "tickets",
           id: currentTicket._id,
@@ -172,10 +172,23 @@ const ViewTicket = ({ mode }) => {
         })
       );
 
-      handleCloseInput();
-      refreshTicket();
+      // Add detailed logging
+      console.log("Full response:", response);
+      console.log("Response payload:", response.payload);
+      console.log("Response success:", response.payload?.success);
+
+      // If the response is successful, proceed
+      if (response.payload?.success) {
+        handleCloseInput();
+        refreshTicket();
+      } else {
+        throw new Error(
+          response.payload?.message || "Failed to update progress"
+        );
+      }
     } catch (error) {
       console.error("Action failed:", error);
+      alert("Failed to update progress. Please try again.");
     }
   };
 

@@ -193,7 +193,14 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
       .populate("createdBy", "name _id role kapRole")
       .populate("assignments.requestor.user", "name _id role department")
       .populate("assignments.operator.user", "name _id role department")
-      .populate("progress.updatedBy", "name role department")
+      .populate({
+        path: "progress.updatedBy",
+        select: "name role department",
+        populate: {
+          path: "department",
+          select: "name",
+        },
+      })
       .populate("kapNotes.addedBy", "name kapRole")
       .populate("orgNotes.addedBy", "name role")
       .populate("kapNotes.targetOrg", "name _id")
@@ -275,25 +282,21 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
           percentage: p.percentage,
           observation: p.observation,
           updatedBy: {
-            id: p.updatedBy?._id,
             name: p.updatedBy?.name,
             role: p.updatedBy?.role,
-            department: p.updatedBy?.department,
+            department: p.updatedBy?.department?.name || null,
           },
           updatedAt: p.updatedAt,
         })) || [],
 
       kapNotes:
         ticket.kapNotes?.map((note) => ({
-          id: note._id,
           text: note.text,
           addedBy: {
-            id: note.addedBy?._id,
             name: note.addedBy?.name,
             role: note.addedBy?.kapRole,
           },
           targetOrg: {
-            id: note.targetOrg?._id,
             name: note.targetOrg?.name,
           },
           createdAt: note.createdAt,
@@ -363,7 +366,7 @@ ticketSchema.statics.createTicket = async function (ticketData) {
 
 ticketSchema.statics.addNote = async function (data) {
   try {
-    const { Id, noteData, userId } = data;
+    const { Id, noteData, addedBy } = data;
 
     const ticket = await this.findById(Id);
     if (!ticket) {
@@ -374,7 +377,7 @@ ticketSchema.statics.addNote = async function (data) {
       };
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(addedBy);
     if (!user) {
       return {
         data: null,
@@ -385,7 +388,7 @@ ticketSchema.statics.addNote = async function (data) {
 
     const note = {
       text: noteData.text,
-      addedBy: userId,
+      addedBy: addedBy,
       createdAt: new Date(),
     };
 
@@ -433,9 +436,11 @@ ticketSchema.statics.addNote = async function (data) {
   }
 };
 
-ticketSchema.statics.updateProgress = async function (ticketId, progressData) {
+ticketSchema.statics.updateProgress = async function (data) {
   try {
-    const ticket = await this.findById(ticketId);
+    const { Id, progressData, addedBy } = data;
+    const ticket = await this.findById(Id);
+
     if (!ticket) {
       return createErrorResponse("UPDATE", "TICKET", "NOT_FOUND");
     }
@@ -443,7 +448,7 @@ ticketSchema.statics.updateProgress = async function (ticketId, progressData) {
     const progress = {
       percentage: progressData.percentage,
       observation: progressData.observation,
-      updatedBy: progressData.addedBy,
+      updatedBy: addedBy,
       updatedAt: new Date(),
     };
 
@@ -451,10 +456,7 @@ ticketSchema.statics.updateProgress = async function (ticketId, progressData) {
     ticket.updatedAt = new Date();
     await ticket.save();
 
-    const updatedTicket = await this.findById(ticketId).populate(
-      "progress.updatedBy",
-      "name role department"
-    );
+    const updatedTicket = this.getFormattedTicket(Id);
 
     return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
   } catch (error) {
@@ -464,7 +466,7 @@ ticketSchema.statics.updateProgress = async function (ticketId, progressData) {
 };
 
 ticketSchema.statics.updateStatus = async function (data) {
-  const { Id, newStatus, userId } = data;
+  const { Id, newStatus, addedBy } = data;
   try {
     // 1. Get the ticket
 
@@ -516,7 +518,7 @@ ticketSchema.statics.updateStatus = async function (data) {
     ticket.updatedAt = new Date();
 
     if (newStatus === "COMPLETED") {
-      ticket.closedBy = userId;
+      ticket.closedBy = addedBy;
       ticket.endDate = new Date();
     } else if (newStatus === "IN_PROGRESS") {
       ticket.startDate = ticket.startDate || new Date();

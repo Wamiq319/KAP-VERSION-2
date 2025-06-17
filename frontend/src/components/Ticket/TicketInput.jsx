@@ -11,7 +11,6 @@ const TicketInput = ({
   const userId = user._id;
 
   const progressOptions = [
-    { value: 0, label: "0%" },
     { value: 20, label: "20%" },
     { value: 40, label: "40%" },
     { value: 60, label: "60%" },
@@ -38,7 +37,14 @@ const TicketInput = ({
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Create a new object to send, cleaning up irrelevant fields
+    // Update validation to check for 20-100 range
+    if (type === "PROGRESS") {
+      if (inputData.percentage < 20 || inputData.percentage > 100) {
+        alert("Progress percentage must be between 20% and 100%");
+        return;
+      }
+    }
+
     const dataToSend = {
       ...inputData,
       type,
