@@ -525,7 +525,7 @@ ticketSchema.statics.updateStatus = async function (data) {
     await ticket.save();
 
     // 8. Return formatted response
-    const updatedTicket = await this.getFormattedTicket(ticketId);
+    const updatedTicket = await this.getFormattedTicket(Id);
     return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
   } catch (error) {
     console.error("Error updating status:", error);

@@ -185,6 +185,27 @@ const ViewTicket = ({ mode }) => {
     setInputTarget(null);
   };
 
+  const handleStartWork = async () => {
+    try {
+      await dispatch(
+        updateEntity({
+          entityType: "tickets",
+          id: currentTicket._id,
+          formData: {
+            actionType: "UPDATE_STATUS",
+            data: {
+              newStatus: "IN_PROGRESS",
+            },
+            userId: currentUser._id,
+          },
+        })
+      );
+      refreshTicket();
+    } catch (error) {
+      console.error("Start work error:", error);
+    }
+  };
+
   if (status === "loading") {
     return <Loader fullScreen />;
   }
@@ -258,6 +279,7 @@ const ViewTicket = ({ mode }) => {
           onTransferTicket={handleTransfer}
           onTransferRequest={handleTransferRequest}
           onPrint={() => window.print()}
+          onStartWork={handleStartWork}
         />
       </div>
 

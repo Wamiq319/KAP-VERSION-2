@@ -18,6 +18,7 @@ const TicketActions = ({
   onAcceptTicket,
   onTransferRequest,
   onPrint,
+  onStartWork,
 }) => {
   // Disable conditions based on ticket status
   const isClosed = ticket.status === "CLOSED";
@@ -96,6 +97,15 @@ const TicketActions = ({
                       disabled={isTransferRequested}
                     />
                   </>
+                )}
+                {mode === "OP_MANAGER" && ticket.status === "ACCEPTED" && (
+                  <Button
+                    text="Start Work"
+                    onClick={onStartWork}
+                    className="bg-yellow-600 hover:bg-yellow-700"
+                    icon={<FaCheck />}
+                    size="medium"
+                  />
                 )}
               </>
             )}
