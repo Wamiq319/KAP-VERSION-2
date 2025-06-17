@@ -108,9 +108,10 @@ const TicketPage = ({ mode }) => {
         case "GOV_MANAGER":
           queryParams = {
             ...queryParams,
-            organizationId: user.organizationId,
-            departmentId: user.departmentId,
-            requestorId: user.organizationId,
+            // organizationId: user.organization._id,
+            userId: user._id,
+            departmentId: user.department._id,
+            // operatorId: user.organizationId,
           };
           break;
 

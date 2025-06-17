@@ -96,6 +96,14 @@ const TicketActions = ({
                       size="medium"
                       disabled={isTransferRequested}
                     />
+                    <Button
+                      text="Close Ticket"
+                      onClick={onCloseTicket}
+                      className="bg-red-600 hover:bg-red-700"
+                      icon={<FaTimes />}
+                      size="medium"
+                      disabled={isTransferRequested}
+                    />
                   </>
                 )}
                 {mode === "OP_MANAGER" && ticket.status === "ACCEPTED" && (
