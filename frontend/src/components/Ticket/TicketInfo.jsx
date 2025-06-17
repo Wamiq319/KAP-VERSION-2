@@ -162,30 +162,6 @@ const TicketInfo = ({ ticket, mode }) => {
 
   return (
     <div className="space-y-6">
-      {/* Development Raw Data */}
-      {import.meta.env.VITE_MODE === "development" && (
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-500">
-              Development Data :: Ticket Info
-            </h3>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(JSON.stringify(ticket, null, 2));
-              }}
-              className="text-xs text-blue-500 hover:text-blue-600"
-            >
-              Copy
-            </button>
-          </div>
-          <div className="border rounded p-2 overflow-auto max-h-52">
-            <pre className="text-xs text-gray-600">
-              {JSON.stringify(ticket, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
-
       {/* Basic Information */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">

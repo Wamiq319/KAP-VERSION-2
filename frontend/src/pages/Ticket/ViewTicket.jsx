@@ -1,17 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEntities, updateEntity } from "../../redux/slices/crudSlice";
-import TicketActions from "../../components/Ticket/TicketActions";
-import TicketInfo from "../../components/Ticket/TicketInfo";
-import TicketInput from "../../components/Ticket/TicketInput";
+import {
+  TicketActions,
+  TicketInfo,
+  Loader,
+  Modal,
+  TicketInput,
+} from "../../components";
 import { formatDate } from "../../utils/dateUtils";
-import Loader from "../../components/Loader";
-import Modal from "../../components/Modal";
+import { useCallback } from "react";
 
 const ViewTicket = ({ mode }) => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const [currentUser, setCurrentUser] = useState(null);
   const [showInput, setShowInput] = useState(false);
   const [inputType, setInputType] = useState(null);
   const [inputTarget, setInputTarget] = useState(null);
@@ -19,6 +24,11 @@ const ViewTicket = ({ mode }) => {
   const { currentTicket, status, error } = useSelector((state) => state.crud);
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    setCurrentUser(user);
+  }, []);
+
+  const refreshTicket = useCallback(() => {
     if (id) {
       dispatch(
         fetchEntities({
@@ -26,20 +36,18 @@ const ViewTicket = ({ mode }) => {
           id,
           isSingleEntity: true,
         })
-      )
-        .then((response) => {
-          // Keep this log as it shows the direct response from the fetch action
-          console.log("Ticket fetch response:", response);
-        })
-        .catch((error) => {
-          console.error("Ticket fetch error:", error);
-        });
+      );
     }
   }, [dispatch, id]);
 
-  const handleAddNote = (type, target) => {
+  useEffect(() => {
+    refreshTicket();
+  }, [refreshTicket]);
+
+  // Action Handlers
+  const handleAddNote = (noteType) => {
     setInputType("NOTE");
-    setInputTarget(target);
+    setInputTarget(noteType); // "KAP_NOTE" or "ORG_NOTE"
     setShowInput(true);
   };
 
@@ -48,142 +56,253 @@ const ViewTicket = ({ mode }) => {
     setShowInput(true);
   };
 
+  const handleAcceptTicket = async () => {
+    try {
+      await dispatch(
+        updateEntity({
+          entityType: "tickets",
+          id: currentTicket._id,
+          formData: {
+            actionType: "UPDATE_STATUS",
+            data: {
+              newStatus: "ACCEPTED",
+              assignedTo: currentUser.id,
+            },
+            userId: currentUser._id,
+          },
+        })
+      );
+      refreshTicket();
+    } catch (error) {
+      console.error("Accept ticket error:", error);
+    }
+  };
+
+  const handleCloseTicket = async () => {
+    try {
+      await dispatch(
+        updateEntity({
+          entityType: "tickets",
+          id: currentTicket._id,
+          formData: {
+            actionType: "UPDATE_STATUS",
+            data: {
+              newStatus: "CLOSED",
+              reason: "Closed by user",
+            },
+            userId: currentUser.id,
+          },
+        })
+      );
+      refreshTicket();
+    } catch (error) {
+      console.error("Close ticket error:", error);
+    }
+  };
+
+  const handleTransfer = (transferType) => {
+    setInputType("TRANSFER");
+    setInputTarget(transferType);
+    setShowInput(true);
+  };
+
+  const handleTransferRequest = (requestType) => {
+    setInputType("TRANSFER_REQUEST");
+    setInputTarget(requestType);
+    setShowInput(true);
+  };
+
+  const handleSubmitInput = async (data) => {
+    try {
+      let payload = {
+        actionType: "",
+        data: {},
+        userId: currentUser._id,
+      };
+
+      switch (inputType) {
+        case "NOTE":
+          payload.actionType = "ADD_NOTE";
+          payload.data = {
+            text: data.text,
+            targetOrg: data.targetOrg,
+            noteType: inputTarget,
+          };
+          break;
+
+        case "PROGRESS":
+          payload.actionType = "ADD_PROGRESS";
+          payload.data = {
+            percentage: data.percentage,
+            observation: data.observation,
+          };
+          break;
+
+        case "TRANSFER":
+          payload.actionType = "TRANSFER_TICKET";
+          payload.data = {
+            targetType: inputTarget,
+            targetId: data.targetId,
+            reason: data.reason,
+          };
+          break;
+
+        case "TRANSFER_REQUEST":
+          payload.actionType = "OPEN_TRANSFER_REQUEST";
+          payload.data = {
+            requestType: inputTarget,
+            targetId: data.targetId,
+            reason: data.reason,
+          };
+          break;
+
+        default:
+          throw new Error("Invalid action type");
+      }
+
+      // Debug logging
+      console.log("Ticket ID:", currentTicket._id);
+      console.log("Submitting payload:", payload);
+
+      await dispatch(
+        updateEntity({
+          entityType: "tickets",
+          id: currentTicket._id,
+          formData: payload,
+        })
+      );
+
+      handleCloseInput();
+      refreshTicket();
+    } catch (error) {
+      console.error("Action failed:", error);
+    }
+  };
+
   const handleCloseInput = () => {
     setShowInput(false);
     setInputType(null);
     setInputTarget(null);
   };
 
-  const handleSubmitInput = async (data) => {
-    try {
-      let actionType;
-      let payload = {};
-
-      switch (data.type) {
-        case "NOTE":
-          actionType = "ADD_NOTE";
-          payload = {
-            text: data.text,
-            targetOrg: data.targetOrg,
-            addedBy: data.addedBy,
-          };
-          break;
-
-        case "PROGRESS":
-          actionType = "ADD_PROGRESS";
-          payload = {
-            text: data.text,
-            observation: data.observation,
-            percentage: data.percentage,
-            addedBy: data.addedBy,
-          };
-          break;
-
-        default:
-          throw new Error("Invalid input type.");
-      }
-
-      const updatePayload = {
-        actionType,
-        data: payload,
-      };
-
-      console.log("Data prepared for backend update:", updatePayload);
-
-      await dispatch(
-        updateEntity({
-          entityType: "tickets",
-          id: currentTicket._id,
-          formData: updatePayload,
-        })
-      );
-
-      handleCloseInput();
-
-      // Refresh the ticket
-      await dispatch(
-        fetchEntities({
-          entityType: "tickets",
-          id,
-          isSingleEntity: true,
-        })
-      );
-    } catch (error) {
-      console.error("Error submitting input:", error);
-    }
-  };
-
   if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader />
-      </div>
-    );
+    return <Loader fullScreen />;
   }
 
   if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500">Error: {error}</div>
-      </div>
-    );
+    return <div className="error-message">Error: {error}</div>;
   }
 
   if (!currentTicket) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-500">Ticket not found</div>
-      </div>
-    );
+    return <div className="empty-state">Ticket not found</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="ticket-container">
+      {/* Development Raw Data */}
+      {import.meta.env.VITE_MODE === "development" && (
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-500">
+              Development Data :: View Ticket
+            </h3>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  JSON.stringify(
+                    {
+                      ticket: currentTicket,
+                      currentUser: currentUser,
+                      mode: mode,
+                    },
+                    null,
+                    2
+                  )
+                );
+              }}
+              className="text-xs text-blue-500 hover:text-blue-600"
+            >
+              Copy
+            </button>
+          </div>
+          <div className="border rounded p-2 overflow-auto max-h-52">
+            <pre className="text-xs text-gray-600">
+              {JSON.stringify(
+                {
+                  ticket: currentTicket,
+                  currentUser: currentUser,
+                  mode: mode,
+                },
+                null,
+                2
+              )}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      <div className="ticket-header">
+        <h1>Ticket Details</h1>
+        <p>View and manage ticket information</p>
+      </div>
+
+      {/* Top Actions Bar */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Ticket Details</h1>
-        <p className="text-gray-600">View and manage ticket information</p>
+        <TicketActions
+          ticket={currentTicket}
+          mode={mode}
+          onAddNote={handleAddNote}
+          onAddProgress={handleAddProgress}
+          onAcceptTicket={handleAcceptTicket}
+          onCloseTicket={handleCloseTicket}
+          onTransferTicket={handleTransfer}
+          onTransferRequest={handleTransferRequest}
+          onPrint={() => window.print()}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-3">
-          <TicketInfo
-            ticket={currentTicket}
-            formatDate={formatDate}
-            mode={mode}
-          />
-        </div>
-
-        {/* Actions Sidebar */}
-        <div className="lg:col-span-1">
-          <TicketActions
-            ticket={currentTicket}
-            mode={mode}
-            onAddNote={handleAddNote}
-            onAddProgress={handleAddProgress}
-          />
-        </div>
+      {/* Main Content */}
+      <div className="ticket-main-content">
+        <TicketInfo
+          ticket={currentTicket}
+          formatDate={formatDate}
+          mode={mode}
+        />
       </div>
 
-      {/* Input Modal */}
       <Modal
         isOpen={showInput}
         onClose={handleCloseInput}
-        title={inputType === "NOTE" ? "Add New Note" : "Update Ticket Progress"}
+        title={getModalTitle(inputType)}
         size="md"
       >
         <TicketInput
           type={inputType}
+          targetType={inputTarget}
           userRole={mode}
-          requestorId={currentTicket.requestor?._id}
-          operatorId={currentTicket.operator?._id}
-          ticketId={currentTicket._id}
+          ticket={currentTicket}
           onClose={handleCloseInput}
           onSubmit={handleSubmitInput}
         />
       </Modal>
     </div>
   );
+};
+
+// Helper function for modal titles
+const getModalTitle = (type) => {
+  switch (type) {
+    case "NOTE":
+      return "Add Note";
+    case "PROGRESS":
+      return "Update Progress";
+    case "TRANSFER":
+      return "Transfer Ticket";
+    case "TRANSFER_REQUEST":
+      return "Request Transfer";
+    default:
+      return "";
+  }
 };
 
 export default ViewTicket;

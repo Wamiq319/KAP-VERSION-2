@@ -23,6 +23,7 @@ const TicketPage = ({ mode }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const words = useSelector((state) => state.lang.words);
   const navigate = useNavigate();
+  console.log(user);
 
   const [uiState, setUiState] = useState({
     showToast: false,
@@ -44,6 +45,10 @@ const TicketPage = ({ mode }) => {
     { key: "index", label: words["#"] },
     { key: "ticketNumber", label: words["Ticket Number"] },
     { key: "request", label: words["Request Type"] },
+    { key: "operator", label: words["Operator"] },
+    { key: "requestor", label: words["Requestor"] },
+    { key: "reqDepartment", label: "RequestorDept" },
+    { key: "optDepartment", label: "OperatorDept" },
   ];
 
   switch (mode) {
@@ -83,9 +88,10 @@ const TicketPage = ({ mode }) => {
         case "OP_MANAGER":
           queryParams = {
             ...queryParams,
-            organizationId: user.organizationId,
-            departmentId: user.departmentId,
-            operatorId: user.organizationId,
+            // organizationId: user.organization._id,
+            userId: user._id,
+            departmentId: user.department._id,
+            // operatorId: user.organizationId,
           };
           break;
 
@@ -150,6 +156,8 @@ const TicketPage = ({ mode }) => {
       request: item.request,
       operator: item.operator.orgName ?? "N/A",
       requestor: item.requestor.orgName ?? "N/A",
+      reqDepartment: item.requestor.departmentName,
+      optDepartment: item.operator.departmentName,
     })) || [];
 
   const handleSubmit = async (formData) => {

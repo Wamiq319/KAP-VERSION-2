@@ -19,6 +19,7 @@ import DepartmentForm from "./Forms/DeptForm";
 import TicketForm from "./Forms/TicketForm";
 import TicketActions from "./Ticket/TicketActions";
 import TicketInfo from "./Ticket/TicketInfo";
+import TicketInput from "./Ticket/TicketInput";
 
 export {
   Button,
@@ -40,4 +41,5 @@ export {
   TicketForm,
   TicketActions,
   TicketInfo,
+  TicketInput,
 };

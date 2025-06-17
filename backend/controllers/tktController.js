@@ -130,21 +130,57 @@ export const deleteTicket = async (req, res) => {
 export const updateTicket = async (req, res) => {
   try {
     const { tktId } = req.params;
-    const { actionType, data } = req.body;
+    const { actionType, data, userId } = req.body;
+
+    // Add debug logging
+    console.log("Request params:", req.params);
+    console.log("Request body:", req.body);
+
+    // Validate tktId
+    if (!tktId) {
+      return res.status(400).json({
+        success: false,
+        message: "Ticket ID is required",
+        data: null,
+      });
+    }
+
     let response;
-    console.log(tktId);
 
     switch (actionType) {
       case "ADD_NOTE":
-        response = await Ticket.addNote({ Id: tktId, noteData: data });
+        response = await Ticket.addNote({
+          Id: tktId,
+          noteData: data,
+          userId: userId,
+        });
+        break;
 
+      case "ACCEPT_TICKET":
+        response = await Ticket.updateStatus({
+          Id: tktId,
+          progrssData: data,
+          userId: userId,
+        });
+        break;
+
+      case "UPDATE_STATUS":
+        response = await Ticket.updateStatus({
+          Id: tktId,
+          newStatus: data.newStatus,
+          userId: userId,
+        });
         break;
 
       default:
-        break;
+        return res.status(400).json({
+          success: false,
+          message: "Invalid action type",
+          data: null,
+        });
     }
 
-    console.log(response);
+    console.log("Controller response:", response);
     return res.status(200).json(response);
   } catch (error) {
     console.error("Error in updateTicket controller:", error);

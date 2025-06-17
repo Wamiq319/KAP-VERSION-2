@@ -25,6 +25,29 @@ const ticketSchema = new mongoose.Schema({
     },
   ],
 
+  notifications: [
+    {
+      type: {
+        type: String,
+        enum: ["ORGANIZATION", "DEPARTMENT_MANAGER"],
+        required: true,
+      },
+      recipient: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      mobile: {
+        type: String,
+        required: true,
+      },
+      sentAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+
   requestor: {
     org: {
       type: mongoose.Schema.Types.ObjectId,
@@ -69,13 +92,6 @@ const ticketSchema = new mongoose.Schema({
     enum: ["LOW", "MEDIUM", "HIGH"],
     required: true,
   },
-
-  startDate: {
-    type: Date,
-    required: true,
-  },
-
-  endDate: { type: Date },
 
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -150,32 +166,172 @@ const ticketSchema = new mongoose.Schema({
     },
   },
 
-  notifications: [
-    {
-      type: {
-        type: String,
-        enum: ["ORGANIZATION", "DEPARTMENT_MANAGER"],
-        required: true,
-      },
-      recipient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      mobile: {
-        type: String,
-        required: true,
-      },
-      sentAt: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
+  startDate: {
+    type: Date,
+    required: true,
+  },
 
+  closedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+
+  endDate: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
+
+// UTILITY FUNCTION FOR GETTING FORMATTED TICKET #####
+// ####################################################
+ticketSchema.statics.getFormattedTicket = async function (ticketId) {
+  try {
+    const ticket = await this.findById(ticketId)
+      .populate("requestor.org", "name _id")
+      .populate("requestor.department", "name _id")
+      .populate("operator.org", "name _id")
+      .populate("operator.department", "name _id")
+      .populate("createdBy", "name _id role kapRole")
+      .populate("assignments.requestor.user", "name _id role department")
+      .populate("assignments.operator.user", "name _id role department")
+      .populate("progress.updatedBy", "name role department")
+      .populate("kapNotes.addedBy", "name kapRole")
+      .populate("orgNotes.addedBy", "name role")
+      .populate("kapNotes.targetOrg", "name _id")
+      .populate("notifications.recipient", "name role")
+      .lean();
+
+    const formattedTicket = {
+      _id: ticket._id,
+      ticketNumber: ticket.ticketNumber,
+      request: ticket.request,
+      description: ticket.description,
+      status: ticket.status,
+      priority: ticket.priority,
+      ticketType: ticket.ticketType,
+      scheduledDate: ticket.scheduledDate,
+      startDate: ticket.startDate,
+      endDate: ticket.endDate,
+      createdAt: ticket.createdAt,
+      updatedAt: ticket.updatedAt,
+
+      requestor: {
+        org: {
+          id: ticket.requestor.org?._id,
+          name: ticket.requestor.org?.name,
+        },
+        department: {
+          id: ticket.requestor.department?._id,
+          name: ticket.requestor.department?.name,
+        },
+      },
+
+      operator: {
+        org: {
+          id: ticket.operator.org?._id,
+          name: ticket.operator.org?.name,
+        },
+        department: {
+          id: ticket.operator.department?._id,
+          name: ticket.operator.department?.name,
+        },
+      },
+
+      createdBy: {
+        id: ticket.createdBy?._id,
+        name: ticket.createdBy?.name,
+        role: ticket.createdBy?.role,
+        kapRole: ticket.createdBy?.kapRole,
+      },
+
+      assignments: {
+        requestor: {
+          user: ticket.assignments?.requestor?.user
+            ? {
+                id: ticket.assignments.requestor.user._id,
+                name: ticket.assignments.requestor.user.name,
+                role: ticket.assignments.requestor.user.role,
+                department: ticket.assignments.requestor.user.department,
+              }
+            : null,
+          status: ticket.assignments?.requestor?.status,
+          assignedAt: ticket.assignments?.requestor?.assignedAt,
+        },
+        operator: {
+          user: ticket.assignments?.operator?.user
+            ? {
+                id: ticket.assignments.operator.user._id,
+                name: ticket.assignments.operator.user.name,
+                role: ticket.assignments.operator.user.role,
+                department: ticket.assignments.operator.user.department,
+              }
+            : null,
+          status: ticket.assignments?.operator?.status,
+          assignedAt: ticket.assignments?.operator?.assignedAt,
+        },
+      },
+
+      progress:
+        ticket.progress?.map((p) => ({
+          percentage: p.percentage,
+          observation: p.observation,
+          updatedBy: {
+            id: p.updatedBy?._id,
+            name: p.updatedBy?.name,
+            role: p.updatedBy?.role,
+            department: p.updatedBy?.department,
+          },
+          updatedAt: p.updatedAt,
+        })) || [],
+
+      kapNotes:
+        ticket.kapNotes?.map((note) => ({
+          id: note._id,
+          text: note.text,
+          addedBy: {
+            id: note.addedBy?._id,
+            name: note.addedBy?.name,
+            role: note.addedBy?.kapRole,
+          },
+          targetOrg: {
+            id: note.targetOrg?._id,
+            name: note.targetOrg?.name,
+          },
+          createdAt: note.createdAt,
+        })) || [],
+
+      orgNotes:
+        ticket.orgNotes?.map((note) => ({
+          id: note._id,
+          text: note.text,
+          addedBy: {
+            id: note.addedBy?._id,
+            name: note.addedBy?.name,
+            role: note.addedBy?.role,
+          },
+          createdAt: note.createdAt,
+        })) || [],
+
+      transferRequests: ticket.transferRequests?.map((request) => ({
+        type: request.type,
+        requestedBy: request.requestedBy,
+        organization: request.organization,
+        currentDepartment: request.currentDepartment,
+        targetDepartment: request.targetDepartment,
+        targetEmployee: request.targetEmployee,
+        reason: request.reason,
+        status: request.status,
+        createdAt: request.createdAt,
+      })),
+    };
+    return formattedTicket;
+  } catch (error) {
+    console.error("Error in getFormattedTicket:", error);
+    return false;
+  }
+};
+
+/////////############################
+// #####################################
 
 ticketSchema.statics.createTicket = async function (ticketData) {
   try {
@@ -183,7 +339,7 @@ ticketSchema.statics.createTicket = async function (ticketData) {
     const newTicketData = {
       ...ticketData,
       ticketNumber,
-      startDate:
+      scheduledDate:
         ticketData.ticketType === "INSTANT"
           ? new Date()
           : ticketData.scheduledDate,
@@ -207,26 +363,29 @@ ticketSchema.statics.createTicket = async function (ticketData) {
 
 ticketSchema.statics.addNote = async function (data) {
   try {
-    const { Id, noteData } = data;
+    const { Id, noteData, userId } = data;
 
     const ticket = await this.findById(Id);
-
     if (!ticket) {
       return {
         data: null,
-        message: "ticket not found",
+        message: "Ticket not found",
         success: false,
       };
     }
 
-    const user = await User.findById(noteData.addedBy);
+    const user = await User.findById(userId);
     if (!user) {
-      return createErrorResponse("UPDATE", "TICKET", "USER_NOT_FOUND");
+      return {
+        data: null,
+        message: "User not found",
+        success: false,
+      };
     }
 
     const note = {
       text: noteData.text,
-      addedBy: noteData.addedBy,
+      addedBy: userId,
       createdAt: new Date(),
     };
 
@@ -304,31 +463,70 @@ ticketSchema.statics.updateProgress = async function (ticketId, progressData) {
   }
 };
 
-ticketSchema.statics.updateStatus = async function (ticketId, status) {
+ticketSchema.statics.updateStatus = async function (data) {
+  const { Id, newStatus, userId } = data;
   try {
-    const ticket = await this.findById(ticketId);
+    // 1. Get the ticket
+
+    const ticket = await this.findById(Id);
     if (!ticket) {
-      return createErrorResponse("UPDATE", "TICKET", "NOT_FOUND");
+      return {
+        success: false,
+        message: "Ticket not found",
+        data: null,
+      };
     }
 
-    const allowedStatuses = [
-      "CREATED",
-      "ACCEPTED",
-      "IN_PROGRESS",
-      "COMPLETED",
-      "CLOSED",
-      "TRANSFER_REQUESTED",
-    ];
-
-    if (!allowedStatuses.includes(status)) {
-      return createErrorResponse("UPDATE", "TICKET", "INVALID_STATUS");
+    // 2. Check if scheduled date has passed and should auto-progress
+    const now = new Date();
+    if (
+      newStatus === "ACCEPTED" &&
+      ticket.ticketType === "SCHEDULED" &&
+      ticket.scheduledDate &&
+      ticket.scheduledDate <= now
+    ) {
+      newStatus = "IN_PROGRESS";
     }
 
-    ticket.status = status;
+    // 3. Define allowed status transitions
+    const statusTransitions = {
+      CREATED: ["ACCEPTED", "TRANSFER_REQUESTED"],
+      ACCEPTED: ["IN_PROGRESS", "TRANSFER_REQUESTED", "CREATED"],
+      IN_PROGRESS: ["COMPLETED", "TRANSFER_REQUESTED", "ACCEPTED"],
+      COMPLETED: ["CLOSED", "IN_PROGRESS"],
+      CLOSED: [], // No transitions from closed state
+      TRANSFER_REQUESTED: ["ACCEPTED", "CREATED"],
+    };
+
+    // 4. Validate the transition
+    const currentStatus = ticket.status;
+    const allowedNextStatuses = statusTransitions[currentStatus] || [];
+
+    if (!allowedNextStatuses.includes(newStatus)) {
+      return {
+        success: false,
+        message: `Invalid status transition from ${currentStatus} to ${newStatus}`,
+        data: null,
+        allowedTransitions: allowedNextStatuses,
+      };
+    }
+
+    // 6. Update the status
+    ticket.status = newStatus;
     ticket.updatedAt = new Date();
+
+    if (newStatus === "COMPLETED") {
+      ticket.closedBy = userId;
+      ticket.endDate = new Date();
+    } else if (newStatus === "IN_PROGRESS") {
+      ticket.startDate = ticket.startDate || new Date();
+    }
+
     await ticket.save();
 
-    return createSuccessResponse("UPDATE", "TICKET", ticket);
+    // 8. Return formatted response
+    const updatedTicket = await this.getFormattedTicket(ticketId);
+    return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
   } catch (error) {
     console.error("Error updating status:", error);
     return createErrorResponse("UPDATE", "TICKET", "INTERNAL_ERROR");
@@ -425,102 +623,22 @@ ticketSchema.statics.openTransferRequest = async function (
 
 ticketSchema.statics.getTicketById = async function (ticketId) {
   try {
-    const ticket = await this.findById(ticketId)
-      .populate("requestor.org", "name _id")
-      .populate("requestor.department", "name _id")
-      .populate("operator.org", "name _id")
-      .populate("operator.department", "name _id")
-      .populate("createdBy", "name _id role kapRole")
-      .populate("assignments.requestor.user", "name _id role department")
-      .populate("assignments.operator.user", "name _id role department")
-      .populate("progress.updatedBy", "name role department")
-      .populate("kapNotes.addedBy", "name kapRole")
-      .populate("orgNotes.addedBy", "name role")
-      .populate("kapNotes.targetOrg", "name _id")
-      .lean();
+    const ticket = await this.findById(ticketId);
 
     if (!ticket) {
       return { success: false, data: null, message: "Ticket Not Found" };
     }
 
-    const formattedTicket = {
-      _id: ticket._id,
-      ticketNumber: ticket.ticketNumber,
-      request: ticket.request,
-      description: ticket.description,
-      status: ticket.status,
-      priority: ticket.priority,
-      startDate: ticket.startDate,
-      endDate: ticket.endDate,
-      ticketType: ticket.ticketType,
-      scheduledDate: ticket.scheduledDate,
-
-      requestor: {
-        orgName: ticket.requestor?.org?.name || null,
-        orgId: ticket.requestor?.org?._id || null,
-      },
-      operator: {
-        orgName: ticket.operator?.org?.name || null,
-        orgId: ticket.operator?.org?._id || null,
-      },
-      assignments: {
-        requestor: {
-          user: {
-            name: ticket.assignments?.requestor?.user?.name || null,
-          },
-          status: ticket.assignments?.requestor?.status || null,
-          assignedAt: ticket.assignments?.requestor?.assignedAt || null,
-        },
-        operator: {
-          user: {
-            name: ticket.assignments?.operator?.user?.name || null,
-          },
-          status: ticket.assignments?.operator?.status || null,
-          assignedAt: ticket.assignments?.operator?.assignedAt || null,
-        },
-      },
-      progress:
-        ticket.progress?.map((p) => ({
-          percentage: p.percentage,
-          observation: p.observation,
-          updatedBy: {
-            name: p.updatedBy?.name || null,
-            role: p.updatedBy?.role?.split("_")[0] || null,
-          },
-          updatedAt: p.updatedAt,
-        })) || [],
-      kapNotes:
-        ticket.kapNotes?.map((note) => ({
-          text: note.text,
-          targetOrg: {
-            name: note.targetOrg?.name || null,
-            id: note.targetOrg?._id || null,
-          },
-          addedBy: {
-            name: note.addedBy?.name || null,
-            role: note.addedBy?.kapRole || null,
-          },
-          createdAt: note.createdAt,
-        })) || [],
-      orgNotes:
-        ticket.orgNotes?.map((note) => ({
-          text: note.text,
-          addedBy: {
-            name: note.addedBy?.name || null,
-            role: note.addedBy?.role?.split("_")[0] || null,
-          },
-          createdAt: note.createdAt,
-        })) || [],
-
-      createdBy: {
-        name: ticket.createdBy?.name || null,
-        role: ticket.createdBy?.kapRole || null,
-      },
-      createdAt: ticket.createdAt,
-      updatedAt: ticket.updatedAt,
-    };
-
-    return { success: true, data: formattedTicket, message: "Ticket Found" };
+    const ticketData = await this.getFormattedTicket(ticketId);
+    if (ticketData) {
+      return { success: true, data: ticketData, message: "Ticket Found" };
+    } else {
+      return {
+        success: false,
+        data: null,
+        message: "unable to get ticket internal error",
+      };
+    }
   } catch (error) {
     console.error("Error getting ticket by ID:", error);
     return createErrorResponse("FETCH", "TICKET", "INTERNAL_ERROR");
