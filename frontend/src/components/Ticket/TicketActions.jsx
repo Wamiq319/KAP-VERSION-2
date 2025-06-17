@@ -23,6 +23,7 @@ const TicketActions = ({
   const isClosed = ticket.status === "CLOSED";
   const isTransferRequested = ticket.status === "TRANSFER_REQUESTED";
   const canAccept = ticket.status === "CREATED" && mode === "OP_MANAGER";
+  const isInProgress = ticket.status === "IN_PROGRESS";
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
@@ -68,14 +69,16 @@ const TicketActions = ({
                 )}
                 {!canAccept && (
                   <>
-                    <Button
-                      text="Update Progress"
-                      onClick={onAddProgress}
-                      className="bg-blue-600 hover:bg-blue-700"
-                      icon={<FaCheck />}
-                      size="medium"
-                      disabled={isTransferRequested}
-                    />
+                    {isInProgress && (
+                      <Button
+                        text="Update Progress"
+                        onClick={onAddProgress}
+                        className="bg-blue-600 hover:bg-blue-700"
+                        icon={<FaCheck />}
+                        size="medium"
+                        disabled={isTransferRequested}
+                      />
+                    )}
                     <Button
                       text={
                         isTransferRequested
@@ -107,6 +110,16 @@ const TicketActions = ({
                   icon={<FaPlus />}
                   size="medium"
                 />
+                {isInProgress && (
+                  <Button
+                    text="Update Progress"
+                    onClick={onAddProgress}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    icon={<FaCheck />}
+                    size="medium"
+                    disabled={isTransferRequested}
+                  />
+                )}
                 <Button
                   text="Transfer to Department"
                   onClick={() => onTransferTicket("DEPARTMENT")}
@@ -128,6 +141,16 @@ const TicketActions = ({
                   icon={<FaPlus />}
                   size="medium"
                 />
+                {isInProgress && (
+                  <Button
+                    text="Update Progress"
+                    onClick={onAddProgress}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    icon={<FaCheck />}
+                    size="medium"
+                    disabled={isTransferRequested}
+                  />
+                )}
                 <Button
                   text="Request Transfer"
                   onClick={() => onTransferRequest("EMPLOYEE")}
