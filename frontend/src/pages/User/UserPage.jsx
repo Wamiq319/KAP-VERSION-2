@@ -30,6 +30,7 @@ const UserPage = ({
   const dispatch = useDispatch();
   const { entities } = useSelector((state) => state.crud);
   const words = useSelector((state) => state.lang.words);
+  const User = JSON.parse(localStorage.getItem("user"));
 
   // State management
   const [uiState, setUiState] = useState({
@@ -76,8 +77,10 @@ const UserPage = ({
       if (filters.orgType) params.orgType = filters.orgType;
       if (filters.organization) params.organization = filters.organization;
       if (filters.department) params.department = filters.department;
+      console.log(Mode);
+      if (Mode === "Manager") params.department = Userdepartment._id;
 
-      await dispatch(
+      params.department = await dispatch(
         fetchEntities({
           entityType: "users",
           params,

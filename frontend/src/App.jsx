@@ -207,9 +207,11 @@ const App = () => {
                 }
               />
               <Route
-                path="/manage-gov-users"
+                path="/manage-org-users"
                 element={
-                  <ProtectedRoute allowedRoles={[ROLES.GOV_MANAGER]}>
+                  <ProtectedRoute
+                    allowedRoles={[ROLES.GOV_MANAGER, ROLES.OP_MANAGER]}
+                  >
                     <UserPage Mode="MANAGER" />
                   </ProtectedRoute>
                 }
