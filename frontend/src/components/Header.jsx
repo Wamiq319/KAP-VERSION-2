@@ -92,7 +92,7 @@ const Header = () => {
                 <div className="flex flex-col items-start min-w-[80px]">
                   <span className="text-xs text-green-200">Organization:</span>
                   <span className="text-sm whitespace-nowrap">
-                    {user.organization?.name || "N/A"}
+                    {user.organization?.name || "KAP"}
                   </span>
                 </div>
 
@@ -101,7 +101,7 @@ const Header = () => {
                 <div className="flex flex-col items-start min-w-[80px]">
                   <span className="text-xs text-green-200">Department:</span>
                   <span className="text-sm whitespace-nowrap">
-                    {user.department?.name || "N/A"}
+                    {user.department?.name || user.kapRole}
                   </span>
                 </div>
               </div>
