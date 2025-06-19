@@ -74,20 +74,34 @@ const UserPage = ({
   const fetchUsers = async () => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
-      const params = {};
-      if (filters.role) params.role = filters.role;
-      if (filters.orgType) params.orgType = filters.orgType;
-      if (filters.organization) params.organization = filters.organization;
-      if (filters.department) params.department = filters.department;
-      console.log(Mode);
-      if (Mode === "Manager") params.department = Userdepartment._id;
+      if (Mode === "MANAGER") {
+        // Get user from localStorage
+        const userStr = localStorage.getItem("user");
 
-      params.department = await dispatch(
-        fetchEntities({
-          entityType: "users",
-          params,
-        })
-      );
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          if (user.department && user.department._id) {
+            await dispatch(
+              fetchEntities({
+                entityType: "users",
+                params: { department: user.department._id },
+              })
+            );
+          }
+        }
+      } else {
+        const params = {};
+        if (filters.role) params.role = filters.role;
+        if (filters.orgType) params.orgType = filters.orgType;
+        if (filters.organization) params.organization = filters.organization;
+        if (filters.department) params.department = filters.department;
+        await dispatch(
+          fetchEntities({
+            entityType: "users",
+            params,
+          })
+        );
+      }
     } finally {
       setUiState((prev) => ({ ...prev, isLoading: false }));
     }

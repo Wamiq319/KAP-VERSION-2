@@ -37,7 +37,7 @@ const DashboardHome = ({ role }) => {
       buttons: [
         {
           text: words["Manage Employees"] || "Manage Employees",
-          path: "/manage-gov-users",
+          path: "/manage-org-users",
           className:
             "w-full bg-orange-600 hover:bg-orange-700 text-lg font-semibold py-3 shadow",
         },

@@ -28,6 +28,7 @@ const UserForm = ({
   const [localLoading, setLocalLoading] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
+  const [localUser, setLocalUser] = useState(null); // For debug card
 
   // UI state (not sent to backend)
   const [uiState, setUiState] = useState({
@@ -57,6 +58,33 @@ const UserForm = ({
     { value: "MANAGER", label: words["Manager"] },
     { value: "EMPLOYEE", label: words["Employee"] },
   ];
+
+  // On mount, if Mode is MANAGER, get user from localStorage and set org/department/role
+  useEffect(() => {
+    if (Mode === "MANAGER") {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          setLocalUser(user); // For debug card
+          setFormData((prev) => ({
+            ...prev,
+            organization: user.organization?._id || "",
+            department: user.department?._id || "",
+            role: user.role === "OP_MANAGER" ? "OP_EMPLOYEE" : prev.role,
+          }));
+          setUiState((prev) => ({
+            ...prev,
+            userType: "ORG_EMPLOYEE",
+            orgType: user.role === "GOV_MANAGER" ? "GOVERNMENT" : "COMPANY",
+            selectedRole: "EMPLOYEE",
+          }));
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }, [Mode]);
 
   // Fetch organizations when org type changes
   useEffect(() => {
@@ -325,148 +353,161 @@ const UserForm = ({
         />
       </div>
 
-      {/* User Type Radio Buttons - full width on mobile, then normal on desktop */}
-      <div className="col-span-1 md:col-span-2 space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          {words["User Type"]} <span className="text-red-500">*</span>
-        </label>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <label className="inline-flex items-center">
-            <input
-              type="radio"
-              name="userType"
-              value="KAP_EMPLOYEE"
-              checked={uiState.userType === "KAP_EMPLOYEE"}
-              onChange={handleChange}
-              className="h-4 w-4 text-green-600 focus:ring-green-500"
-              required
-            />
-            <span className="ml-2 text-gray-700">{words["KAP Employee"]}</span>
-          </label>
-          <label className="inline-flex items-center">
-            <input
-              type="radio"
-              name="userType"
-              value="ORG_EMPLOYEE"
-              checked={uiState.userType === "ORG_EMPLOYEE"}
-              onChange={handleChange}
-              className="h-4 w-4 text-green-600 focus:ring-green-500"
-            />
-            <span className="ml-2 text-gray-700">
-              {words["Organization Employee"]}
-            </span>
-          </label>
-        </div>
-        {formErrors.userType && (
-          <p className="mt-1 text-sm text-red-600">{formErrors.userType}</p>
-        )}
-      </div>
-
-      {/* KAP Employee Fields - full width */}
-      {uiState.userType === "KAP_EMPLOYEE" && (
-        <div className="col-span-1 md:col-span-2">
-          <Dropdown
-            label={words["KAP Role"]}
-            options={kapRoleOptions}
-            selectedValue={formData.kapRole}
-            onChange={(value) => handleDropdownChange("kapRole", value)}
-            required
-            className="w-full"
-            error={formErrors.kapRole}
-          />
-        </div>
-      )}
-
-      {/* Organization Employee Fields */}
-      {uiState.userType === "ORG_EMPLOYEE" && (
+      {/* Only show the rest of the form if not in MANAGER mode */}
+      {Mode !== "MANAGER" && (
         <>
-          {/* Organization Type Radio Buttons - full width */}
+          {/* User Type Radio Buttons - full width on mobile, then normal on desktop */}
           <div className="col-span-1 md:col-span-2 space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              {words["Organization Type"]}{" "}
-              <span className="text-red-500">*</span>
+              {words["User Type"]} <span className="text-red-500">*</span>
             </label>
             <div className="flex flex-col sm:flex-row gap-4">
               <label className="inline-flex items-center">
                 <input
                   type="radio"
-                  name="orgType"
-                  value="GOVERNMENT"
-                  checked={uiState.orgType === "GOVERNMENT"}
+                  name="userType"
+                  value="KAP_EMPLOYEE"
+                  checked={uiState.userType === "KAP_EMPLOYEE"}
                   onChange={handleChange}
                   className="h-4 w-4 text-green-600 focus:ring-green-500"
                   required
                 />
                 <span className="ml-2 text-gray-700">
-                  {words["Government"]}
+                  {words["KAP Employee"]}
                 </span>
               </label>
               <label className="inline-flex items-center">
                 <input
                   type="radio"
-                  name="orgType"
-                  value="COMPANY"
-                  checked={uiState.orgType === "COMPANY"}
+                  name="userType"
+                  value="ORG_EMPLOYEE"
+                  checked={uiState.userType === "ORG_EMPLOYEE"}
                   onChange={handleChange}
                   className="h-4 w-4 text-green-600 focus:ring-green-500"
                 />
-                <span className="ml-2 text-gray-700">{words["Company"]}</span>
+                <span className="ml-2 text-gray-700">
+                  {words["Organization Employee"]}
+                </span>
               </label>
             </div>
-            {formErrors.orgType && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.orgType}</p>
+            {formErrors.userType && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.userType}</p>
             )}
           </div>
 
-          {/* Organization Dropdown - full width on mobile, normal on desktop */}
-          {uiState.orgType && (
-            <div className="col-span-1 md:col-span-1">
-              <Dropdown
-                label={words["Organization"]}
-                options={organizationOptions}
-                selectedValue={formData.organization}
-                onChange={(value) =>
-                  handleDropdownChange("organization", value)
-                }
-                required
-                isLoading={localLoading}
-                className="w-full"
-                error={formErrors.organization}
-              />
-            </div>
-          )}
-
-          {/* Role Dropdown - full width on mobile, normal on desktop */}
-          {formData.organization && (
-            <div className="col-span-1 md:col-span-1">
-              <Dropdown
-                label={words["Role"]}
-                options={uiRoleOptions}
-                selectedValue={uiState.selectedRole}
-                onChange={(value) =>
-                  handleDropdownChange("selectedRole", value)
-                }
-                required
-                className="w-full"
-                error={formErrors.selectedRole}
-              />
-            </div>
-          )}
-
-          {/* Department Dropdown - full width */}
-          {formData.organization && (
+          {/* KAP Employee Fields - full width */}
+          {uiState.userType === "KAP_EMPLOYEE" && (
             <div className="col-span-1 md:col-span-2">
               <Dropdown
-                label={words["Department"]}
-                options={departmentOptions}
-                selectedValue={formData.department}
-                onChange={(value) => handleDropdownChange("department", value)}
+                label={words["KAP Role"]}
+                options={kapRoleOptions}
+                selectedValue={formData.kapRole}
+                onChange={(value) => handleDropdownChange("kapRole", value)}
                 required
-                isLoading={localLoading}
                 className="w-full"
-                error={formErrors.department}
+                error={formErrors.kapRole}
               />
             </div>
+          )}
+
+          {/* Organization Employee Fields */}
+          {uiState.userType === "ORG_EMPLOYEE" && (
+            <>
+              {/* Organization Type Radio Buttons - full width */}
+              <div className="col-span-1 md:col-span-2 space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {words["Organization Type"]}{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="orgType"
+                      value="GOVERNMENT"
+                      checked={uiState.orgType === "GOVERNMENT"}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-green-600 focus:ring-green-500"
+                      required
+                    />
+                    <span className="ml-2 text-gray-700">
+                      {words["Government"]}
+                    </span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="orgType"
+                      value="COMPANY"
+                      checked={uiState.orgType === "COMPANY"}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-green-600 focus:ring-green-500"
+                    />
+                    <span className="ml-2 text-gray-700">
+                      {words["Company"]}
+                    </span>
+                  </label>
+                </div>
+                {formErrors.orgType && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {formErrors.orgType}
+                  </p>
+                )}
+              </div>
+
+              {/* Organization Dropdown - full width on mobile, normal on desktop */}
+              {uiState.orgType && (
+                <div className="col-span-1 md:col-span-1">
+                  <Dropdown
+                    label={words["Organization"]}
+                    options={organizationOptions}
+                    selectedValue={formData.organization}
+                    onChange={(value) =>
+                      handleDropdownChange("organization", value)
+                    }
+                    required
+                    isLoading={localLoading}
+                    className="w-full"
+                    error={formErrors.organization}
+                  />
+                </div>
+              )}
+
+              {/* Role Dropdown - full width on mobile, normal on desktop */}
+              {formData.organization && (
+                <div className="col-span-1 md:col-span-1">
+                  <Dropdown
+                    label={words["Role"]}
+                    options={uiRoleOptions}
+                    selectedValue={uiState.selectedRole}
+                    onChange={(value) =>
+                      handleDropdownChange("selectedRole", value)
+                    }
+                    required
+                    className="w-full"
+                    error={formErrors.selectedRole}
+                  />
+                </div>
+              )}
+
+              {/* Department Dropdown - full width */}
+              {formData.organization && (
+                <div className="col-span-1 md:col-span-2">
+                  <Dropdown
+                    label={words["Department"]}
+                    options={departmentOptions}
+                    selectedValue={formData.department}
+                    onChange={(value) =>
+                      handleDropdownChange("department", value)
+                    }
+                    required
+                    isLoading={localLoading}
+                    className="w-full"
+                    error={formErrors.department}
+                  />
+                </div>
+              )}
+            </>
           )}
         </>
       )}
@@ -483,6 +524,15 @@ const UserForm = ({
             <pre className="whitespace-pre-wrap text-xs">
               {JSON.stringify(formData, null, 2)}
             </pre>
+            {/* Show user from localStorage if Mode is MANAGER */}
+            {Mode === "MANAGER" && localUser && (
+              <>
+                <strong>User (from localStorage):</strong>{" "}
+                <pre className="whitespace-pre-wrap text-xs">
+                  {JSON.stringify(localUser, null, 2)}
+                </pre>
+              </>
+            )}
           </p>
         </div>
       )}

@@ -84,6 +84,7 @@ userSchema.statics.getUsers = async function (options = {}) {
     const query = { role: { $ne: "ADMIN" } };
     if (role) query.role = { $eq: role, $ne: "ADMIN" };
     if (organization) query.organization = organization;
+    if (department) query.department = department;
 
     // Always include these fields
     const baseFields =

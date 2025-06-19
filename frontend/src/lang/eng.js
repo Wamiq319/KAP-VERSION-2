@@ -132,7 +132,7 @@ export const eng = {
 
   // UserPage - UI Elements
   "Show Filters": "Show Filters",
-  "Hide Filters": "Hide Filters",
+  "Hide Filters": "Hide Filteclers",
   "Reset Filters": "Reset Filters",
   Search: "Search",
   "N/A": "N/A",
