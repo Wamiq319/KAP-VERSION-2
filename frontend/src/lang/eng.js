@@ -163,6 +163,28 @@ export const eng = {
   to: "to",
   of: "of",
   entries: "entries",
+
+  // TicketPage - Table Headers
+  "Ticket Number": "Ticket Number",
+  "Request Type": "Request Type",
+  Operator: "Operator",
+  Requestor: "Requestor",
+  RequestorDept: "Requestor Dept",
+  OperatorDept: "Operator Dept",
+
+  // TicketPage - Actions
+  "Follow Up": "Follow Up",
+  "Create Ticket": "Create Ticket",
+  "No tickets selected": "No tickets selected",
+  "Deleted Successfully": "Deleted Successfully",
+  Deleted: "Deleted",
+  "Bulk delete failed": "Bulk delete failed",
+  "Delete failed": "Delete failed",
+  "Delete Selected": "Delete Selected",
+  "selected tickets?": "selected tickets?",
+  Tickets: "Tickets",
+  "Failed to create ticket": "Failed to create ticket",
+  "Ticket created successfully": "Ticket created successfully",
 };
 
 export default eng;

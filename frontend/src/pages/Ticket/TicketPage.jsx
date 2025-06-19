@@ -47,8 +47,8 @@ const TicketPage = ({ mode }) => {
     { key: "request", label: words["Request Type"] },
     { key: "operator", label: words["Operator"] },
     { key: "requestor", label: words["Requestor"] },
-    { key: "reqDepartment", label: "RequestorDept" },
-    { key: "optDepartment", label: "OperatorDept" },
+    { key: "reqDepartment", label: words["RequestorDept"] },
+    { key: "optDepartment", label: words["OperatorDept"] },
   ];
 
   switch (mode) {
@@ -155,10 +155,10 @@ const TicketPage = ({ mode }) => {
       id: item._id,
       ticketNumber: item.ticketNumber,
       request: item.request,
-      operator: item.operator.orgName ?? "N/A",
-      requestor: item.requestor.orgName ?? "N/A",
-      reqDepartment: item.requestor.departmentName,
-      optDepartment: item.operator.departmentName,
+      operator: item.operator.orgName ?? words["N/A"],
+      requestor: item.requestor.orgName ?? words["N/A"],
+      reqDepartment: item.requestor.departmentName ?? words["N/A"],
+      optDepartment: item.operator.departmentName ?? words["N/A"],
     })) || [];
 
   const handleSubmit = async (formData) => {
