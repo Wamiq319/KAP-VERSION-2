@@ -406,7 +406,10 @@ ticketSchema.statics.addNote = async function (data) {
         targetOrg: targetOrgId,
       });
     } else {
-      ticket.orgNotes.push(note);
+      ticket.orgNotes.push({
+        text: noteData.text,
+        addedBy: addedBy,
+      });
     }
 
     ticket.updatedAt = new Date();

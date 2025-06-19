@@ -128,16 +128,7 @@ const TicketActions = ({
                   icon={<FaPlus />}
                   size="medium"
                 />
-                {isInProgress && (
-                  <Button
-                    text="Update Progress"
-                    onClick={onAddProgress}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    icon={<FaCheck />}
-                    size="medium"
-                    disabled={isTransferRequested}
-                  />
-                )}
+
                 <Button
                   text="Transfer to Department"
                   onClick={() => onTransferTicket("DEPARTMENT")}

@@ -27,8 +27,7 @@ const AdminHomePage = () => {
           </div>
         </div>
 
-        {/* Buttons - kept your original button styling */}
-
+        {/* Buttons - use words from lang file */}
         <Button
           text={words["Manage Organization"]}
           onClick={() => handleNavigation("/manage-admin-orgs")}

@@ -40,22 +40,22 @@ const UserForm = ({
   const kapRoleOptions = [
     {
       value: "GOVERNMENT_INTEGRATION",
-      label: words["Government Integration"] || "Government Integration",
+      label: words["Government Integration"],
     },
     {
       value: "SECURITY_SAFETY",
-      label: words["Security & Safety"] || "Security & Safety",
+      label: words["Security & Safety"],
     },
     {
       value: "PLANNING_DEVELOPMENT",
-      label: words["Planning & Development"] || "Planning & Development",
+      label: words["Planning & Development"],
     },
   ];
 
   // Simplified UI role options
   const uiRoleOptions = [
-    { value: "MANAGER", label: words["Manager"] || "Manager" },
-    { value: "EMPLOYEE", label: words["Employee"] || "Employee" },
+    { value: "MANAGER", label: words["Manager"] },
+    { value: "EMPLOYEE", label: words["Employee"] },
   ];
 
   // Fetch organizations when org type changes
@@ -200,44 +200,34 @@ const UserForm = ({
 
     requiredFields.forEach((field) => {
       if (!formData[field]) {
-        errors[field] =
-          words["This field is required"] || "This field is required";
+        errors[field] = words["This field is required"];
       }
     });
 
     // Validate mobile number format
     if (formData.mobile && !validateSaudiMobile(formData.mobile)) {
       errors.mobile =
-        words["Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)"] ||
-        "Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)";
+        words["Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)"];
     }
 
     if (!uiState.userType) {
-      errors.userType =
-        words["Please select user type"] || "Please select user type";
+      errors.userType = words["Please select user type"];
     }
 
     if (uiState.userType === "KAP_EMPLOYEE" && !formData.kapRole) {
-      errors.kapRole =
-        words["Please select a KAP Role"] || "Please select a KAP Role";
+      errors.kapRole = words["Please select a KAP Role"];
     }
 
     if (uiState.userType === "ORG_EMPLOYEE") {
       if (!uiState.orgType)
-        errors.orgType =
-          words["Please select organization type"] ||
-          "Please select organization type";
+        errors.orgType = words["Please select organization type"];
       if (!formData.organization)
-        errors.organization =
-          words["Please select an organization"] ||
-          "Please select an organization";
+        errors.organization = words["Please select an organization"];
       if (!uiState.selectedRole)
-        errors.selectedRole =
-          words["Please select a role"] || "Please select a role";
+        errors.selectedRole = words["Please select a role"];
       if (!formData.department && formData.organization)
         // Department is required if an organization is selected
-        errors.department =
-          words["Please select a department"] || "Please select a department";
+        errors.department = words["Please select a department"];
     }
 
     // Ensure the final 'role' is set, as it's derived
@@ -250,8 +240,7 @@ const UserForm = ({
     ) {
       // This case should ideally not happen if other fields are valid and useEffect runs correctly,
       // but as a safeguard, we check if a derived role is missing.
-      errors.role =
-        words["A role must be assigned"] || "A role must be assigned";
+      errors.role = words["A role must be assigned"];
     }
 
     setFormErrors(errors);
@@ -339,8 +328,7 @@ const UserForm = ({
       {/* User Type Radio Buttons - full width on mobile, then normal on desktop */}
       <div className="col-span-1 md:col-span-2 space-y-2">
         <label className="block text-sm font-medium text-gray-700">
-          {words["User Type"] || "User Type"}{" "}
-          <span className="text-red-500">*</span>
+          {words["User Type"]} <span className="text-red-500">*</span>
         </label>
         <div className="flex flex-col sm:flex-row gap-4">
           <label className="inline-flex items-center">
@@ -353,9 +341,7 @@ const UserForm = ({
               className="h-4 w-4 text-green-600 focus:ring-green-500"
               required
             />
-            <span className="ml-2 text-gray-700">
-              {words["KAP Employee"] || "KAP Employee"}
-            </span>
+            <span className="ml-2 text-gray-700">{words["KAP Employee"]}</span>
           </label>
           <label className="inline-flex items-center">
             <input
@@ -367,7 +353,7 @@ const UserForm = ({
               className="h-4 w-4 text-green-600 focus:ring-green-500"
             />
             <span className="ml-2 text-gray-700">
-              {words["Organization Employee"] || "Organization Employee"}
+              {words["Organization Employee"]}
             </span>
           </label>
         </div>
@@ -380,7 +366,7 @@ const UserForm = ({
       {uiState.userType === "KAP_EMPLOYEE" && (
         <div className="col-span-1 md:col-span-2">
           <Dropdown
-            label={words["KAP Role"] || "KAP Role"}
+            label={words["KAP Role"]}
             options={kapRoleOptions}
             selectedValue={formData.kapRole}
             onChange={(value) => handleDropdownChange("kapRole", value)}
@@ -397,7 +383,7 @@ const UserForm = ({
           {/* Organization Type Radio Buttons - full width */}
           <div className="col-span-1 md:col-span-2 space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              {words["Organization Type"] || "Organization Type"}{" "}
+              {words["Organization Type"]}{" "}
               <span className="text-red-500">*</span>
             </label>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -412,7 +398,7 @@ const UserForm = ({
                   required
                 />
                 <span className="ml-2 text-gray-700">
-                  {words["Government"] || "Government"}
+                  {words["Government"]}
                 </span>
               </label>
               <label className="inline-flex items-center">
@@ -424,9 +410,7 @@ const UserForm = ({
                   onChange={handleChange}
                   className="h-4 w-4 text-green-600 focus:ring-green-500"
                 />
-                <span className="ml-2 text-gray-700">
-                  {words["Company"] || "Company"}
-                </span>
+                <span className="ml-2 text-gray-700">{words["Company"]}</span>
               </label>
             </div>
             {formErrors.orgType && (
@@ -438,7 +422,7 @@ const UserForm = ({
           {uiState.orgType && (
             <div className="col-span-1 md:col-span-1">
               <Dropdown
-                label={words["Organization"] || "Organization"}
+                label={words["Organization"]}
                 options={organizationOptions}
                 selectedValue={formData.organization}
                 onChange={(value) =>
@@ -456,7 +440,7 @@ const UserForm = ({
           {formData.organization && (
             <div className="col-span-1 md:col-span-1">
               <Dropdown
-                label={words["Role"] || "Role"}
+                label={words["Role"]}
                 options={uiRoleOptions}
                 selectedValue={uiState.selectedRole}
                 onChange={(value) =>
@@ -473,7 +457,7 @@ const UserForm = ({
           {formData.organization && (
             <div className="col-span-1 md:col-span-2">
               <Dropdown
-                label={words["Department"] || "Department"}
+                label={words["Department"]}
                 options={departmentOptions}
                 selectedValue={formData.department}
                 onChange={(value) => handleDropdownChange("department", value)}

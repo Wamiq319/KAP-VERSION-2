@@ -12,37 +12,42 @@ import {
 const TicketInfo = ({ ticket, mode }) => {
   console.log("Current Ticket In Ticket View:", ticket);
 
+  const renderNote = (note, type) => {
+    const borderColor = type === "kap" ? "border-blue-500" : "border-green-500";
+    const roleColor = type === "kap" ? "text-blue-400" : "text-green-400";
+    const toLabelColor = type === "kap" ? "text-blue-400" : "text-green-400";
+
+    return (
+      <div
+        key={note.id || Math.random()}
+        className={`bg-gray-50 rounded-lg p-3 border-l-4 ${borderColor} mb-2`}
+      >
+        <div>
+          <span className="font-semibold text-gray-700 text-sm">
+            {note.addedBy.name || "Unknown"}
+          </span>
+          <span className={`${roleColor} text-xs ml-2`}>
+            ({note.addedBy?.role || "Unknown Role"})
+          </span>
+        </div>
+        <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
+          <span className="text-blue-600 font-medium">Date:</span>
+          {formatDate(note.createdAt)}
+          <span className={`${toLabelColor} font-medium ml-4`}>To:</span>
+          <span className="text-gray-700">{note.targetOrg?.name || "N/A"}</span>
+        </div>
+        <p className="text-gray-700 text-sm">{note.text}</p>
+      </div>
+    );
+  };
+
   const renderKapNotes = () => {
     if (!ticket.kapNotes || ticket.kapNotes.length === 0) {
       return <div className="text-gray-500 italic">No KAP notes available</div>;
     }
-
     return (
       <div className="space-y-3">
-        {ticket.kapNotes.map((note, index) => (
-          <div
-            key={index}
-            className="bg-gray-50 rounded-lg p-3 border-l-4 border-blue-500"
-          >
-            <div>
-              <span className="font-semibold text-gray-700 text-sm">
-                {note.addedBy.name || "Unknown"}
-              </span>
-              <span className="text-gray-500 text-xs ml-2">
-                ({note.addedBy?.role || "Unknown Role"})
-              </span>
-            </div>
-            <div className="text-xs text-gray-500 mb-1">
-              {formatDate(note.createdAt)}
-            </div>
-            <div className="mb-2">
-              <span className="text-xs text-gray-500">
-                Target Organization: {note.targetOrg?.name || "N/A"}
-              </span>
-            </div>
-            <p className="text-gray-700 text-sm">{note.text}</p>
-          </div>
-        ))}
+        {ticket.kapNotes.map((note) => renderNote(note, "kap"))}
       </div>
     );
   };
@@ -55,28 +60,9 @@ const TicketInfo = ({ ticket, mode }) => {
         </div>
       );
     }
-
     return (
       <div className="space-y-3">
-        {ticket.orgNotes.map((note, index) => (
-          <div
-            key={index}
-            className="bg-gray-50 rounded-lg p-3 border-l-4 border-green-500"
-          >
-            <div>
-              <span className="font-semibold text-gray-700 text-sm">
-                {note.addedBy.name || "Unknown"}
-              </span>
-              <span className="text-gray-500 text-xs ml-2">
-                ({note.addedBy?.role || "Unknown Role"})
-              </span>
-            </div>
-            <div className="text-xs text-gray-500 mb-1">
-              {formatDate(note.createdAt)}
-            </div>
-            <p className="text-gray-700 text-sm">{note.text}</p>
-          </div>
-        ))}
+        {ticket.orgNotes.map((note) => renderNote(note, "org"))}
       </div>
     );
   };
@@ -161,13 +147,13 @@ const TicketInfo = ({ ticket, mode }) => {
       {/* Main Content */}
       <div className="flex-1 space-y-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-200  rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Ticket Information
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex gap-6">
             {/* Ticket Information */}
-            <div className="bg-gray-50 p-4 rounded-lg h-full flex flex-col">
+            <div className="shadow-lg  bg-white p-4 rounded-lg h-full w-1/3 flex flex-col">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
@@ -185,88 +171,100 @@ const TicketInfo = ({ ticket, mode }) => {
                   </div>
                 </div>
 
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <div className={statusStyle.style}>
-                    {statusStyle.icon}
-                    {ticket.status}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Priority</p>
-                  <div className={priorityStyle.style}>
-                    {priorityStyle.icon}
-                    {ticket.priority}
-                  </div>
-                </div>
-                {ticket.createdBy && (
+                <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-gray-500">Created By</p>
-                    <div className="flex items-center space-x-2">
-                      <BsPerson className="w-4 h-4 text-green-500" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">
-                          {ticket.createdBy.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {ticket.createdBy.role}
-                        </p>
-                      </div>
+                    <p className="text-sm text-gray-500">Request Type:</p>
+                    <p className="font-medium">{ticket.request}</p>
+                  </div>
+                </div>
+
+                <div
+                  className="flex space-x-6
+                "
+                >
+                  <div>
+                    <p className="text-sm text-gray-500">Status</p>
+                    <span className={statusStyle.style}>
+                      {statusStyle.icon}
+                      {ticket.status}
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Priority</p>
+                    <div className={priorityStyle.style}>
+                      {priorityStyle.icon}
+                      {ticket.priority}
                     </div>
                   </div>
-                )}
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500">Created By</p>
+                  <div className="flex items-center space-x-2">
+                    <BsPerson className="w-4 h-4 text-green-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">
+                        {ticket.createdBy.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {ticket.createdBy.role}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Requestor Details */}
-            <div className="flex flex-col gap-6 h-full">
-              <div className="bg-gray-50 p-4 rounded-lg flex-1 flex flex-col">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">
-                  Requestor Details
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-500">Organization</p>
-                    <p className="font-medium">
-                      {ticket.requestor?.orgName || "N/A"}
-                    </p>
+            <div className="flex flex-col gap-6 w-full">
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <div className="bg-gray-50 p-4 rounded-lg flex flex-col w-full">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    Requestor Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Organization</p>
+                      <p className="font-medium">
+                        {ticket.requestor?.org?.name || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Department</p>
+                      <p className="font-medium">
+                        {ticket.requestor?.department?.name || "N/A"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Department</p>
-                    <p className="font-medium">
-                      {ticket.requestor?.departmentName || "N/A"}
-                    </p>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg flex flex-col w-full">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    Operator Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Organization</p>
+                      <p className="font-medium">
+                        {ticket.operator?.org?.name || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Department</p>
+                      <p className="font-medium">
+                        {ticket.operator?.department?.name || "N/A"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-              {/* Description Card */}
-              <div className="bg-gray-50 p-4 rounded-lg flex-1 flex flex-col">
+
+              <div className="bg-gray-50 p-4 rounded-lg flex flex-col w-full">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">
                   Description
                 </h3>
                 <div className="text-sm text-gray-700 flex-1 overflow-y-auto">
                   {ticket.description || "No description provided."}
-                </div>
-              </div>
-            </div>
-
-            {/* Operator Details */}
-            <div className="bg-gray-50 p-4 rounded-lg h-full flex flex-col">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Operator Details
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Organization</p>
-                  <p className="font-medium">
-                    {ticket.operator?.orgName || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Department</p>
-                  <p className="font-medium">
-                    {ticket.operator?.departmentName || "N/A"}
-                  </p>
                 </div>
               </div>
             </div>
@@ -416,9 +414,10 @@ const TicketInfo = ({ ticket, mode }) => {
         {/* Organization Notes Card */}
         <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
           <div className="p-4 border-b border-gray-200">
+            ``
             <h3 className="text-lg font-semibold text-gray-800 flex items-center">
               <BsPerson className="w-5 h-5 text-green-500 mr-2" />
-              Notes by Organization
+              Notes by {ticket.requestor.org.name}
             </h3>
           </div>
           <div className="p-4 flex-1 overflow-y-auto">{renderOrgNotes()}</div>

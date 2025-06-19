@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTrash, FaUndo, FaSearch, FaPlus } from "react-icons/fa";
 import { MdOutlineLockReset } from "react-icons/md";
+
 import {
   fetchEntities,
   createEntity,
   deleteEntity,
   updateEntityPassword,
 } from "../../redux/slices/crudSlice";
+
 import {
   DataTable,
   Button,
@@ -133,8 +135,8 @@ const UserPage = ({
     username: item.username,
     password: item.password,
     role: item.role === "KAP_EMPLOYEE" ? "KAP_" + item.kapRole : item.role,
-    organization: item.organization?.name || "N/A",
-    department: item.department?.name || "N/A",
+    organization: item.organization?.name || words["N/A"],
+    department: item.department?.name || words["N/A"],
   }));
 
   // Filter handlers
@@ -219,7 +221,7 @@ const UserPage = ({
 
       // For MANAGER mode, ensure we're not creating KAP employees
       if (Mode === "MANAGER" && formData.role === "KAP_EMPLOYEE") {
-        throw new Error("Manager cannot create KAP employees");
+        throw new Error(words["Manager cannot create KAP employees"]);
       }
 
       const response = await dispatch(
@@ -335,19 +337,22 @@ const UserPage = ({
 
   // Filter options
   const roleOptions = [
-    { value: "", label: words["All Roles"] || "All Roles" },
+    { value: "", label: words["All Roles"] },
     { value: "KAP_EMPLOYEE", label: words["KAP Employee"] },
-    { value: "ORG_EMPLOYEE", label: words["Organization Employee"] },
+    { value: "GOV_MANAGER", label: words["GOV Manager"] },
+    { value: "OP_MANAGER", label: words["COMPANY Manager"] },
+    { value: "GOV_EMPLOYEE", label: words["GOV Employee"] },
+    { value: "OP_EMPLOYEE", label: words["COMPANY Employee"] },
   ];
 
   const orgTypeOptions = [
-    { value: "", label: words["All Types"] || "All Types" },
+    { value: "", label: words["All Types"] },
     { value: "GOVERNMENT", label: words["Government"] },
     { value: "COMPANY", label: words["Company"] },
   ];
 
   const organizationOptions = [
-    { value: "", label: words["All Organizations"] || "All Organizations" },
+    { value: "", label: words["All Organizations"] },
     ...(entities.organizations?.map((org) => ({
       value: org._id,
       label: org.name,
@@ -355,7 +360,7 @@ const UserPage = ({
   ];
 
   const departmentOptions = [
-    { value: "", label: words["All Departments"] || "All Departments" },
+    { value: "", label: words["All Departments"] },
     ...(entities.departments?.map((dept) => ({
       value: dept._id,
       label: dept.name,

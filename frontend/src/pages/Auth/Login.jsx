@@ -20,7 +20,6 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    console.log("submit");
 
     if (!formData.username.trim()) {
       setError(words["Username cannot be empty"]);
@@ -40,7 +39,6 @@ const LoginPage = () => {
         navigate("/admin-update");
       }
     } catch (err) {
-      console.error("Login error:", err);
       setError(words["Something went wrong. Please try again."]);
     }
   };
