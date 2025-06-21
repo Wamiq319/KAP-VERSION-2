@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, InputField, Dropdown } from "../FormComponents";
 
 const TicketInput = ({
-  type, // 'NOTE' or 'PROGRESS'
-  userRole,
+  type, // 'NOTE' , 'PROGRESS' , 'TRANSFER' , 'TRANSFER_REQUEST'
+  Role, // 'KAP', 'MANAGER', 'EMPLOYEE'
   onClose,
   onSubmit,
 }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user._id;
+  const orgId = user.organization?._id; // Adjust as per your user object structure
 
   const progressOptions = [
     { value: 20, label: "20%" },
@@ -18,21 +19,60 @@ const TicketInput = ({
     { value: 100, label: "100%" },
   ];
 
+  // State for department dropdown (empty initially)
+  const [departmentOptions, setDepartmentOptions] = useState([]);
+
+  // Placeholder data for employees
+  const employeeOptions = [
+    { value: "emp1", label: "Employee 1" },
+    { value: "emp2", label: "Employee 2" },
+  ];
+
   const [inputData, setInputData] = useState({
     addedBy: userId,
     text: "",
 
     targetOrg:
-      userRole === "KAP_EMPLOYEE"
+      Role === "KAP"
         ? ""
-        : userRole === "GOVERNMENT_EMPLOYEE" || userRole === "GOVE_MANAGER"
+        : Role === "MANAGER" || Role === "EMPLOYEE"
         ? "requestor"
         : "operator",
 
-    percentage: type === "PROGRESS" && userRole !== "KAP_EMPLOYEE" ? 0 : null,
+    percentage: type === "PROGRESS" && Role !== "KAP" ? 0 : null,
 
-    observation: type === "PROGRESS" && userRole !== "KAP_EMPLOYEE" ? "" : null,
+    observation: type === "PROGRESS" && Role !== "KAP" ? "" : null,
+
+    transferTarget: "",
+
+    department: "",
+
+    employee: "",
   });
+
+  // Fetch departments when Role is MANAGER and type is TRANSFER_REQUEST
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      if (Role === "MANAGER" && type === "TRANSFER_REQUEST" && orgId) {
+        try {
+          // Replace with your actual API endpoint
+          const res = await fetch(`/api/organization/${orgId}/departments`);
+          const data = await res.json();
+          if (Array.isArray(data.departments)) {
+            setDepartmentOptions(
+              data.departments.map((dept) => ({
+                value: dept._id,
+                label: dept.name,
+              }))
+            );
+          }
+        } catch (err) {
+          setDepartmentOptions([]);
+        }
+      }
+    };
+    fetchDepartments();
+  }, [Role, type, orgId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -50,10 +90,7 @@ const TicketInput = ({
       type,
     };
 
-    if (
-      type === "NOTE" ||
-      (type === "PROGRESS" && userRole === "KAP_EMPLOYEE")
-    ) {
+    if (type === "NOTE" || (type === "PROGRESS" && Role === "KAP")) {
       delete dataToSend.percentage;
       delete dataToSend.observation;
     }
@@ -99,40 +136,7 @@ const TicketInput = ({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {type === "PROGRESS" && userRole !== "KAP_EMPLOYEE" && (
-          <>
-            <div>
-              <Dropdown
-                label="Progress Percentage"
-                options={progressOptions}
-                selectedValue={inputData.percentage}
-                onChange={(value) =>
-                  setInputData((prev) => ({
-                    ...prev,
-                    percentage: value,
-                  }))
-                }
-                required={true}
-              />
-            </div>
-            <div>
-              <InputField
-                label="Observation"
-                value={inputData.observation}
-                onChange={(e) =>
-                  setInputData((prev) => ({
-                    ...prev,
-                    observation: e.target.value,
-                  }))
-                }
-                type="textarea"
-                rows={3}
-                required={true}
-              />
-            </div>
-          </>
-        )}
-
+        {/* NOTE */}
         {type === "NOTE" && (
           <>
             <InputField
@@ -145,8 +149,7 @@ const TicketInput = ({
               rows={4}
               required={true}
             />
-
-            {userRole === "KAP_EMPLOYEE" && (
+            {Role === "KAP" && (
               <Dropdown
                 label="Target Organization"
                 options={[
@@ -166,6 +169,90 @@ const TicketInput = ({
           </>
         )}
 
+        {/* PROGRESS */}
+        {type === "PROGRESS" && (
+          <>
+            <Dropdown
+              label="Progress Percentage"
+              options={progressOptions}
+              selectedValue={inputData.percentage}
+              onChange={(value) =>
+                setInputData((prev) => ({
+                  ...prev,
+                  percentage: value,
+                }))
+              }
+              required={true}
+            />
+            <InputField
+              label="Observation"
+              value={inputData.observation}
+              onChange={(e) =>
+                setInputData((prev) => ({
+                  ...prev,
+                  observation: e.target.value,
+                }))
+              }
+              type="textarea"
+              rows={3}
+              required={true}
+            />
+          </>
+        )}
+
+        {/* TRANSFER */}
+        {type === "TRANSFER" && (
+          <Dropdown
+            label="Select Transfer Target"
+            options={[
+              { value: "target1", label: "Target 1" },
+              { value: "target2", label: "Target 2" },
+            ]}
+            selectedValue={inputData.transferTarget}
+            onChange={(value) =>
+              setInputData((prev) => ({
+                ...prev,
+                transferTarget: value,
+              }))
+            }
+            required={true}
+          />
+        )}
+
+        {/* TRANSFER_REQUEST */}
+        {type === "TRANSFER_REQUEST" && (
+          <>
+            {Role === "MANAGER" && (
+              <Dropdown
+                label="Select Department"
+                options={departmentOptions}
+                selectedValue={inputData.department}
+                onChange={(value) =>
+                  setInputData((prev) => ({
+                    ...prev,
+                    department: value,
+                  }))
+                }
+                required={true}
+              />
+            )}
+            {Role === "EMPLOYEE" && (
+              <Dropdown
+                label="Select Employee"
+                options={employeeOptions}
+                selectedValue={inputData.employee}
+                onChange={(value) =>
+                  setInputData((prev) => ({
+                    ...prev,
+                    employee: value,
+                  }))
+                }
+                required={true}
+              />
+            )}
+          </>
+        )}
+
         <div className="flex justify-end gap-2 mt-6">
           <Button
             text="Cancel"
@@ -173,7 +260,15 @@ const TicketInput = ({
             className="bg-gray-500 hover:bg-gray-600 text-white"
           />
           <Button
-            text={type === "NOTE" ? "Add Note" : "Update Progress"}
+            text={
+              type === "NOTE"
+                ? "Add Note"
+                : type === "PROGRESS"
+                ? "Update Progress"
+                : type === "TRANSFER"
+                ? "Transfer"
+                : "Request Transfer"
+            }
             type="submit"
             className="bg-blue-500 hover:bg-blue-600 text-white"
           />

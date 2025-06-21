@@ -20,6 +20,7 @@ const ViewTicket = ({ mode }) => {
   const [showInput, setShowInput] = useState(false);
   const [inputType, setInputType] = useState(null);
   const [inputTarget, setInputTarget] = useState(null);
+  const [inputRole, setInputRole] = useState(null);
 
   const { currentTicket, status, error } = useSelector((state) => state.crud);
 
@@ -45,14 +46,16 @@ const ViewTicket = ({ mode }) => {
   }, [refreshTicket]);
 
   // Action Handlers
-  const handleAddNote = (noteType) => {
+  const handleAddNote = (noteType, roleForNote = null) => {
     setInputType("NOTE");
     setInputTarget(noteType); // "KAP_NOTE" or "ORG_NOTE"
+    setInputRole(roleForNote || currentUser?.role);
     setShowInput(true);
   };
 
   const handleAddProgress = () => {
     setInputType("PROGRESS");
+    setInputRole(currentUser?.role);
     setShowInput(true);
   };
 
@@ -100,15 +103,17 @@ const ViewTicket = ({ mode }) => {
     }
   };
 
-  const handleTransfer = (transferType) => {
+  const handleTransfer = (transferType, roleForTransfer = null) => {
     setInputType("TRANSFER");
     setInputTarget(transferType);
+    setInputRole(roleForTransfer || currentUser?.role);
     setShowInput(true);
   };
 
-  const handleTransferRequest = (requestType) => {
+  const handleTransferRequest = (requestType, roleForRequest = null) => {
     setInputType("TRANSFER_REQUEST");
     setInputTarget(requestType);
+    setInputRole(roleForRequest || currentUser?.role);
     setShowInput(true);
   };
 
@@ -196,6 +201,7 @@ const ViewTicket = ({ mode }) => {
     setShowInput(false);
     setInputType(null);
     setInputTarget(null);
+    setInputRole(null);
   };
 
   const handleStartWork = async () => {
@@ -314,7 +320,7 @@ const ViewTicket = ({ mode }) => {
         <TicketInput
           type={inputType}
           targetType={inputTarget}
-          userRole={mode}
+          Role={inputRole}
           ticket={currentTicket}
           onClose={handleCloseInput}
           onSubmit={handleSubmitInput}

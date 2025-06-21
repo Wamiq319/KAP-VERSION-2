@@ -10,6 +10,7 @@ const defaultFormData = {
   ticketType: "INSTANT", // Options: INSTANT , SCHEDULED
   priority: "MEDIUM",
   scheduledDate: "",
+  finishDate: "",
   requestor: "",
   operator: "",
   requestorDepartment: "",
@@ -202,6 +203,14 @@ const TicketForm = ({
           words["Scheduled date must be in the future"] ||
           "Scheduled date must be in the future";
       }
+      if (formData.finishDate) {
+        const finishDate = new Date(formData.finishDate);
+        if (finishDate < scheduledDate) {
+          errors.finishDate =
+            words["Finish date must be after scheduled date"] ||
+            "Finish date must be after scheduled date";
+        }
+      }
     }
 
     setFormErrors(errors);
@@ -221,12 +230,14 @@ const TicketForm = ({
       description: formData.description.trim(),
       requestorDepartment: formData.requestorDepartment?.trim() || undefined,
       operatorDepartment: formData.operatorDepartment?.trim() || undefined,
+      finishDate: formData.finishDate || undefined,
     };
 
     try {
       setIsLoading(true);
       setErrorMessage("");
       onSubmit(cleanedFormData);
+      console.log(formData);
     } catch (error) {
       setErrorMessage(error.message || "Failed to submit form");
     } finally {
@@ -424,16 +435,33 @@ const TicketForm = ({
 
       {/* Scheduled Date (only show if SCHEDULED type) */}
       {formData.ticketType === "SCHEDULED" && (
-        <DatePicker
-          label={words["Scheduled Date"] || "Scheduled Date"}
-          name="scheduledDate"
-          value={formData.scheduledDate}
-          onChange={handleChange}
-          required
-          className="w-full"
-          minDate={new Date()} // Can't schedule in the past
-          error={formErrors.scheduledDate}
-        />
+        <>
+          <DatePicker
+            label={words["Scheduled Date"] || "Scheduled Date"}
+            name="scheduledDate"
+            value={formData.scheduledDate}
+            onChange={handleChange}
+            required
+            className="w-full"
+            minDate={new Date()} // Can't schedule in the past
+            error={formErrors.scheduledDate}
+          />
+          {/* Finish Date Picker */}
+          <DatePicker
+            label={words["Finish Date"] || "Finish Date"}
+            name="finishDate"
+            value={formData.finishDate}
+            onChange={handleChange}
+            required={false}
+            className="w-full"
+            minDate={
+              formData.scheduledDate
+                ? new Date(formData.scheduledDate)
+                : new Date()
+            }
+            error={formErrors.finishDate}
+          />
+        </>
       )}
 
       {/* Requestor and Department */}

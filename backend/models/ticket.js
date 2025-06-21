@@ -25,29 +25,6 @@ const ticketSchema = new mongoose.Schema({
     },
   ],
 
-  notifications: [
-    {
-      type: {
-        type: String,
-        enum: ["ORGANIZATION", "DEPARTMENT_MANAGER"],
-        required: true,
-      },
-      recipient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      mobile: {
-        type: String,
-        required: true,
-      },
-      sentAt: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
-
   requestor: {
     org: {
       type: mongoose.Schema.Types.ObjectId,
@@ -166,9 +143,13 @@ const ticketSchema = new mongoose.Schema({
     },
   },
 
+  finishDate: {
+    type: Date,
+  },
+
   startDate: {
     type: Date,
-    required: true,
+    default: null,
   },
 
   closedBy: {
@@ -204,7 +185,6 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
       .populate("kapNotes.addedBy", "name kapRole")
       .populate("orgNotes.addedBy", "name role")
       .populate("kapNotes.targetOrg", "name _id")
-      .populate("notifications.recipient", "name role")
       .lean();
 
     const formattedTicket = {
@@ -339,28 +319,28 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
 ticketSchema.statics.createTicket = async function (ticketData) {
   try {
     const ticketNumber = await this.generateTicketNumber();
+    const isInstant = ticketData.ticketType === "INSTANT";
+
     const newTicketData = {
       ...ticketData,
       ticketNumber,
-      scheduledDate:
-        ticketData.ticketType === "INSTANT"
-          ? new Date()
-          : ticketData.scheduledDate,
+      scheduledDate: isInstant ? new Date() : ticketData.scheduledDate,
       status: "CREATED",
     };
     const createdTicket = await this.create(newTicketData);
-    const allTickets = await this.find({})
-      .select("ticketNumber _id request operator requestor status progress")
-      .populate("requestor.org", "name")
-      .populate("requestor.department", "name")
-      .populate("operator.org", "name")
-      .populate("operator.department", "name")
-      .populate("assignments.requestor.user", "name")
-      .populate("assignments.operator.user", "name");
-    return createSuccessResponse("CREATE", "TICKET", allTickets);
+
+    return {
+      success: true,
+      message: "Ticket created successfully",
+      data: createdTicket,
+    };
   } catch (error) {
     console.error("Error in createTicket model:", error);
-    return createErrorResponse("CREATE", "TICKET", "INTERNAL_ERROR");
+    return {
+      success: false,
+      message: "Internal server error",
+      data: null,
+    };
   }
 };
 

@@ -11,6 +11,7 @@ export const createTicket = async (req, res) => {
       description,
       ticketType,
       scheduledDate,
+      finishDate,
       requestor,
       operator,
       requestorDepartment,
@@ -28,16 +29,19 @@ export const createTicket = async (req, res) => {
       !creator ||
       !priority
     ) {
-      return res.status(400).json({});
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+        data: null,
+      });
     }
 
-    // Validate scheduled date for scheduled tickets
     if (ticketType === "SCHEDULED" && !scheduledDate) {
-      return res
-        .status(400)
-        .json(
-          createErrorResponse("CREATE", "TICKET", "SCHEDULED_DATE_REQUIRED")
-        );
+      return res.status(400).json({
+        success: false,
+        message: "Scheduled date is required for scheduled tickets",
+        data: null,
+      });
     }
 
     const ticketData = {
@@ -45,6 +49,7 @@ export const createTicket = async (req, res) => {
       description,
       ticketType,
       scheduledDate,
+      finishDate,
       requestor: {
         org: requestor,
         department: requestorDepartment,
@@ -58,14 +63,14 @@ export const createTicket = async (req, res) => {
     };
 
     const response = await Ticket.createTicket(ticketData);
-    return res
-      .status(201)
-      .json(handleModelResponse(response, "CREATE", "TICKET"));
+    return res.status(response.success ? 201 : 400).json(response);
   } catch (error) {
     console.error("Error in createTicket controller:", error);
-    return res
-      .status(500)
-      .json(createErrorResponse("CREATE", "TICKET", "INTERNAL_ERROR"));
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      data: null,
+    });
   }
 };
 
