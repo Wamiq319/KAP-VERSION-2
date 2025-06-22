@@ -73,7 +73,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
     });
 
     if (logoFile) {
-      formDataToSend.append("logo", logoFile);
+      formDataToSend.append("image", logoFile);
     }
 
     console.log("Submitting form data:", {

@@ -10,51 +10,25 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
 }
 
-// Accepted file types
+// Accepted image types
 const imageMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-const attachmentMimeTypes = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "text/plain",
-  "application/zip",
-];
 
-// Generate random characters (8 chars)
-const generateRandomChars = () => {
-  return Math.random().toString(36).substring(2, 10);
-};
-
-// Custom filename generators
+// Generate random filename
 const generateImageName = (originalName) => {
   const ext = path.extname(originalName);
-  return `logoImage-${generateRandomChars()}${ext}`;
+  return `image-${Math.random().toString(36).substring(2, 10)}${ext}`;
 };
 
-const generateAttachmentName = (originalName) => {
-  const ext = path.extname(originalName);
-  return `file-${generateRandomChars()}${ext}`;
-};
-
-// Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, tempDir);
   },
   filename: (req, file, cb) => {
-    let uniqueName;
-    if (imageMimeTypes.includes(file.mimetype)) {
-      uniqueName = generateImageName(file.originalname);
-    } else {
-      uniqueName = generateAttachmentName(file.originalname);
-    }
-    cb(null, uniqueName);
+    cb(null, generateImageName(file.originalname));
   },
 });
 
-// Middleware for uploading a SINGLE IMAGE
+// Middleware for uploading a SINGLE IMAGE (field name: 'image')
 export const uploadImage = multer({
   storage,
   fileFilter: (req, file, cb) => {
@@ -67,22 +41,7 @@ export const uploadImage = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
-}).single("logo");
-
-// Middleware for uploading a SINGLE ATTACHMENT
-export const uploadAttachment = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (attachmentMimeTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Invalid file type for attachment"), false);
-    }
-  },
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-}).single("attachment");
+}).single("image");
 
 // Utility to delete a file
 export const deleteTempFile = (filename) => {

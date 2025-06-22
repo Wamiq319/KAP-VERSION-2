@@ -6,6 +6,7 @@ import {
   updateTicket,
   getTicketById,
 } from "../controllers/tktController.js";
+import { uploadImage } from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -17,6 +18,6 @@ router.get("/:ticketId", getTicketById);
 
 router.delete("/:tktId", deleteTicket);
 
-router.patch("/:tktId", updateTicket);
+router.patch("/:tktId", uploadImage, updateTicket);
 
 export default router;

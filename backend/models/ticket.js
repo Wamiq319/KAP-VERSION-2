@@ -16,6 +16,7 @@ const ticketSchema = new mongoose.Schema({
     {
       percentage: { type: Number, min: 0, max: 100, required: true },
       observation: { type: String, required: true },
+      imageUrl: { type: String, default: null },
       updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -261,6 +262,7 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
         ticket.progress?.map((p) => ({
           percentage: p.percentage,
           observation: p.observation,
+          imageUrl: p.imageUrl,
           updatedBy: {
             name: p.updatedBy?.name,
             role: p.updatedBy?.role,
@@ -431,6 +433,7 @@ ticketSchema.statics.updateProgress = async function (data) {
     const progress = {
       percentage: progressData.percentage,
       observation: progressData.observation,
+      imageUrl: progressData.imageUrl || null,
       updatedBy: addedBy,
       updatedAt: new Date(),
     };

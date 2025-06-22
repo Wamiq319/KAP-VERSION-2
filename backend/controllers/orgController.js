@@ -1,5 +1,5 @@
 import Organization from "../models/organization.js";
-import { uploadLogoImage } from "../utils/uploadCloudinary.js";
+import { uploadImage } from "../utils/uploadCloudinary.js";
 import Department from "../models/department.js";
 import {
   handleModelResponse,
@@ -26,12 +26,13 @@ export const createOrganization = async (req, res) => {
 
     if (logoImage) {
       try {
-        const uploaded = await uploadLogoImage(logoImage.path);
+        const uploaded = await uploadImage(logoImage.path);
         logo = {
           public_id: uploaded.public_id,
           url: uploaded.url,
         };
       } catch (error) {
+        console.log(error);
         return res.status(400).json({
           success: false,
           message: "Error processing organization image",
@@ -68,6 +69,17 @@ export const createOrganization = async (req, res) => {
 
     res.status(finalResponse.success ? 201 : 400).json(finalResponse);
   } catch (error) {
+    // Handle Multer file filter errors (e.g., non-image upload)
+    if (
+      error instanceof Error &&
+      error.message.includes("Only JPEG, PNG, GIF, or WEBP images are allowed")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+        data: null,
+      });
+    }
     console.error("Error creating organization:", error);
     res.status(500).json({
       success: false,

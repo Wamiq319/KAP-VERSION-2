@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { formatDate } from "../../utils/dateUtils";
 import { getStatusStyle, getPriorityStyle } from "../../utils/themeUtils.jsx";
 import {
@@ -7,9 +7,15 @@ import {
   BsCheckCircle,
   BsPerson,
   BsClipboardData,
+  BsTools,
+  BsBarChartSteps,
 } from "react-icons/bs";
+import Modal from "../Modal";
 
 const TicketInfo = ({ ticket, mode }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState(null);
+
   console.log("Current Ticket In Ticket View:", ticket);
 
   const renderNote = (note, type) => {
@@ -82,23 +88,49 @@ const TicketInfo = ({ ticket, mode }) => {
         {ticket.progress.map((update, idx) => (
           <div
             key={idx}
-            className="bg-gray-50 rounded-lg p-3 border-l-4 border-green-500 mb-2"
+            className="bg-gray-50 rounded-lg p-3 border-l-4 border-green-500 mb-2 flex items-center gap-4"
           >
-            <div>
+            {/* Column 1: Progress Image */}
+            <div
+              className="flex-shrink-0 w-16 h-16 flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                setModalOpen(true);
+                setModalImageUrl(update.imageUrl || null);
+              }}
+            >
+              {update.imageUrl ? (
+                <img
+                  src={update.imageUrl}
+                  alt="Progress Attachment"
+                  className="w-16 h-16 object-cover rounded border shadow"
+                />
+              ) : (
+                <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded border shadow">
+                  <BsBarChartSteps className="w-8 h-8 text-green-400" />
+                </div>
+              )}
+            </div>
+            {/* Column 2: Name, Role, Date, Progress */}
+            <div className="flex flex-col min-w-[140px] max-w-[180px]">
               <span className="font-semibold text-gray-700 text-sm">
                 {update.updatedBy?.name || "Unknown"}
               </span>
-              <span className="text-green-400 text-xs ml-2">
+              <span className="text-green-400 text-xs">
                 ({update.updatedBy?.role || "Unknown Role"})
               </span>
+              <span className="text-xs text-gray-500 mt-1">
+                {formatDate(update.updatedAt)}
+              </span>
+              <span className="text-green-700 text-xs font-bold mt-1">
+                {update.percentage}% Progress
+              </span>
             </div>
-            <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
-              <span className="text-blue-600 font-medium">Date:</span>
-              {formatDate(update.updatedAt)}
-              <span className="text-green-400 font-medium ml-4">Progress:</span>
-              <span className="text-gray-700">{update.percentage}%</span>
+            {/* Column 3: Observation/Description */}
+            <div className="flex-1 pl-4 border-l border-gray-200 min-h-[48px] flex items-center">
+              <span className="text-gray-700 text-xs">
+                {update.observation}
+              </span>
             </div>
-            <p className="text-gray-700 text-xs mb-1">{update.observation}</p>
           </div>
         ))}
       </div>
@@ -358,47 +390,47 @@ const TicketInfo = ({ ticket, mode }) => {
           </div>
         </div>
 
-        {/* Assignments */}
-
+        {/* Progress History (moved here) */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Assignments
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <BsClock className="w-5 h-5 text-blue-500 mr-2" />
+            Progress History
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Requestor</p>
-              <p className="font-medium">
-                {ticket.assignments?.requestor?.user?.name || "N/A"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {ticket.assignments?.requestor?.user?.role || "Unknown Role"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Operator</p>
-              <p className="font-medium">
-                {ticket.assignments?.operator?.user?.name || "N/A"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {ticket.assignments?.operator?.user?.role || "Unknown Role"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Transfer History Section */}
-        <div className="bg-white rounded-lg shadow p-6 w-full h-52 flex flex-col">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Transfer History
-          </h2>
-          <div className="flex-1 overflow-y-auto">
-            {renderTransferHistory()}
-          </div>
+          {renderProgress()}
         </div>
       </div>
 
       {/* Side Column */}
       <div className="w-full md:w-[350px] flex flex-col gap-4">
+        {/* Assignments Card (moved to top, enhanced UI) */}
+        <div className="bg-white rounded-lg shadow-md flex flex-col mb-2">
+          <div className="p-4 border-b border-gray-200 flex items-center">
+            <BsPerson className="w-5 h-5 text-indigo-500 mr-2" />
+            <h3 className="text-lg font-semibold text-gray-800">Assignments</h3>
+          </div>
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-center">
+              <BsPerson className="w-8 h-8 text-green-500 mb-1" />
+              <p className="text-xs text-gray-500">Requestor</p>
+              <p className="font-medium">
+                {ticket.assignments?.requestor?.user?.name || "N/A"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {ticket.assignments?.requestor?.user?.role || "Unknown Role"}
+              </p>
+            </div>
+            <div className="flex flex-col items-center">
+              <BsPerson className="w-8 h-8 text-blue-500 mb-1" />
+              <p className="text-xs text-gray-500">Operator</p>
+              <p className="font-medium">
+                {ticket.assignments?.operator?.user?.name || "N/A"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {ticket.assignments?.operator?.user?.role || "Unknown Role"}
+              </p>
+            </div>
+          </div>
+        </div>
         {/* KAP Notes Card */}
         <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
           <div className="p-4 border-b border-gray-200">
@@ -412,7 +444,6 @@ const TicketInfo = ({ ticket, mode }) => {
         {/* Organization Notes Card */}
         <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
           <div className="p-4 border-b border-gray-200">
-            ``
             <h3 className="text-lg font-semibold text-gray-800 flex items-center">
               <BsPerson className="w-5 h-5 text-green-500 mr-2" />
               Notes by {ticket.requestor.org.name}
@@ -420,17 +451,35 @@ const TicketInfo = ({ ticket, mode }) => {
           </div>
           <div className="p-4 flex-1 overflow-y-auto">{renderOrgNotes()}</div>
         </div>
-        {/* Progress History Card */}
+        {/* Transfer History Card (replaces Progress History) */}
         <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center">
               <BsClock className="w-5 h-5 text-blue-500 mr-2" />
-              Progress History
+              Transfer History
             </h3>
           </div>
-          <div className="p-4 flex-1 overflow-y-auto">{renderProgress()}</div>
+          <div className="p-4 flex-1 overflow-y-auto">
+            {renderTransferHistory()}
+          </div>
         </div>
       </div>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={"Progress Visual"}
+        imageUrl={modalImageUrl}
+        size="md"
+      >
+        {!modalImageUrl && (
+          <div className="flex flex-col items-center justify-center w-full h-64">
+            <BsBarChartSteps className="w-20 h-20 text-green-400 mb-4" />
+            <div className="text-gray-500 text-lg">
+              No progress visuals available
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

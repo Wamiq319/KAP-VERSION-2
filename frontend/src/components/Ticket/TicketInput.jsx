@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, InputField, Dropdown } from "../FormComponents";
+import { Button, InputField, Dropdown, ImageInput } from "../FormComponents";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,6 +45,9 @@ const TicketInput = ({
     employee: "",
   });
 
+  // Add state for progress image
+  const [progressImage, setProgressImage] = useState(null);
+
   // Fetch departments when Role is MANAGER and type is TRANSFER_REQUEST
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -84,6 +87,11 @@ const TicketInput = ({
       ...inputData,
       type,
     };
+
+    // If progress, add image if present
+    if (type === "PROGRESS" && progressImage) {
+      dataToSend.image = progressImage;
+    }
 
     if (type === "NOTE" || (type === "PROGRESS" && Role === "KAP")) {
       delete dataToSend.percentage;
@@ -203,6 +211,13 @@ const TicketInput = ({
               type="textarea"
               rows={3}
               required={true}
+            />
+            {/* Optional image upload for progress */}
+            <ImageInput
+              label="Progress Image (optional)"
+              onChange={setProgressImage}
+              className="mt-2"
+              required={false}
             />
           </>
         )}

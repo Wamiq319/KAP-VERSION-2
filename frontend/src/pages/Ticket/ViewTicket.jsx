@@ -177,6 +177,9 @@ const ViewTicket = ({ mode }) => {
         userId: currentUser._id,
       };
 
+      let useFormData = false;
+      let formDataToSend = null;
+
       switch (inputType) {
         case "NOTE":
           payload.actionType = "ADD_NOTE";
@@ -188,11 +191,24 @@ const ViewTicket = ({ mode }) => {
           break;
 
         case "PROGRESS":
-          payload.actionType = "ADD_PROGRESS";
-          payload.data = {
-            percentage: data.percentage,
-            observation: data.observation,
-          };
+          if (data.image) {
+            // Use FormData if image is present
+            formDataToSend = new FormData();
+            formDataToSend.append("actionType", "ADD_PROGRESS");
+            formDataToSend.append("userId", currentUser._id);
+            formDataToSend.append("data[percentage]", data.percentage);
+            formDataToSend.append("data[observation]", data.observation);
+            formDataToSend.append("image", data.image);
+            useFormData = true;
+          } else {
+            // Use JSON if no image
+            payload.actionType = "ADD_PROGRESS";
+            payload.data = {
+              percentage: data.percentage,
+              observation: data.observation,
+            };
+            useFormData = false;
+          }
           break;
 
         case "TRANSFER":
@@ -220,12 +236,15 @@ const ViewTicket = ({ mode }) => {
       // Debug logging
       console.log("Ticket ID:", currentTicket._id);
       console.log("Submitting payload:", payload);
+      if (useFormData) {
+        console.log("Submitting as FormData");
+      }
 
       const response = await dispatch(
         updateEntity({
           entityType: "tickets",
           id: currentTicket._id,
-          formData: payload,
+          formData: useFormData ? formDataToSend : payload,
         })
       );
 
