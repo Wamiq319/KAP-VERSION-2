@@ -185,6 +185,20 @@ export const updateTicket = async (req, res) => {
         });
         break;
 
+      case "TRANSFER_TICKET":
+        response = await Ticket.handleTransfer(tktId, {
+          ...data,
+          transferKind: "TRANSFER",
+        });
+        break;
+
+      case "TRANSFER_REQUEST":
+        response = await Ticket.handleTransfer(tktId, {
+          ...data,
+          transferKind: "TRANSFER_REQUEST",
+        });
+        break;
+
       default:
         return res.status(400).json({
           success: false,

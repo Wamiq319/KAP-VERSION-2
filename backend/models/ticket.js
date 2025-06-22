@@ -518,90 +518,79 @@ ticketSchema.statics.updateStatus = async function (data) {
   }
 };
 
-ticketSchema.statics.assignTo = async function (ticketId, assignmentData) {
+ticketSchema.statics.handleTransfer = async function (ticketId, transferData) {
   try {
     const ticket = await this.findById(ticketId);
     if (!ticket) {
       return createErrorResponse("UPDATE", "TICKET", "NOT_FOUND");
     }
 
-    const { role, userId, status = "PENDING" } = assignmentData;
-    const allowedStatuses = ["PENDING", "ACCEPTED", "REJECTED"];
-
-    if (!allowedStatuses.includes(status)) {
-      return createErrorResponse("UPDATE", "TICKET", "INVALID_STATUS");
+    // Use transferKind to determine logic
+    if (transferData.transferKind === "TRANSFER") {
+      const { assignTo, targetOrg, status = "PENDING" } = transferData;
+      const allowedStatuses = ["PENDING", "ACCEPTED", "REJECTED"];
+      if (!allowedStatuses.includes(status)) {
+        return createErrorResponse("UPDATE", "TICKET", "INVALID_STATUS");
+      }
+      if (targetOrg === "operator") {
+        ticket.assignments.operator = {
+          user: assignTo,
+          status,
+          assignedAt: new Date(),
+        };
+      } else if (targetOrg === "requestor") {
+        ticket.assignments.requestor = {
+          user: assignTo,
+          status,
+          assignedAt: new Date(),
+        };
+      } else {
+        ticket.assignments.operator = {
+          user: assignTo,
+          status,
+          assignedAt: new Date(),
+        };
+      }
+      ticket.updatedAt = new Date();
+      await ticket.save();
+      const updatedTicket = await this.findById(ticketId)
+        .populate("assignments.requestor.user", "name role department")
+        .populate("assignments.operator.user", "name role department");
+      return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
     }
 
-    if (role === "requestor") {
-      ticket.assignments.requestor = {
-        user: userId,
-        status,
-        assignedAt: new Date(),
+    if (transferData.transferKind === "TRANSFER_REQUEST") {
+      const transferRequest = {
+        type: transferData.type,
+        requestedBy: transferData.requestedBy,
+        organization: transferData.organization,
+        currentDepartment: transferData.currentDepartment,
+        reason: transferData.reason,
+        status: "PENDING",
+        createdAt: new Date(),
       };
-    } else if (role === "operator") {
-      ticket.assignments.operator = {
-        user: userId,
-        status,
-        assignedAt: new Date(),
-      };
+      if (transferData.type === "DEPARTMENT") {
+        transferRequest.targetDepartment = transferData.targetDepartment;
+      } else if (transferData.type === "EMPLOYEE") {
+        transferRequest.targetEmployee = transferData.targetEmployee;
+      }
+      ticket.transferRequests = [
+        ...(ticket.transferRequests || []),
+        transferRequest,
+      ];
+      ticket.status = "TRANSFER_REQUESTED";
+      ticket.updatedAt = new Date();
+      await ticket.save();
+      const updatedTicket = await this.findById(ticketId)
+        .populate("transferRequests.requestedBy", "name role")
+        .populate("transferRequests.targetEmployee", "name role")
+        .populate("transferRequests.targetDepartment", "name");
+      return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
     }
 
-    ticket.updatedAt = new Date();
-    await ticket.save();
-
-    const updatedTicket = await this.findById(ticketId)
-      .populate("assignments.requestor.user", "name role department")
-      .populate("assignments.operator.user", "name role department");
-
-    return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
+    return createErrorResponse("UPDATE", "TICKET", "INVALID_TRANSFER_KIND");
   } catch (error) {
-    console.error("Error assigning ticket:", error);
-    return createErrorResponse("UPDATE", "TICKET", "INTERNAL_ERROR");
-  }
-};
-
-ticketSchema.statics.openTransferRequest = async function (
-  ticketId,
-  transferData
-) {
-  try {
-    const ticket = await this.findById(ticketId);
-    if (!ticket) {
-      return createErrorResponse("UPDATE", "TICKET", "NOT_FOUND");
-    }
-
-    const transferRequest = {
-      type: transferData.type,
-      requestedBy: transferData.requestedBy,
-      organization: transferData.organization,
-      currentDepartment: transferData.currentDepartment,
-      reason: transferData.reason,
-      status: "PENDING",
-      createdAt: new Date(),
-    };
-
-    if (transferData.type === "DEPARTMENT") {
-      transferRequest.targetDepartment = transferData.targetDepartment;
-    } else if (transferData.type === "EMPLOYEE") {
-      transferRequest.targetEmployee = transferData.targetEmployee;
-    }
-
-    ticket.transferRequests = [
-      ...(ticket.transferRequests || []),
-      transferRequest,
-    ];
-    ticket.status = "TRANSFER_REQUESTED";
-    ticket.updatedAt = new Date();
-    await ticket.save();
-
-    const updatedTicket = await this.findById(ticketId)
-      .populate("transferRequests.requestedBy", "name role")
-      .populate("transferRequests.targetEmployee", "name role")
-      .populate("transferRequests.targetDepartment", "name");
-
-    return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
-  } catch (error) {
-    console.error("Error creating transfer request:", error);
+    console.error("Error handling transfer:", error);
     return createErrorResponse("UPDATE", "TICKET", "INTERNAL_ERROR");
   }
 };

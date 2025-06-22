@@ -34,7 +34,9 @@ const TicketInfo = ({ ticket, mode }) => {
           <span className="text-blue-600 font-medium">Date:</span>
           {formatDate(note.createdAt)}
           <span className={`${toLabelColor} font-medium ml-4`}>To:</span>
-          <span className="text-gray-700">{note.targetOrg?.name || "N/A"}</span>
+          <span className="text-gray-700">
+            {note.targetOrg?.name || "OPERATOR"}
+          </span>
         </div>
         <p className="text-gray-700 text-sm">{note.text}</p>
       </div>
@@ -75,40 +77,32 @@ const TicketInfo = ({ ticket, mode }) => {
         </div>
       );
     }
-
-    return ticket.progress.map((update, index) => (
-      <div
-        key={index}
-        className="bg-white rounded-lg shadow p-4 mb-4 border-l-4 border-green-500"
-      >
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <span className="font-semibold text-gray-700">
-              {update.operator?.name || "Unknown"}
-            </span>
-            <span className="text-gray-500 text-sm ml-2">
-              ({update.operator?.role || "Unknown Role"})
-            </span>
+    return (
+      <div className="space-y-3">
+        {ticket.progress.map((update, idx) => (
+          <div
+            key={idx}
+            className="bg-gray-50 rounded-lg p-3 border-l-4 border-green-500 mb-2"
+          >
+            <div>
+              <span className="font-semibold text-gray-700 text-sm">
+                {update.updatedBy?.name || "Unknown"}
+              </span>
+              <span className="text-green-400 text-xs ml-2">
+                ({update.updatedBy?.role || "Unknown Role"})
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
+              <span className="text-blue-600 font-medium">Date:</span>
+              {formatDate(update.updatedAt)}
+              <span className="text-green-400 font-medium ml-4">Progress:</span>
+              <span className="text-gray-700">{update.percentage}%</span>
+            </div>
+            <p className="text-gray-700 text-xs mb-1">{update.observation}</p>
           </div>
-          <span className="text-sm text-gray-500">
-            {formatDate(update.timestamp)}
-          </span>
-        </div>
-        <div className="mb-2">
-          <span className="text-sm font-medium text-gray-600">Progress:</span>
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-            <div
-              className="bg-green-600 h-2.5 rounded-full"
-              style={{ width: `${update.percentage}%` }}
-            ></div>
-          </div>
-          <span className="text-sm text-gray-500">{update.percentage}%</span>
-        </div>
-        {update.observation && (
-          <p className="text-gray-700 mt-2">{update.observation}</p>
-        )}
+        ))}
       </div>
-    ));
+    );
   };
 
   const renderTransferHistory = () => {
@@ -373,16 +367,20 @@ const TicketInfo = ({ ticket, mode }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Requestor</p>
-              <p className="font-medium">{ticket.requestor?.name || "N/A"}</p>
+              <p className="font-medium">
+                {ticket.assignments?.requestor?.user?.name || "N/A"}
+              </p>
               <p className="text-sm text-gray-500">
-                {ticket.requestor?.role || "Unknown Role"}
+                {ticket.assignments?.requestor?.user?.role || "Unknown Role"}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Operator</p>
-              <p className="font-medium">{ticket.operator?.name || "N/A"}</p>
+              <p className="font-medium">
+                {ticket.assignments?.operator?.user?.name || "N/A"}
+              </p>
               <p className="text-sm text-gray-500">
-                {ticket.operator?.role || "Unknown Role"}
+                {ticket.assignments?.operator?.user?.role || "Unknown Role"}
               </p>
             </div>
           </div>

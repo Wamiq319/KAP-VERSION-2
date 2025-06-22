@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, InputField, Dropdown } from "../FormComponents";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchEntities } from "../../redux/slices/crudSlice";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -39,28 +37,13 @@ const TicketInput = ({
   const [inputData, setInputData] = useState({
     addedBy: userId,
     text: "",
-
-    targetOrg:
-      Role === "KAP"
-        ? ""
-        : Role === "MANAGER" || Role === "EMPLOYEE"
-        ? "requestor"
-        : "operator",
-
+    targetOrg: Role === "KAP" ? "" : "operator",
     percentage: type === "PROGRESS" && Role !== "KAP" ? 0 : null,
-
     observation: type === "PROGRESS" && Role !== "KAP" ? "" : null,
-
     transferTarget: "",
-
     department: "",
-
     employee: "",
   });
-
-  const dispatch = useDispatch();
-  const users = useSelector((state) => state.users || []);
-  const hasFetchedUsers = useRef(false);
 
   // Fetch departments when Role is MANAGER and type is TRANSFER_REQUEST
   useEffect(() => {

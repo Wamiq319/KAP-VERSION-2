@@ -122,21 +122,18 @@ const ViewTicket = ({ mode }) => {
 
   const handleTransfer = async (transferType) => {
     let optionsForTransfer = [];
+
     if (transferType === "TICKET" && currentUser) {
       let departmentId = currentUser.department?._id;
       let employeeRole = null;
+
       if (currentUser.role === "OP_MANAGER") {
         employeeRole = "OP_EMPLOYEE";
-      } else if (
-        currentUser.role === "GOV_MANAGER" &&
-        currentTicket?.requestor?.department?._id
-      ) {
+      } else if (currentUser.role === "GOV_MANAGER") {
         employeeRole = "GOV_EMPLOYEE";
-        departmentId = currentTicket.requestor.department._id;
       }
       // Debug logs
-      console.log("[handleTransfer] departmentId:", departmentId);
-      console.log("[handleTransfer] employeeRole:", employeeRole);
+
       if (departmentId && employeeRole) {
         console.log("[handleTransfer] Dispatching fetchEntities for users...");
         const result = await dispatch(
@@ -201,9 +198,9 @@ const ViewTicket = ({ mode }) => {
         case "TRANSFER":
           payload.actionType = "TRANSFER_TICKET";
           payload.data = {
-            targetType: inputTarget,
-            targetId: data.targetId,
-            reason: data.reason,
+            assignTo: data.transferTarget,
+            targetOrg:
+              currentUser.role === "GOV_MANAGER" ? "requestor" : "operator",
           };
           break;
 
