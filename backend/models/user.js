@@ -86,15 +86,30 @@ userSchema.statics.getUsers = async function (options = {}) {
     if (organization) query.organization = organization;
     if (department) query.department = department;
 
-    // Always include these fields
-    const baseFields =
-      "name username mobile role kapRole organization department password";
-    const selectedFields = fields ? `${baseFields} ${fields}` : baseFields;
-
-    const projection = {};
-    selectedFields.split(" ").forEach((field) => {
-      projection[field] = 1;
-    });
+    let projection = {};
+    if (fields) {
+      // Always include _id
+      fields
+        .split(",")
+        .concat("_id")
+        .forEach((field) => {
+          projection[field.trim()] = 1;
+        });
+    } else {
+      // Default: all main fields
+      [
+        "name",
+        "username",
+        "mobile",
+        "role",
+        "kapRole",
+        "organization",
+        "department",
+        "password",
+      ].forEach((field) => {
+        projection[field] = 1;
+      });
+    }
 
     const data = await this.find(query, projection)
       .limit(Number(limit) || 0)
@@ -103,25 +118,38 @@ userSchema.statics.getUsers = async function (options = {}) {
       .populate("department", "name _id logo");
 
     // Format the response data
-    const formattedData = data.map((user) => ({
-      _id: user._id,
-      name: user.name,
-      username: user.username,
-      mobile: user.mobile,
-      role: user.role,
-      kapRole: user.kapRole,
-      organization: user.organization
-        ? {
-            _id: user.organization._id,
-            name: user.organization.name,
-            logo: user.organization.logo.url,
-          }
-        : null,
-      department: user.department
-        ? { _id: user.department._id, name: user.department.name }
-        : null,
-      password: user.password,
-    }));
+    let formattedData;
+    if (fields) {
+      // Only include requested fields (plus _id)
+      const requestedFields = fields.split(",").map((f) => f.trim());
+      formattedData = data.map((user) => {
+        const obj = { _id: user._id };
+        requestedFields.forEach((field) => {
+          if (user[field] !== undefined) obj[field] = user[field];
+        });
+        return obj;
+      });
+    } else {
+      formattedData = data.map((user) => ({
+        _id: user._id,
+        name: user.name,
+        username: user.username,
+        mobile: user.mobile,
+        role: user.role,
+        kapRole: user.kapRole,
+        organization: user.organization
+          ? {
+              _id: user.organization._id,
+              name: user.organization.name,
+              logo: user.organization.logo.url,
+            }
+          : null,
+        department: user.department
+          ? { _id: user.department._id, name: user.department.name }
+          : null,
+        password: user.password,
+      }));
+    }
 
     return {
       success: true,

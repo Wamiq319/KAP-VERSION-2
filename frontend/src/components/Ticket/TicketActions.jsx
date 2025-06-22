@@ -80,18 +80,28 @@ const TicketActions = ({
                         disabled={isTransferRequested}
                       />
                     )}
+                    {/* Transfer Ticket Button */}
                     <Button
                       text={
                         isTransferRequested
                           ? "Transfer Pending"
                           : "Transfer Ticket"
                       }
-                      onClick={onTransferTicket}
+                      onClick={() => onTransferTicket("TICKET")}
                       className={`${
                         isTransferRequested
                           ? "bg-gray-400"
                           : "bg-orange-600 hover:bg-orange-700"
                       }`}
+                      icon={<FaExchangeAlt />}
+                      size="medium"
+                      disabled={isTransferRequested}
+                    />
+                    {/* Transfer to Department Button */}
+                    <Button
+                      text="Transfer to Department"
+                      onClick={() => onTransferTicket("DEPARTMENT")}
+                      className="bg-orange-500 hover:bg-orange-600"
                       icon={<FaExchangeAlt />}
                       size="medium"
                       disabled={isTransferRequested}
@@ -128,11 +138,20 @@ const TicketActions = ({
                   icon={<FaPlus />}
                   size="medium"
                 />
-
+                {/* Transfer Ticket Button */}
+                <Button
+                  text="Transfer Ticket"
+                  onClick={() => onTransferTicket("TICKET")}
+                  className="bg-orange-600 hover:bg-orange-700"
+                  icon={<FaExchangeAlt />}
+                  size="medium"
+                  disabled={isTransferRequested}
+                />
+                {/* Transfer to Department Button */}
                 <Button
                   text="Transfer to Department"
                   onClick={() => onTransferTicket("DEPARTMENT")}
-                  className="bg-orange-600 hover:bg-orange-700"
+                  className="bg-orange-500 hover:bg-orange-600"
                   icon={<FaExchangeAlt />}
                   size="medium"
                   disabled={isTransferRequested}

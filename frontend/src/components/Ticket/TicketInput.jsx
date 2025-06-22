@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button, InputField, Dropdown } from "../FormComponents";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchEntities } from "../../redux/slices/crudSlice";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const TicketInput = ({
   type, // 'NOTE' , 'PROGRESS' , 'TRANSFER' , 'TRANSFER_REQUEST'
   Role, // 'KAP', 'MANAGER', 'EMPLOYEE'
   onClose,
   onSubmit,
+  ticket,
+  transferOptions,
 }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user._id;
@@ -22,11 +28,13 @@ const TicketInput = ({
   // State for department dropdown (empty initially)
   const [departmentOptions, setDepartmentOptions] = useState([]);
 
-  // Placeholder data for employees
-  const employeeOptions = [
-    { value: "emp1", label: "Employee 1" },
-    { value: "emp2", label: "Employee 2" },
-  ];
+  // State for employee dropdown (dynamic)
+  const employeeOptions = transferOptions || [];
+
+  const mappedEmployeeOptions = employeeOptions.map((emp) => ({
+    value: emp._id,
+    label: emp.name,
+  }));
 
   const [inputData, setInputData] = useState({
     addedBy: userId,
@@ -49,6 +57,10 @@ const TicketInput = ({
 
     employee: "",
   });
+
+  const dispatch = useDispatch();
+  const users = useSelector((state) => state.users || []);
+  const hasFetchedUsers = useRef(false);
 
   // Fetch departments when Role is MANAGER and type is TRANSFER_REQUEST
   useEffect(() => {
@@ -119,6 +131,18 @@ const TicketInput = ({
             </button>
           </div>
           <div className="space-y-2">
+            <div>
+              <strong>Type:</strong> <span className="text-xs">{type}</span>
+            </div>
+            <div>
+              <strong>Role:</strong> <span className="text-xs">{Role}</span>
+            </div>
+            <div>
+              <strong>Transfer Options (employeeOptions):</strong>
+              <pre className="whitespace-pre-wrap text-xs">
+                {JSON.stringify(employeeOptions, null, 2)}
+              </pre>
+            </div>
             <div>
               <strong>Input Data:</strong>
               <pre className="whitespace-pre-wrap text-xs">
@@ -201,7 +225,21 @@ const TicketInput = ({
         )}
 
         {/* TRANSFER */}
-        {type === "TRANSFER" && (
+        {type === "TRANSFER" && Role === "MANAGER" && (
+          <Dropdown
+            label="Select Employee to Transfer"
+            options={mappedEmployeeOptions}
+            selectedValue={inputData.transferTarget}
+            onChange={(value) =>
+              setInputData((prev) => ({
+                ...prev,
+                transferTarget: value,
+              }))
+            }
+            required={true}
+          />
+        )}
+        {type === "TRANSFER" && Role !== "MANAGER" && (
           <Dropdown
             label="Select Transfer Target"
             options={[

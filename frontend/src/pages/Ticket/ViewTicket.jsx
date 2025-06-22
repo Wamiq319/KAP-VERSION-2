@@ -21,6 +21,7 @@ const ViewTicket = ({ mode }) => {
   const [inputType, setInputType] = useState(null);
   const [inputTarget, setInputTarget] = useState(null);
   const [inputRole, setInputRole] = useState(null);
+  const [transferOptions, setTransferOptions] = useState([]);
 
   const { currentTicket, status, error } = useSelector((state) => state.crud);
 
@@ -45,17 +46,33 @@ const ViewTicket = ({ mode }) => {
     refreshTicket();
   }, [refreshTicket]);
 
+  // Helper to map mode to Role for TicketInput
+  const getRoleFromMode = () => {
+    switch (mode) {
+      case "KAP_EMPLOYEE":
+        return "KAP";
+      case "OP_MANAGER":
+      case "GOV_MANAGER":
+        return "MANAGER";
+      case "OP_EMPLOYEE":
+      case "GOV_EMPLOYEE":
+        return "EMPLOYEE";
+      default:
+        return currentUser?.role || "EMPLOYEE";
+    }
+  };
+
   // Action Handlers
-  const handleAddNote = (noteType, roleForNote = null) => {
+  const handleAddNote = (noteType) => {
     setInputType("NOTE");
     setInputTarget(noteType); // "KAP_NOTE" or "ORG_NOTE"
-    setInputRole(roleForNote || currentUser?.role);
+    setInputRole(getRoleFromMode());
     setShowInput(true);
   };
 
   const handleAddProgress = () => {
     setInputType("PROGRESS");
-    setInputRole(currentUser?.role);
+    setInputRole(getRoleFromMode());
     setShowInput(true);
   };
 
@@ -103,17 +120,55 @@ const ViewTicket = ({ mode }) => {
     }
   };
 
-  const handleTransfer = (transferType, roleForTransfer = null) => {
+  const handleTransfer = async (transferType) => {
+    let optionsForTransfer = [];
+    if (transferType === "TICKET" && currentUser) {
+      let departmentId = currentUser.department?._id;
+      let employeeRole = null;
+      if (currentUser.role === "OP_MANAGER") {
+        employeeRole = "OP_EMPLOYEE";
+      } else if (
+        currentUser.role === "GOV_MANAGER" &&
+        currentTicket?.requestor?.department?._id
+      ) {
+        employeeRole = "GOV_EMPLOYEE";
+        departmentId = currentTicket.requestor.department._id;
+      }
+      // Debug logs
+      console.log("[handleTransfer] departmentId:", departmentId);
+      console.log("[handleTransfer] employeeRole:", employeeRole);
+      if (departmentId && employeeRole) {
+        console.log("[handleTransfer] Dispatching fetchEntities for users...");
+        const result = await dispatch(
+          fetchEntities({
+            entityType: "users",
+            params: {
+              role: employeeRole,
+              department: departmentId,
+              fields: "_id,name",
+            },
+          })
+        );
+        console.log("[handleTransfer] fetchEntities result:", result);
+        optionsForTransfer = result?.payload?.data || [];
+        console.log("[handleTransfer] optionsForTransfer:", optionsForTransfer);
+      } else {
+        console.log(
+          "[handleTransfer] Skipping fetchEntities: missing departmentId or employeeRole"
+        );
+      }
+    }
+    setTransferOptions(optionsForTransfer);
     setInputType("TRANSFER");
     setInputTarget(transferType);
-    setInputRole(roleForTransfer || currentUser?.role);
+    setInputRole(getRoleFromMode());
     setShowInput(true);
   };
 
-  const handleTransferRequest = (requestType, roleForRequest = null) => {
+  const handleTransferRequest = (requestType) => {
     setInputType("TRANSFER_REQUEST");
     setInputTarget(requestType);
-    setInputRole(roleForRequest || currentUser?.role);
+    setInputRole(getRoleFromMode());
     setShowInput(true);
   };
 
@@ -324,6 +379,7 @@ const ViewTicket = ({ mode }) => {
           ticket={currentTicket}
           onClose={handleCloseInput}
           onSubmit={handleSubmitInput}
+          transferOptions={transferOptions}
         />
       </Modal>
     </div>
