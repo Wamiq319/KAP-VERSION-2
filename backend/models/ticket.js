@@ -427,7 +427,7 @@ ticketSchema.statics.updateProgress = async function (data) {
     const ticket = await this.findById(Id);
 
     if (!ticket) {
-      return createErrorResponse("UPDATE", "TICKET", "NOT_FOUND");
+      return { success: false, message: "Ticket not found", data: null };
     }
 
     const progress = {
@@ -442,38 +442,37 @@ ticketSchema.statics.updateProgress = async function (data) {
     ticket.updatedAt = new Date();
     await ticket.save();
 
-    const updatedTicket = this.getFormattedTicket(Id);
+    const updatedTicket = await this.getFormattedTicket(Id);
 
-    return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
+    return {
+      success: true,
+      message: "Progress updated successfully",
+      data: updatedTicket,
+    };
   } catch (error) {
     console.error("Error updating progress:", error);
-    return createErrorResponse("UPDATE", "TICKET", "INTERNAL_ERROR");
+    return { success: false, message: "Internal server error", data: null };
   }
 };
 
 ticketSchema.statics.updateStatus = async function (data) {
   const { Id, newStatus, addedBy } = data;
   try {
-    // 1. Get the ticket
-
     const ticket = await this.findById(Id);
     if (!ticket) {
-      return {
-        success: false,
-        message: "Ticket not found",
-        data: null,
-      };
+      return { success: false, message: "Ticket not found", data: null };
     }
 
     // 2. Check if scheduled date has passed and should auto-progress
     const now = new Date();
+    let statusToSet = newStatus;
     if (
       newStatus === "ACCEPTED" &&
       ticket.ticketType === "SCHEDULED" &&
       ticket.scheduledDate &&
       ticket.scheduledDate <= now
     ) {
-      newStatus = "IN_PROGRESS";
+      statusToSet = "IN_PROGRESS";
     }
 
     // 3. Define allowed status transitions
@@ -482,7 +481,7 @@ ticketSchema.statics.updateStatus = async function (data) {
       ACCEPTED: ["IN_PROGRESS", "TRANSFER_REQUESTED", "CREATED"],
       IN_PROGRESS: ["COMPLETED", "TRANSFER_REQUESTED", "ACCEPTED"],
       COMPLETED: ["CLOSED", "IN_PROGRESS"],
-      CLOSED: [], // No transitions from closed state
+      CLOSED: [],
       TRANSFER_REQUESTED: ["ACCEPTED", "CREATED"],
     };
 
@@ -490,23 +489,23 @@ ticketSchema.statics.updateStatus = async function (data) {
     const currentStatus = ticket.status;
     const allowedNextStatuses = statusTransitions[currentStatus] || [];
 
-    if (!allowedNextStatuses.includes(newStatus)) {
+    if (!allowedNextStatuses.includes(statusToSet)) {
       return {
         success: false,
-        message: `Invalid status transition from ${currentStatus} to ${newStatus}`,
+        message: `Invalid status transition from ${currentStatus} to ${statusToSet}`,
         data: null,
         allowedTransitions: allowedNextStatuses,
       };
     }
 
     // 6. Update the status
-    ticket.status = newStatus;
+    ticket.status = statusToSet;
     ticket.updatedAt = new Date();
 
-    if (newStatus === "COMPLETED") {
+    if (statusToSet === "COMPLETED") {
       ticket.closedBy = addedBy;
       ticket.endDate = new Date();
-    } else if (newStatus === "IN_PROGRESS") {
+    } else if (statusToSet === "IN_PROGRESS") {
       ticket.startDate = ticket.startDate || new Date();
     }
 
@@ -514,57 +513,50 @@ ticketSchema.statics.updateStatus = async function (data) {
 
     // 8. Return formatted response
     const updatedTicket = await this.getFormattedTicket(Id);
-    return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
+    return {
+      success: true,
+      message: "Status updated successfully",
+      data: updatedTicket,
+    };
   } catch (error) {
     console.error("Error updating status:", error);
-    return createErrorResponse("UPDATE", "TICKET", "INTERNAL_ERROR");
+    return { success: false, message: "Internal server error", data: null };
   }
 };
 
-ticketSchema.statics.handleTransfer = async function (ticketId, transferData) {
+ticketSchema.statics.handleTransfer = async function (data) {
   try {
-    const ticket = await this.findById(ticketId);
+    const { Id, transferData } = data;
+    console.log("[handleTransfer] Id:", Id, "transferData:", transferData);
+    const ticket = await this.findById(Id);
     if (!ticket) {
-      return createErrorResponse("UPDATE", "TICKET", "NOT_FOUND");
+      return { success: false, message: "Ticket not found", data: null };
     }
 
-    // Use transferKind to determine logic
-    if (transferData.transferKind === "TRANSFER") {
-      const { assignTo, targetOrg, status = "PENDING" } = transferData;
-      const allowedStatuses = ["PENDING", "ACCEPTED", "REJECTED"];
-      if (!allowedStatuses.includes(status)) {
-        return createErrorResponse("UPDATE", "TICKET", "INVALID_STATUS");
-      }
+    if (transferData.transferKind === "TRANSFER_TICKET") {
+      // Direct assignment
+      const { assignTo, targetOrg } = transferData;
       if (targetOrg === "operator") {
         ticket.assignments.operator = {
           user: assignTo,
-          status,
           assignedAt: new Date(),
         };
       } else if (targetOrg === "requestor") {
         ticket.assignments.requestor = {
           user: assignTo,
-          status,
           assignedAt: new Date(),
         };
       } else {
-        ticket.assignments.operator = {
-          user: assignTo,
-          status,
-          assignedAt: new Date(),
+        return {
+          success: false,
+          message: "Invalid targetOrg for transfer",
+          data: null,
         };
       }
-      ticket.updatedAt = new Date();
-      await ticket.save();
-      const updatedTicket = await this.findById(ticketId)
-        .populate("assignments.requestor.user", "name role department")
-        .populate("assignments.operator.user", "name role department");
-      return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
-    }
-
-    if (transferData.transferKind === "TRANSFER_REQUEST") {
+    } else if (transferData.transferKind === "TRANSFER_REQUEST") {
+      // Add a transfer request
       const transferRequest = {
-        type: transferData.type,
+        type: transferData.type, // e.g., "DEPARTMENT" or "EMPLOYEE"
         requestedBy: transferData.requestedBy,
         organization: transferData.organization,
         currentDepartment: transferData.currentDepartment,
@@ -582,19 +574,27 @@ ticketSchema.statics.handleTransfer = async function (ticketId, transferData) {
         transferRequest,
       ];
       ticket.status = "TRANSFER_REQUESTED";
-      ticket.updatedAt = new Date();
-      await ticket.save();
-      const updatedTicket = await this.findById(ticketId)
-        .populate("transferRequests.requestedBy", "name role")
-        .populate("transferRequests.targetEmployee", "name role")
-        .populate("transferRequests.targetDepartment", "name");
-      return createSuccessResponse("UPDATE", "TICKET", updatedTicket);
+    } else {
+      return {
+        success: false,
+        message: "Invalid transferKind for transfer",
+        data: null,
+      };
     }
 
-    return createErrorResponse("UPDATE", "TICKET", "INVALID_TRANSFER_KIND");
+    ticket.updatedAt = new Date();
+    await ticket.save();
+
+    // Use getFormattedTicket for consistent response
+    const formattedTicket = await this.getFormattedTicket(Id);
+    return {
+      success: true,
+      message: "Ticket transfer handled successfully",
+      data: formattedTicket,
+    };
   } catch (error) {
-    console.error("Error handling transfer:", error);
-    return createErrorResponse("UPDATE", "TICKET", "INTERNAL_ERROR");
+    console.error("[handleTransfer] Error handling transfer:", error);
+    return { success: false, message: "Internal server error", data: null };
   }
 };
 
@@ -708,15 +708,19 @@ ticketSchema.statics.deleteTicketById = async function (ticketId) {
   try {
     const ticket = await this.findById(ticketId);
     if (!ticket) {
-      return createErrorResponse("DELETE", "TICKET", "NOT_FOUND");
+      return { success: false, message: "Ticket not found", data: null };
     }
 
     await this.findByIdAndDelete(ticketId);
     const allTickets = await this.find({});
-    return createSuccessResponse("DELETE", "TICKET", allTickets);
+    return {
+      success: true,
+      message: "Ticket deleted successfully",
+      data: allTickets,
+    };
   } catch (error) {
     console.error("Error deleting ticket:", error);
-    return createErrorResponse("DELETE", "TICKET", "INTERNAL_ERROR");
+    return { success: false, message: "Internal server error", data: null };
   }
 };
 

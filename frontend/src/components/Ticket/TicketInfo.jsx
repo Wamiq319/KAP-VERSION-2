@@ -84,7 +84,7 @@ const TicketInfo = ({ ticket, mode }) => {
       );
     }
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 h-[500px] overflow-y-auto">
         {ticket.progress.map((update, idx) => (
           <div
             key={idx}
@@ -391,7 +391,7 @@ const TicketInfo = ({ ticket, mode }) => {
         </div>
 
         {/* Progress History (moved here) */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 ">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
             <BsClock className="w-5 h-5 text-blue-500 mr-2" />
             Progress History

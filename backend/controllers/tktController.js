@@ -138,10 +138,6 @@ export const updateTicket = async (req, res) => {
     const { tktId } = req.params;
     const { actionType, data, userId } = req.body;
 
-    // Add debug logging
-    console.log("Request params:", req.params);
-    console.log("Request body:", req.body);
-
     // Validate tktId
     if (!tktId) {
       return res.status(400).json({
@@ -233,10 +229,14 @@ export const updateTicket = async (req, res) => {
         break;
 
       case "TRANSFER_TICKET":
-        response = await Ticket.updateStatus({
+        console.log("[updateTicket] Entering TRANSFER_TICKET case");
+        response = await Ticket.handleTransfer({
           Id: tktId,
-          assignTo: data.assignTo,
-          targetOrg: data.targetOrg,
+          transferData: {
+            assignTo: data.assignTo,
+            targetOrg: data.targetOrg,
+            transferKind: "TRANSFER_TICKET",
+          },
         });
         break;
 
@@ -248,17 +248,17 @@ export const updateTicket = async (req, res) => {
         });
     }
 
-    console.log("Controller response:", response);
+    console.log("Model response:", response);
     return res.status(200).json(response);
   } catch (error) {
-    // Handle Multer file filter errors (e.g., non-image upload)
+    console.log(error);
     if (
       error instanceof Error &&
       error.message.includes("Only JPEG, PNG, GIF, or WEBP images are allowed")
     ) {
       return res.status(400).json({
         success: false,
-        message: error.message,
+        message: "Internal Server error",
         data: null,
       });
     }
