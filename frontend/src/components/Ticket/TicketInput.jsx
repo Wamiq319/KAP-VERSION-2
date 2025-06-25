@@ -43,6 +43,7 @@ const TicketInput = ({
     transferTarget: "",
     department: "",
     employee: "",
+    reason: "",
   });
 
   // Add state for progress image
@@ -260,8 +261,11 @@ const TicketInput = ({
           <>
             {Role === "MANAGER" && (
               <Dropdown
-                label="Select Department"
-                options={departmentOptions}
+                label="Select Department for Transfer Request"
+                options={transferOptions.map((dept) => ({
+                  value: dept._id,
+                  label: dept.name,
+                }))}
                 selectedValue={inputData.department}
                 onChange={(value) =>
                   setInputData((prev) => ({
@@ -274,8 +278,11 @@ const TicketInput = ({
             )}
             {Role === "EMPLOYEE" && (
               <Dropdown
-                label="Select Employee"
-                options={employeeOptions}
+                label="Select Employee for Transfer Request"
+                options={transferOptions.map((emp) => ({
+                  value: emp._id,
+                  label: emp.name,
+                }))}
                 selectedValue={inputData.employee}
                 onChange={(value) =>
                   setInputData((prev) => ({
@@ -286,6 +293,19 @@ const TicketInput = ({
                 required={true}
               />
             )}
+            <InputField
+              label="Reason for Transfer Request"
+              value={inputData.reason}
+              onChange={(e) =>
+                setInputData((prev) => ({
+                  ...prev,
+                  reason: e.target.value,
+                }))
+              }
+              type="textarea"
+              rows={3}
+              required={true}
+            />
           </>
         )}
 

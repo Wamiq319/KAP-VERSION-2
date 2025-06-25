@@ -132,7 +132,6 @@ const ViewTicket = ({ mode }) => {
       } else if (currentUser.role === "GOV_MANAGER") {
         employeeRole = "GOV_EMPLOYEE";
       }
-      // Debug logs
 
       if (departmentId && employeeRole) {
         console.log("[handleTransfer] Dispatching fetchEntities for users...");
@@ -162,7 +161,86 @@ const ViewTicket = ({ mode }) => {
     setShowInput(true);
   };
 
-  const handleTransferRequest = (requestType) => {
+  const handleTransferRequest = async (requestType) => {
+    let optionsForTransferRequest = [];
+
+    // Check if user is a manager (OP_MANAGER or GOV_MANAGER)
+    const isManager =
+      currentUser.role === "OP_MANAGER" || currentUser.role === "GOV_MANAGER";
+
+    if (isManager) {
+      // For managers, fetch departments of their organization
+      const orgId = currentUser.organization?._id;
+      if (orgId) {
+        console.log(
+          "[handleTransferRequest] Dispatching fetchEntities for departments..."
+        );
+        const result = await dispatch(
+          fetchEntities({
+            entityType: "departments",
+            params: {
+              organization: orgId,
+              minimal: true,
+              fields: "name _id",
+            },
+          })
+        );
+        console.log(
+          "[handleTransferRequest] fetchEntities result for departments:",
+          result
+        );
+        optionsForTransferRequest = result?.payload?.data || [];
+        console.log(
+          "[handleTransferRequest] department optionsForTransferRequest:",
+          optionsForTransferRequest
+        );
+      } else {
+        console.log(
+          "[handleTransferRequest] Skipping fetchEntities: missing orgId for manager"
+        );
+      }
+    } else {
+      // For employees, fetch employees in their department
+      let departmentId = currentUser.department?._id;
+      let employeeRole = null;
+
+      if (currentUser.role === "OP_EMPLOYEE") {
+        employeeRole = "OP_EMPLOYEE";
+      } else if (currentUser.role === "GOV_EMPLOYEE") {
+        employeeRole = "GOV_EMPLOYEE";
+      }
+
+      if (departmentId && employeeRole) {
+        console.log(
+          "[handleTransferRequest] Dispatching fetchEntities for users..."
+        );
+        const result = await dispatch(
+          fetchEntities({
+            entityType: "users",
+            params: {
+              role: employeeRole,
+              department: departmentId,
+              fields: "_id,name",
+            },
+          })
+        );
+        console.log(
+          "[handleTransferRequest] fetchEntities result for users:",
+          result
+        );
+        optionsForTransferRequest = result?.payload?.data || [];
+        console.log(
+          "[handleTransferRequest] employee optionsForTransferRequest:",
+          optionsForTransferRequest
+        );
+      } else {
+        console.log(
+          "[handleTransferRequest] Skipping fetchEntities: missing departmentId or employeeRole"
+        );
+      }
+    }
+
+    setTransferOptions(optionsForTransferRequest);
     setInputType("TRANSFER_REQUEST");
     setInputTarget(requestType);
     setInputRole(getRoleFromMode());
@@ -224,8 +302,12 @@ const ViewTicket = ({ mode }) => {
           payload.actionType = "OPEN_TRANSFER_REQUEST";
           payload.data = {
             requestType: inputTarget,
-            targetId: data.targetId,
-            reason: data.reason,
+            targetId:
+              currentUser.role === "OP_MANAGER" ||
+              currentUser.role === "GOV_MANAGER"
+                ? data.department
+                : data.employee,
+            reason: data.reason || "Transfer request initiated",
           };
           break;
 

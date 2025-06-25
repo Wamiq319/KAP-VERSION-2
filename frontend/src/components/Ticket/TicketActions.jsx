@@ -97,11 +97,15 @@ const TicketActions = ({
                       size="medium"
                       disabled={isTransferRequested}
                     />
-                    {/* Transfer to Department Button */}
+                    {/* Transfer Request Button */}
                     <Button
-                      text="Transfer to Department"
-                      onClick={() => onTransferTicket("DEPARTMENT")}
-                      className="bg-orange-500 hover:bg-orange-600"
+                      text="Request Transfer"
+                      onClick={() => onTransferRequest("MANAGER")}
+                      className={`${
+                        isTransferRequested
+                          ? "bg-gray-400"
+                          : "bg-orange-600 hover:bg-orange-700"
+                      }`}
                       icon={<FaExchangeAlt />}
                       size="medium"
                       disabled={isTransferRequested}
@@ -147,11 +151,15 @@ const TicketActions = ({
                   size="medium"
                   disabled={isTransferRequested}
                 />
-                {/* Transfer to Department Button */}
+                {/* Transfer Request Button */}
                 <Button
-                  text="Transfer to Department"
-                  onClick={() => onTransferTicket("DEPARTMENT")}
-                  className="bg-orange-500 hover:bg-orange-600"
+                  text="Request Transfer"
+                  onClick={() => onTransferRequest("MANAGER")}
+                  className={`${
+                    isTransferRequested
+                      ? "bg-gray-400"
+                      : "bg-orange-600 hover:bg-orange-700"
+                  }`}
                   icon={<FaExchangeAlt />}
                   size="medium"
                   disabled={isTransferRequested}
