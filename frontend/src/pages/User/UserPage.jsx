@@ -143,14 +143,21 @@ const UserPage = ({
 
   const tableData = entities.users?.map((item, index) => ({
     index: index + 1,
-    id: item.id,
+    id: item._id,
     name: item.name,
     mobile: item.mobile,
     username: item.username,
     password: item.password,
-    role: item.role === "KAP_EMPLOYEE" ? "KAP_" + item.kapRole : item.role,
-    organization: item.organization?.name || words["N/A"],
-    department: item.department?.name || words["N/A"],
+    role:
+      item.role === "KAP_EMPLOYEE"
+        ? "KAP-USER"
+        : item.role.includes("MANAGER")
+        ? "MANAGER"
+        : item.role.includes("EMPLOYEE")
+        ? "EMPLOYEE"
+        : item.role,
+    organization: item.organization?.name || "KAP",
+    department: item.department?.name || item.kapRole,
   }));
 
   // Filter handlers
@@ -258,7 +265,7 @@ const UserPage = ({
     } catch (error) {
       setUiState((prev) => ({
         ...prev,
-        errorMessage: error.message || words["Server error"],
+        errorMessage: error.message,
       }));
     } finally {
       setUiState((prev) => ({ ...prev, isLoading: false }));

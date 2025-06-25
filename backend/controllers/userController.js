@@ -5,19 +5,6 @@ import {
   handleValidationError,
 } from "../utils/responseHandler.js";
 
-// Common error messages
-const ERROR_MESSAGES = {
-  REQUIRED_FIELDS: "Required fields are missing",
-  INTERNAL_ERROR: "Internal server error while processing user",
-  MODEL_ERROR: "Error in user operation",
-  NOT_FOUND: "User not found",
-  INVALID_DATA: "Invalid user data provided",
-  DUPLICATE: "User already exists",
-  AUTH_ERROR: "Authentication failed",
-  UNAUTHORIZED: "Unauthorized operation",
-  ADMIN_ERROR: "Admin operation failed",
-};
-
 export const createUser = async (req, res) => {
   try {
     const {
@@ -54,12 +41,7 @@ export const createUser = async (req, res) => {
       organization:
         role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? organization : undefined,
       department:
-        role !== "KAP_EMPLOYEE" &&
-        role !== "ADMIN" &&
-        role !== "GOV_MANAGER" &&
-        role !== "OP_MANAGER"
-          ? department
-          : undefined,
+        role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? department : undefined,
     });
 
     if (response.success) {

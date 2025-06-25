@@ -36,12 +36,7 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",
     required: function () {
-      return (
-        this.role !== "KAP_EMPLOYEE" &&
-        this.role !== "ADMIN" &&
-        this.role !== "GOV_MANAGER" &&
-        this.role !== "OP_MANAGER"
-      );
+      return this.role !== "KAP_EMPLOYEE" && this.role !== "ADMIN";
     },
   },
   createdAt: { type: Date, default: Date.now },
