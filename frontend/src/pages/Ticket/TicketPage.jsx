@@ -253,6 +253,7 @@ const TicketPage = ({ mode }) => {
 
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
+      
       await Promise.all(
         confirmDelete.ids.map((id) =>
           dispatch(deleteEntity({ entityType: "tickets", id }))

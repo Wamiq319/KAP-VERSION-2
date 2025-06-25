@@ -20,15 +20,19 @@ export const createUser = async (req, res) => {
 
     // Validate required fields based on role
     if (role === "KAP_EMPLOYEE" && !kapRole) {
-      return res
-        .status(400)
-        .json(handleValidationError("USER", "KAP_ROLE_REQUIRED"));
+      return res.status(400).json({
+        message: "Kap role misisng",
+        data: null,
+        success: false,
+      });
     }
 
     if (!name || !username || !password || !mobile || !role) {
-      return res
-        .status(400) // Bad Request for any missing core fields
-        .json(handleValidationError("USER", "REQUIRED_FIELDS"));
+      return res.status(400).json({
+        message: "Required fields are missing",
+        success: false,
+        data: null,
+      });
     }
 
     const response = await User.createUser({
@@ -43,23 +47,7 @@ export const createUser = async (req, res) => {
       department:
         role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? department : undefined,
     });
-
-    if (response.success) {
-      // If user creation was successful
-      res.status(201).json(handleModelResponse(response, "CREATE", "USER"));
-    } else {
-      // If user creation failed due to business logic (e.g., duplicate username/mobile, admin limit)
-      let statusCode = 400; // Default to Bad Request
-      if (
-        response.message.includes("already exists") ||
-        response.message.includes("admin user is allowed")
-      ) {
-        statusCode = 409; // Use 409 Conflict for duplicate resource or specific conflict
-      }
-      res
-        .status(statusCode)
-        .json(handleModelResponse(response, "CREATE", "USER"));
-    }
+    return res.status(response.success ? 201 : 400).json(response);
   } catch (error) {
     console.error("Error in createUser controller:", error); // Log the actual error for debugging
     res.status(500).json(handleInternalError("USER", error));
@@ -101,13 +89,15 @@ export const updateUserPassword = async (req, res) => {
     const { newPassword } = req.body;
 
     if (!newPassword) {
-      return res
-        .status(400)
-        .json(handleValidationError("USER", "REQUIRED_FIELDS"));
+      return res.status(400).json({
+        message: "New password is required",
+        data: null,
+        success: false,
+      });
     }
 
     const response = await User.updatePasswordById(userId, newPassword);
-    res.status(200).json(handleModelResponse(response, "UPDATE", "USER"));
+    return res.status(response.success ? 201 : 400).json(response);
   } catch (error) {
     res.status(500).json(handleInternalError("USER", error));
   }

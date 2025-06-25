@@ -120,8 +120,8 @@ export const getTickets = async (req, res) => {
 
 export const deleteTicket = async (req, res) => {
   try {
-    const { ticketId } = req.params;
-    const response = await Ticket.deleteTicketById(ticketId);
+    const { tktId} = req.params;
+    const response = await Ticket.deleteTicketById(tktId);
     return res
       .status(200)
       .json(handleModelResponse(response, "DELETE", "TICKET"));
