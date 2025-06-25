@@ -79,7 +79,7 @@ organizationSchema.statics.getOrganizations = async function (options = {}) {
     console.error("Error getting organizations:", error);
     return {
       success: false,
-      message: "Error getting organizations",
+      message: "Internal server error",
       data: null,
     };
   }
@@ -125,7 +125,7 @@ organizationSchema.statics.createOrganization = async function (orgData) {
     console.error("Error creating organization:", error);
     return {
       success: false,
-      message: "Internal Error creating organization",
+      message: "Internal server error",
       data: null,
     };
   }
@@ -161,7 +161,7 @@ organizationSchema.statics.deleteOrganizationById = async function (orgId) {
     console.error("Error deleting organization:", error);
     return {
       success: false,
-      message: "Error deleting organization",
+      message: "Internal server error",
       data: null,
     };
   }
@@ -205,7 +205,7 @@ organizationSchema.statics.updatePasswordById = async function (
     console.error("Error updating password:", error);
     return {
       success: false,
-      message: "Error updating password",
+      message: "Internal server error",
       data: null,
     };
   }

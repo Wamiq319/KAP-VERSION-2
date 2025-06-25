@@ -96,7 +96,7 @@ export const getTickets = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Missing required parameters: userId and role",
-        data: [],
+        data: null,
       });
     }
 

@@ -136,14 +136,22 @@ export const loginUser = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res
-        .status(400)
-        .json(handleValidationError("USER", "REQUIRED_FIELDS"));
+      return res.status(400).json({
+        data: null,
+        message: "Missing required fields",
+        success: false,
+      });
     }
 
     const response = await User.loginUser(username, password);
-    res.status(200).json(handleModelResponse(response, "FETCH", "USER"));
+
+    return res.status(response.success ? 200 : 400).json(response);
   } catch (error) {
-    res.status(500).json(handleInternalError("USER", error));
+    console.error("Error in getTickets controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      data: [],
+    });
   }
 };
