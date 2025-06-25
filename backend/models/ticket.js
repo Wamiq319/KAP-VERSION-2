@@ -637,17 +637,12 @@ ticketSchema.statics.getTickets = async function ({
         break;
 
       case "GOV_EMPLOYEE":
-        filter.$or = [
-          { "assignments.operator.user": userId },
-          { "requestor.department": departmentId },
-        ];
+        filter.$or = [{ "assignments.requestor.user": userId }];
         break;
 
       case "OP_EMPLOYEE":
-        filter.$or = [
-          { "assignments.requestor.user": userId },
-          { "operator.department": departmentId },
-        ];
+        console.log(userId);
+        filter.$or = [{ "assignments.operator.user": userId }];
         break;
 
       case "GOV_MANAGER":

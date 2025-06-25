@@ -6,6 +6,7 @@ import {
   deleteEntity,
   createEntity,
 } from "../../redux/slices/crudSlice";
+
 import {
   DataTable,
   Button,
@@ -15,6 +16,7 @@ import {
   ConfirmationModal,
   TicketForm,
 } from "../../components";
+
 import { useNavigate } from "react-router-dom";
 
 const TicketPage = ({ mode }) => {
@@ -88,30 +90,23 @@ const TicketPage = ({ mode }) => {
         case "OP_MANAGER":
           queryParams = {
             ...queryParams,
-            // organizationId: user.organization._id,
             userId: user._id,
             departmentId: user.department._id,
-            // operatorId: user.organizationId,
           };
           break;
 
         case "OP_EMPLOYEE":
           queryParams = {
             ...queryParams,
-            organizationId: user.organizationId,
-            departmentId: user.departmentId,
-            assigneeId: user._id,
-            operatorId: user.organizationId,
+            userId: user._id,
           };
           break;
 
         case "GOV_MANAGER":
           queryParams = {
             ...queryParams,
-            // organizationId: user.organization._id,
             userId: user._id,
             departmentId: user.department._id,
-            // operatorId: user.organizationId,
           };
           break;
 
