@@ -9,7 +9,7 @@ import { sendSms } from "../utils/sendMessage.js";
 import dotenv from "dotenv";
 
 dotenv.config();
-const WEB_URL = process.env.WEB_URL || "http://localhost:3000";
+const BASE_URL = process.env.WEB_URL || "http://localhost:3000";
 
 export const createTicket = async (req, res) => {
   try {
@@ -77,16 +77,6 @@ export const createTicket = async (req, res) => {
       const ticket = response.data;
       const ticketId = ticket._id;
       const ticketNumber = ticket.ticketNumber || "N/A";
-      const viewUrl = `${WEB_URL}/ticket/${ticketId}`;
-
-      // Notify Creator
-      const creatorUser = await User.findById(creator).select("name mobile");
-      if (creatorUser?.mobile) {
-        await sendSms({
-          to: creatorUser.mobile,
-          message: `✅ Ticket #${ticketNumber} has been created. View: ${viewUrl}`,
-        });
-      }
 
       // Notify GOV Manager(s)
       const govManagers = await User.getUsersRelatedToTicket({
@@ -95,9 +85,10 @@ export const createTicket = async (req, res) => {
       });
 
       for (const user of govManagers) {
+        const viewUrl = `${BASE_URL}/manage-gov-tickets/view/${ticketId}`;
         await sendSms({
           to: user.mobile,
-          message: `🛠️ New ticket #${ticketNumber} created in GOV department. View: ${viewUrl}`,
+          message: `📩 New  ticket #${ticketNumber} created for your department. View: ${viewUrl}`,
         });
       }
 
@@ -108,9 +99,10 @@ export const createTicket = async (req, res) => {
       });
 
       for (const user of opManagers) {
+        const viewUrl = `${BASE_URL}/manage-op-tickets/view/${ticketId}`;
         await sendSms({
           to: user.mobile,
-          message: `🛠️ New ticket #${ticketNumber} assigned to OP department. View: ${viewUrl}`,
+          message: `📩 New  ticket #${ticketNumber} created for your department. View: ${viewUrl}`,
         });
       }
     }
@@ -304,7 +296,129 @@ export const updateTicket = async (req, res) => {
         });
     }
 
-    console.log("Model response:", response);
+    if (response.success && response.data) {
+      const ticket = response.data;
+      const ticketId = ticket._id;
+      const ticketNumber = ticket.ticketNumber || "N/A";
+      const smsList = [];
+
+      const statusMessages = {
+        ACCEPTED: "✅ Ticket Accepted By Operator",
+        IN_PROGRESS: "🔧 Ticket Work has been Started",
+        COMPLETED: "🎉 Work had been completed",
+        CLOSED: "🔒 Ticket closed",
+        TRANSFER_REQUESTED: "📦 Ticket transfer requested",
+      };
+
+      const getPathByRole = (role) => {
+        switch (role) {
+          case "KAP_EMPLOYEE":
+            return "/manage-kap-tickets/view";
+          case "GOV_MANAGER":
+            return "/manage-gov-tickets/view";
+          case "OP_MANAGER":
+            return "/manage-op-tickets/view";
+          case "OP_EMPLOYEE":
+            return "/manage-op-employee-tickets/view";
+          case "GOV_EMPLOYEE":
+            return "/manage-gov-employee-tickets/view";
+          default:
+            return "/manage-kap-tickets/view";
+        }
+      };
+
+      const addSms = (user, role) => {
+        if (!user?.mobile) return;
+        let message;
+
+        switch (actionType) {
+          case "ADD_NOTE":
+            message = `📝 A note was added to ticket #${ticketNumber}`;
+            break;
+          case "ADD_PROGRESS":
+            message = `📈 Progress updated for ticket #${ticketNumber}`;
+            break;
+          case "UPDATE_STATUS":
+            message = `${
+              statusMessages[ticket.status] || "🔔 Ticket updated"
+            } (#${ticketNumber})`;
+            break;
+          case "TRANSFER_TICKET":
+            message = `📦 Ticket #${ticketNumber} has been transferred to you`;
+            break;
+          default:
+            message = `🔔 Ticket #${ticketNumber} was updated`;
+        }
+
+        const path = getPathByRole(role);
+        const viewUrl = `${BASE_URL}${path}/${ticketId}`;
+
+        smsList.push({
+          to: user.mobile,
+          message: `${message}. View: ${viewUrl}`,
+        });
+      };
+
+      // ✅ TRANSFER: Only send to signed user
+      if (actionType === "TRANSFER_TICKET" && data.assignTo) {
+        const signedUser = await User.findById(data.assignTo).select(
+          "mobile role"
+        );
+        if (signedUser) addSms(signedUser, signedUser.role);
+      }
+
+      // ✅ OTHER actions: notify all relevant users
+      else {
+        const userSet = new Set();
+
+        // 1. createdBy
+        if (ticket.createdBy?._id) {
+          const kapUser = await User.findById(ticket.createdBy._id).select(
+            "mobile role"
+          );
+          if (kapUser && !userSet.has(kapUser.mobile)) {
+            userSet.add(kapUser.mobile);
+            addSms(kapUser, kapUser.role);
+          }
+        }
+
+        const fetchAndAdd = async ({ departmentId, organizationId, roles }) => {
+          const users = await User.getUsersRelatedToTicket({
+            departmentId,
+            organizationId,
+            roles,
+          });
+          for (const user of users) {
+            if (user?.mobile && !userSet.has(user.mobile)) {
+              userSet.add(user.mobile);
+              addSms(user, user.role);
+            }
+          }
+        };
+
+        // 2. Requestor: assigned + manager
+        if (ticket.requestor?.department?.id) {
+          await fetchAndAdd({
+            departmentId: ticket.requestor.department.id,
+            roles: ["GOV_EMPLOYEE", "GOV_MANAGER"],
+          });
+        }
+
+        // 3. Operator: assigned + manager
+        if (ticket.operator?.department?.id) {
+          await fetchAndAdd({
+            departmentId: ticket.operator.department.id,
+            roles: ["OP_EMPLOYEE", "OP_MANAGER"],
+          });
+        }
+      }
+
+      // ✅ Send all SMS
+      for (const sms of smsList) {
+        await sendSms(sms);
+      }
+    }
+
     return res.status(200).json(response);
   } catch (error) {
     console.log(error);
