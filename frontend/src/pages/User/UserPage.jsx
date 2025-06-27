@@ -74,6 +74,10 @@ const UserPage = ({
   const fetchUsers = async () => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
+
+      // Clear existing users data to ensure fresh fetch
+      dispatch({ type: "entityManage/clearUsers" });
+
       if (Mode === "MANAGER") {
         // Get user from localStorage
         const userStr = localStorage.getItem("user");
@@ -95,6 +99,7 @@ const UserPage = ({
         if (filters.orgType) params.orgType = filters.orgType;
         if (filters.organization) params.organization = filters.organization;
         if (filters.department) params.department = filters.department;
+
         await dispatch(
           fetchEntities({
             entityType: "users",
@@ -255,6 +260,7 @@ const UserPage = ({
       if (response?.success) {
         showToast(response.message || words["Employee created successfully"]);
         closeModal();
+
         await fetchUsers();
       } else {
         setUiState((prev) => ({

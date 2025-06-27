@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { InputField, Dropdown } from "../index";
+import { InputField, Dropdown, Button } from "../index";
 import { fetchEntities } from "../../redux/slices/crudSlice";
+import Loader from "../Loader";
 
 const defaultFormData = {
   name: "",
@@ -41,15 +42,15 @@ const UserForm = ({
   const kapRoleOptions = [
     {
       value: "GOVERNMENT_INTEGRATION",
-      label: words["Government Integration"],
+      label: "Government Integration",
     },
     {
       value: "SECURITY_SAFETY",
-      label: words["Security & Safety"],
+      label: "Security & Safety",
     },
     {
       value: "PLANNING_DEVELOPMENT",
-      label: words["Planning & Development"],
+      label: "Planning & Development",
     },
   ];
 
@@ -548,20 +549,19 @@ const UserForm = ({
 
       {/* Form actions - always full width */}
       <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
-        <button
-          type="button"
+        <Button
+          text={words["Cancel"]}
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-500 hover:bg-gray-700 text-white rounded w-full sm:w-auto"
-        >
-          {words["Cancel"]}
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading || localLoading}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50 w-full sm:w-auto"
-        >
-          {isLoading || localLoading ? words["Creating..."] : words["Create"]}
-        </button>
+          className="bg-gray-500 hover:bg-gray-700 w-full sm:w-auto"
+        />
+        <Button
+          text={
+            isLoading || localLoading ? words["Creating..."] : words["Create"]
+          }
+          onClick={handleSubmit}
+          isLoading={isLoading || localLoading}
+          className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+        />
       </div>
     </form>
   );

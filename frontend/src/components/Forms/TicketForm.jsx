@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { InputField, Dropdown, DatePicker } from "../index";
+import { InputField, Dropdown, DatePicker, Button } from "../index";
 import { fetchEntities, createEntity } from "../../redux/slices/crudSlice";
 import { HiFlag } from "react-icons/hi";
 
@@ -531,22 +531,22 @@ const TicketForm = ({
 
       {/* Form actions */}
       <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
-        <button
+        <Button
+          text={words["Cancel"] || "Cancel"}
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-500 hover:bg-gray-700 text-white rounded w-full sm:w-auto"
-        >
-          {words["Cancel"] || "Cancel"}
-        </button>
-        <button
+          className="bg-gray-500 hover:bg-gray-700 w-full sm:w-auto"
+        />
+        <Button
+          text={
+            isLoading
+              ? words["Creating..."] || "Creating..."
+              : words["Create"] || "Create"
+          }
           type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50 w-full sm:w-auto"
-        >
-          {isLoading
-            ? words["Creating..."] || "Creating..."
-            : words["Create"] || "Create"}
-        </button>
+          isLoading={isLoading}
+          className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+        />
       </div>
     </form>
   );

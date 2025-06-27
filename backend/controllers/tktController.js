@@ -1,6 +1,5 @@
 import Ticket from "../models/ticket.js";
 import User from "../models/user.js";
-
 import {
   createErrorResponse,
   handleModelResponse,
@@ -8,8 +7,8 @@ import {
 import { uploadImage } from "../utils/uploadCloudinary.js";
 import { sendSms } from "../utils/sendMessage.js";
 import dotenv from "dotenv";
-dotenv.config();
 
+dotenv.config();
 const WEB_URL = process.env.WEB_URL || "http://localhost:3000";
 
 export const createTicket = async (req, res) => {
@@ -52,6 +51,7 @@ export const createTicket = async (req, res) => {
       });
     }
 
+    // Step 1: Create the ticket
     const ticketData = {
       request,
       description,
@@ -71,7 +71,56 @@ export const createTicket = async (req, res) => {
     };
 
     const response = await Ticket.createTicket(ticketData);
-    return res.status(response.success ? 201 : 400).json(response);
+
+    // Step 2: If success, fetch necessary data and send SMS
+    if (response.success && response.data) {
+      const ticket = response.data;
+      const ticketId = ticket._id;
+      const ticketNumber = ticket.ticketNumber || "N/A";
+      const viewUrl = `${WEB_URL}/ticket/${ticketId}`;
+
+      // Notify Creator
+      const creatorUser = await User.findById(creator).select("name mobile");
+      if (creatorUser?.mobile) {
+        await sendSms({
+          to: creatorUser.mobile,
+          message: `✅ Ticket #${ticketNumber} has been created. View: ${viewUrl}`,
+        });
+      }
+
+      // Notify GOV Manager(s)
+      const govManagers = await User.getUsersRelatedToTicket({
+        departmentId: requestorDepartment,
+        roles: ["GOV_MANAGER"],
+      });
+
+      for (const user of govManagers) {
+        await sendSms({
+          to: user.mobile,
+          message: `🛠️ New ticket #${ticketNumber} created in GOV department. View: ${viewUrl}`,
+        });
+      }
+
+      // Notify OP Manager(s)
+      const opManagers = await User.getUsersRelatedToTicket({
+        departmentId: operatorDepartment,
+        roles: ["OP_MANAGER"],
+      });
+
+      for (const user of opManagers) {
+        await sendSms({
+          to: user.mobile,
+          message: `🛠️ New ticket #${ticketNumber} assigned to OP department. View: ${viewUrl}`,
+        });
+      }
+    }
+
+    // Step 3: Send clean response to frontend (no data)
+    return res.status(response.success ? 201 : 400).json({
+      success: response.success,
+      message: response.message,
+      data: null,
+    });
   } catch (error) {
     console.error("Error in createTicket controller:", error);
     return res.status(500).json({

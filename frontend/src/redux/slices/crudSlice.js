@@ -180,6 +180,9 @@ const entityManageSlice = createSlice({
       state.status = "idle";
       state.error = null;
     },
+    clearUsers: (state) => {
+      state.entities.users = [];
+    },
     setCurrentTicket: (state, action) => {
       state.currentTicket = action.payload;
     },
@@ -213,13 +216,23 @@ const entityManageSlice = createSlice({
         state.lastAction = "fetch";
       })
       .addCase(createEntity.fulfilled, (state, action) => {
-        const { entityType, data } = action.payload;
-        if (!state.entities[entityType]) {
-          state.entities[entityType] = [];
+        const { entityType, data, success } = action.payload;
+
+        // Only update state if success is true and data is not null
+        if (success && data) {
+          if (!state.entities[entityType]) {
+            state.entities[entityType] = [];
+          }
+
+          // If data is an array (like when backend returns all users), replace the entire array
+          if (Array.isArray(data)) {
+            state.entities[entityType] = data;
+          } else {
+            // If data is a single object, add it to the array
+            state.entities[entityType].push(data);
+          }
         }
-        if (data) {
-          state.entities[entityType].push(data);
-        }
+
         state.status = "succeeded";
         state.lastAction = "create";
       })
@@ -268,5 +281,6 @@ const entityManageSlice = createSlice({
   },
 });
 
-export const { clearEntities, setCurrentTicket } = entityManageSlice.actions;
+export const { clearEntities, clearUsers, setCurrentTicket } =
+  entityManageSlice.actions;
 export default entityManageSlice.reducer;

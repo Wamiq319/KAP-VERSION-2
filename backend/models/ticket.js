@@ -329,12 +329,21 @@ ticketSchema.statics.createTicket = async function (ticketData) {
       scheduledDate: isInstant ? new Date() : ticketData.scheduledDate,
       status: "CREATED",
     };
+
     const createdTicket = await this.create(newTicketData);
+
+    // ✅ Re-fetch the ticket with all relevant info populated
+    const detailedTicket = await this.findById(createdTicket._id)
+      .populate("createdBy", "name mobile role")
+      .populate("requestor.org", "name")
+      .populate("requestor.department", "name")
+      .populate("operator.org", "name")
+      .populate("operator.department", "name");
 
     return {
       success: true,
       message: "Ticket created successfully",
-      data: createdTicket,
+      data: detailedTicket,
     };
   } catch (error) {
     console.error("Error in createTicket model:", error);

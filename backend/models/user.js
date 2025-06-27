@@ -42,27 +42,28 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Generate user data for response
-userSchema.statics.getUserData = async function (userId) {
-  if (!userId) return null;
-  const user = await this.findById(userId);
-  if (!user) return null;
+// In userSchema.statics
+userSchema.statics.getUsersRelatedToTicket = async function ({
+  userId,
+  departmentId,
+  organizationId,
+  roles,
+}) {
+  const query = { $or: [] };
 
-  return {
-    _id: user._id,
-    name: user.name,
-    username: user.username,
-    mobile: user.mobile,
-    role: user.role,
-    kapRole: user.kapRole || null,
-    organization: user.organization
-      ? { _id: user.organization._id, name: user.organization.name }
-      : null,
-    department: user.department
-      ? { _id: user.department._id, name: user.department.name }
-      : null,
-    password: user.password,
-  };
+  if (userId) query.$or.push({ _id: userId });
+  if (departmentId) query.$or.push({ department: departmentId });
+  if (organizationId) query.$or.push({ organization: organizationId });
+
+  if (!query.$or.length) return [];
+
+  if (roles?.length) {
+    query.role = { $in: roles };
+  }
+
+  const users = await this.find(query).select("name mobile role");
+
+  return users;
 };
 
 // Get users with filtering options
@@ -186,6 +187,24 @@ userSchema.statics.createUser = async function (userData) {
       };
     }
 
+    if (
+      ["GOV_MANAGER", "OP_MANAGER"].includes(userData.role) &&
+      userData.department
+    ) {
+      const existingManager = await this.findOne({
+        role: userData.role,
+        department: userData.department,
+      });
+
+      if (existingManager) {
+        return {
+          success: false,
+          message: `Only one Manager allowed per department.`,
+          data: null,
+        };
+      }
+    }
+
     // For ADMIN role, ensure only one admin exists
     if (userData.role === "ADMIN") {
       const existingAdmin = await this.findOne({ role: "ADMIN" });
@@ -205,12 +224,11 @@ userSchema.statics.createUser = async function (userData) {
     }
 
     const newUser = await this.create(userData);
-    const allUsers = await this.find({});
 
     return {
       success: true,
       message: "User created successfully",
-      data: allUsers,
+      data: null,
     };
   } catch (error) {
     console.error("Error creating user:", error);
