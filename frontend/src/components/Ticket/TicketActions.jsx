@@ -170,13 +170,15 @@ const TicketActions = ({
             {/* Employee Common Actions */}
             {(mode === "GOV_EMPLOYEE" || mode === "OP_EMPLOYEE") && (
               <>
-                <Button
-                  text="Add Note"
-                  onClick={() => onAddNote("ORG_NOTE")}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  icon={<FaPlus />}
-                  size="medium"
-                />
+                {mode === "GOV_EMPLOYEE" && (
+                  <Button
+                    text="Add Note"
+                    onClick={() => onAddNote("ORG_NOTE")}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    icon={<FaPlus />}
+                    size="medium"
+                  />
+                )}
                 {isInProgress && (
                   <Button
                     text="Update Progress"
@@ -185,6 +187,15 @@ const TicketActions = ({
                     icon={<FaCheck />}
                     size="medium"
                     disabled={isTransferRequested}
+                  />
+                )}
+                {mode === "OP_EMPLOYEE" && ticket.status === "ACCEPTED" && (
+                  <Button
+                    text="Start Work"
+                    onClick={onStartWork}
+                    className="bg-yellow-600 hover:bg-yellow-700"
+                    icon={<FaCheck />}
+                    size="medium"
                   />
                 )}
                 <Button

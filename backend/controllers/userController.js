@@ -2,8 +2,11 @@ import User from "../models/user.js";
 import {
   handleModelResponse,
   handleInternalError,
-  handleValidationError,
 } from "../utils/responseHandler.js";
+import { sendSms } from "../utils/sendMessage.js";
+import dotenv from "dotenv";
+dotenv.config();
+const WEB_URL = process.env.WEB_URL || "http://localhost:3000";
 
 export const createUser = async (req, res) => {
   try {
@@ -47,10 +50,24 @@ export const createUser = async (req, res) => {
       department:
         role !== "KAP_EMPLOYEE" && role !== "ADMIN" ? department : undefined,
     });
+
+    if (response.success) {
+      const message = `Your account has been created successfully. Your username is ${username} and password is ${password}. Please login here ${WEB_URL}`;
+      try {
+        await sendSms({ to: mobile, message: message });
+      } catch (smsError) {
+        console.error("SMS sending failed:", smsError);
+        // Don't fail the user creation if SMS fails
+      }
+    }
     return res.status(response.success ? 201 : 400).json(response);
   } catch (error) {
-    console.error("Error in createUser controller:", error); // Log the actual error for debugging
-    res.status(500).json(handleInternalError("USER", error));
+    console.error("Error in createUser controller:", error);
+    res.status(500).json({
+      data: null,
+      message: "Internal Server Error",
+      success: false,
+    });
   }
 };
 

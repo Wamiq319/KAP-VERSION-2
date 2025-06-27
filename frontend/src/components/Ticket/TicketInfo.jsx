@@ -416,7 +416,7 @@ const TicketInfo = ({ ticket, mode }) => {
                 {ticket.assignments?.requestor?.user?.name || "N/A"}
               </p>
               <p className="text-xs text-gray-500">
-                {ticket.assignments?.requestor?.user?.role || "Unknown Role"}
+                {ticket.requestor?.department?.name}
               </p>
             </div>
             <div className="flex flex-col items-center">
@@ -426,7 +426,7 @@ const TicketInfo = ({ ticket, mode }) => {
                 {ticket.assignments?.operator?.user?.name || "N/A"}
               </p>
               <p className="text-xs text-gray-500">
-                {ticket.assignments?.operator?.user?.role || "Unknown Role"}
+                {ticket.operator?.department?.name}
               </p>
             </div>
           </div>

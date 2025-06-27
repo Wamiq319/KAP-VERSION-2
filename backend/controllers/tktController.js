@@ -1,9 +1,16 @@
 import Ticket from "../models/ticket.js";
+import User from "../models/user.js";
+
 import {
   createErrorResponse,
   handleModelResponse,
 } from "../utils/responseHandler.js";
 import { uploadImage } from "../utils/uploadCloudinary.js";
+import { sendSms } from "../utils/sendMessage.js";
+import dotenv from "dotenv";
+dotenv.config();
+
+const WEB_URL = process.env.WEB_URL || "http://localhost:3000";
 
 export const createTicket = async (req, res) => {
   try {
@@ -120,7 +127,7 @@ export const getTickets = async (req, res) => {
 
 export const deleteTicket = async (req, res) => {
   try {
-    const { tktId} = req.params;
+    const { tktId } = req.params;
     const response = await Ticket.deleteTicketById(tktId);
     return res
       .status(200)

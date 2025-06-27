@@ -43,7 +43,9 @@ const userSchema = new mongoose.Schema({
 });
 
 // Generate user data for response
-userSchema.statics.getUserData = function (user) {
+userSchema.statics.getUserData = async function (userId) {
+  if (!userId) return null;
+  const user = await this.findById(userId);
   if (!user) return null;
 
   return {
