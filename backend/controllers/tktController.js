@@ -269,11 +269,26 @@ export const updateTicket = async (req, res) => {
         break;
 
       case "UPDATE_STATUS":
+        console.log(
+          "[UPDATE_STATUS] tktId:",
+          tktId,
+          "newStatus:",
+          data.newStatus,
+          "userId:",
+          userId
+        );
+
         response = await Ticket.updateStatus({
           Id: tktId,
           newStatus: data.newStatus,
           updatedBy: userId,
         });
+
+        console.log(
+          "[UPDATE_STATUS] Response:",
+          response.success,
+          response.message
+        );
         break;
 
       case "TRANSFER_TICKET":

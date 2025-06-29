@@ -110,13 +110,35 @@ const ViewTicket = ({ mode }) => {
               newStatus: "CLOSED",
               reason: "Closed by user",
             },
-            userId: currentUser.id,
+            userId: currentUser._id,
           },
         })
       );
       refreshTicket();
     } catch (error) {
       console.error("Close ticket error:", error);
+    }
+  };
+
+  const handleMarkComplete = async () => {
+    try {
+      await dispatch(
+        updateEntity({
+          entityType: "tickets",
+          id: currentTicket._id,
+          formData: {
+            actionType: "UPDATE_STATUS",
+            data: {
+              newStatus: "COMPLETED",
+              reason: "Marked as completed by operator",
+            },
+            userId: currentUser._id,
+          },
+        })
+      );
+      refreshTicket();
+    } catch (error) {
+      console.error("Mark complete error:", error);
     }
   };
 
@@ -447,6 +469,7 @@ const ViewTicket = ({ mode }) => {
           onAddProgress={handleAddProgress}
           onAcceptTicket={handleAcceptTicket}
           onCloseTicket={handleCloseTicket}
+          onMarkComplete={handleMarkComplete}
           onTransferTicket={handleTransfer}
           onTransferRequest={handleTransferRequest}
           onPrint={() => window.print()}

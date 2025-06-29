@@ -5,6 +5,7 @@ import {
   FaPrint,
   FaCheck,
   FaExchangeAlt,
+  FaFlagCheckered,
 } from "react-icons/fa";
 import { Button } from "../FormComponents";
 
@@ -14,6 +15,7 @@ const TicketActions = ({
   onAddNote,
   onAddProgress,
   onCloseTicket,
+  onMarkComplete,
   onTransferTicket,
   onAcceptTicket,
   onTransferRequest,
@@ -22,6 +24,7 @@ const TicketActions = ({
 }) => {
   // Disable conditions based on ticket status
   const isClosed = ticket.status === "CLOSED";
+  const isCompleted = ticket.status === "COMPLETED";
   const canAccept = ticket.status === "CREATED" && mode === "OP_MANAGER";
   const isInProgress = ticket.status === "IN_PROGRESS";
 
@@ -46,13 +49,25 @@ const TicketActions = ({
           <>
             {/* KAP Employee Actions */}
             {mode === "KAP_EMPLOYEE" && (
-              <Button
-                text="Add Note"
-                onClick={() => onAddNote("KAP_NOTE")}
-                className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
-                size="small"
-              />
+              <>
+                <Button
+                  text="Add Note"
+                  onClick={() => onAddNote("KAP_NOTE")}
+                  className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                  icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  size="small"
+                />
+                {/* KAP Close Button - Only for KAP when ticket is IN_PROGRESS or COMPLETED */}
+                {(isInProgress || isCompleted) && (
+                  <Button
+                    text="Close Ticket"
+                    onClick={onCloseTicket}
+                    className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
+                    icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
+                  />
+                )}
+              </>
             )}
 
             {/* OP Manager Actions */}
@@ -82,7 +97,7 @@ const TicketActions = ({
                     <Button
                       text="Transfer"
                       onClick={() => onTransferTicket("TICKET")}
-                      className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
                       icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
                       size="small"
                     />
@@ -96,12 +111,13 @@ const TicketActions = ({
                     />
                   </>
                 )}
-                {mode === "OP_MANAGER" && ticket.status === "IN_PROGRESS" && (
+                {/* Mark Complete Button - Only for OP_MANAGER when ticket is IN_PROGRESS */}
+                {isInProgress && (
                   <Button
-                    text="Close"
-                    onClick={onCloseTicket}
-                    className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
-                    icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    text="Mark Complete"
+                    onClick={onMarkComplete}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
+                    icon={<FaFlagCheckered className="w-3 h-3 sm:w-4 sm:h-4" />}
                     size="small"
                   />
                 )}
@@ -131,7 +147,7 @@ const TicketActions = ({
                 <Button
                   text="Transfer"
                   onClick={() => onTransferTicket("TICKET")}
-                  className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
                   icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
                   size="small"
                 />
@@ -176,12 +192,13 @@ const TicketActions = ({
                     size="small"
                   />
                 )}
-                {mode === "OP_EMPLOYEE" && ticket.status === "IN_PROGRESS" && (
+                {/* Mark Complete Button - Only for OP_EMPLOYEE when ticket is IN_PROGRESS */}
+                {mode === "OP_EMPLOYEE" && isInProgress && (
                   <Button
-                    text="Close"
-                    onClick={onCloseTicket}
-                    className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
-                    icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    text="Mark Complete"
+                    onClick={onMarkComplete}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
+                    icon={<FaFlagCheckered className="w-3 h-3 sm:w-4 sm:h-4" />}
                     size="small"
                   />
                 )}

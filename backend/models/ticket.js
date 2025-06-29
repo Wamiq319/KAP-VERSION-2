@@ -553,52 +553,80 @@ ticketSchema.statics.updateProgress = async function (data) {
 
 ticketSchema.statics.updateStatus = async function (data) {
   const { Id, newStatus, addedBy } = data;
+
+  console.log(
+    "[updateStatus] ID:",
+    Id,
+    "Current->New:",
+    newStatus,
+    "User:",
+    addedBy
+  );
+
   try {
     const ticket = await this.findById(Id);
+
     if (!ticket) {
+      console.log("[updateStatus] ❌ Ticket not found");
       return { success: false, message: "Ticket not found", data: null };
     }
 
-    const now = new Date();
-    let statusToSet = newStatus;
+    console.log(
+      "[updateStatus] Found ticket:",
+      ticket.ticketNumber,
+      "Status:",
+      ticket.status
+    );
 
-    // Define allowed status transitions
+    // Updated status transitions - allow ACCEPTED and CLOSED from any status
     const statusTransitions = {
-      CREATED: ["ACCEPTED"],
-      ACCEPTED: ["IN_PROGRESS", "CREATED"],
-      IN_PROGRESS: ["COMPLETED", "ACCEPTED"],
-      COMPLETED: ["CLOSED", "IN_PROGRESS"],
-      CLOSED: [],
+      CREATED: ["ACCEPTED", "CLOSED"],
+      ACCEPTED: ["IN_PROGRESS", "CREATED", "CLOSED", "COMPLETED"],
+      IN_PROGRESS: ["COMPLETED", "ACCEPTED", "CLOSED"],
+      COMPLETED: ["CLOSED", "IN_PROGRESS", "ACCEPTED"],
+      CLOSED: ["ACCEPTED"], // Allow reopening from CLOSED to ACCEPTED
     };
 
     // Validate the transition
     const currentStatus = ticket.status;
     const allowedNextStatuses = statusTransitions[currentStatus] || [];
 
-    if (!allowedNextStatuses.includes(statusToSet)) {
+    if (!allowedNextStatuses.includes(newStatus)) {
+      console.log(
+        "[updateStatus] ❌ Invalid transition:",
+        currentStatus,
+        "->",
+        newStatus,
+        "Allowed:",
+        allowedNextStatuses
+      );
       return {
         success: false,
-        message: `Invalid status transition from ${currentStatus} to ${statusToSet}`,
+        message: `Invalid status transition from ${currentStatus} to ${newStatus}`,
         data: null,
         allowedTransitions: allowedNextStatuses,
       };
     }
 
+    console.log("[updateStatus] ✅ Valid transition, updating...");
+
     // Update the status
-    ticket.status = statusToSet;
+    ticket.status = newStatus;
     ticket.updatedAt = new Date();
 
     // Handle date updates based on status
-    if (statusToSet === "COMPLETED") {
+    if (newStatus === "COMPLETED") {
       ticket.closedBy = addedBy;
       ticket.endDate = new Date();
-    } else if (statusToSet === "IN_PROGRESS") {
-      // Set startDate when work begins (for both INSTANT and SCHEDULED)
-      // No validation against scheduled date - allow early start
+    } else if (newStatus === "CLOSED") {
+      ticket.closedBy = addedBy;
+      ticket.endDate = new Date();
+    } else if (newStatus === "IN_PROGRESS") {
       ticket.startDate = new Date();
     }
 
     await ticket.save();
+    console.log("[updateStatus] ✅ Status updated to:", newStatus);
 
     const updatedTicket = await this.getFormattedTicket(Id);
     return {
@@ -607,7 +635,7 @@ ticketSchema.statics.updateStatus = async function (data) {
       data: updatedTicket,
     };
   } catch (error) {
-    console.error("Error updating status:", error);
+    console.error("[updateStatus] ❌ Error:", error.message);
     return { success: false, message: "Internal server error", data: null };
   }
 };
