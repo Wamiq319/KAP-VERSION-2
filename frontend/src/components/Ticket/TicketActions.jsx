@@ -22,7 +22,6 @@ const TicketActions = ({
 }) => {
   // Disable conditions based on ticket status
   const isClosed = ticket.status === "CLOSED";
-  const isTransferRequested = ticket.status === "TRANSFER_REQUESTED";
   const canAccept = ticket.status === "CREATED" && mode === "OP_MANAGER";
   const isInProgress = ticket.status === "IN_PROGRESS";
 
@@ -77,38 +76,23 @@ const TicketActions = ({
                         className="bg-blue-600 hover:bg-blue-700"
                         icon={<FaCheck />}
                         size="medium"
-                        disabled={isTransferRequested}
                       />
                     )}
                     {/* Transfer Ticket Button */}
                     <Button
-                      text={
-                        isTransferRequested
-                          ? "Transfer Pending"
-                          : "Transfer Ticket"
-                      }
+                      text="Transfer Ticket"
                       onClick={() => onTransferTicket("TICKET")}
-                      className={`${
-                        isTransferRequested
-                          ? "bg-gray-400"
-                          : "bg-orange-600 hover:bg-orange-700"
-                      }`}
+                      className="bg-orange-600 hover:bg-orange-700"
                       icon={<FaExchangeAlt />}
                       size="medium"
-                      disabled={isTransferRequested}
                     />
                     {/* Transfer Request Button */}
                     <Button
                       text="Request Transfer"
                       onClick={() => onTransferRequest("MANAGER")}
-                      className={`${
-                        isTransferRequested
-                          ? "bg-gray-400"
-                          : "bg-orange-600 hover:bg-orange-700"
-                      }`}
+                      className="bg-orange-600 hover:bg-orange-700"
                       icon={<FaExchangeAlt />}
                       size="medium"
-                      disabled={isTransferRequested}
                     />
                   </>
                 )}
@@ -119,7 +103,6 @@ const TicketActions = ({
                     className="bg-red-600 hover:bg-red-700"
                     icon={<FaTimes />}
                     size="medium"
-                    disabled={isTransferRequested}
                   />
                 )}
                 {mode === "OP_MANAGER" && ticket.status === "ACCEPTED" && (
@@ -151,20 +134,14 @@ const TicketActions = ({
                   className="bg-orange-600 hover:bg-orange-700"
                   icon={<FaExchangeAlt />}
                   size="medium"
-                  disabled={isTransferRequested}
                 />
                 {/* Transfer Request Button */}
                 <Button
                   text="Request Transfer"
                   onClick={() => onTransferRequest("MANAGER")}
-                  className={`${
-                    isTransferRequested
-                      ? "bg-gray-400"
-                      : "bg-orange-600 hover:bg-orange-700"
-                  }`}
+                  className="bg-orange-600 hover:bg-orange-700"
                   icon={<FaExchangeAlt />}
                   size="medium"
-                  disabled={isTransferRequested}
                 />
               </>
             )}
@@ -188,7 +165,6 @@ const TicketActions = ({
                     className="bg-blue-600 hover:bg-blue-700"
                     icon={<FaCheck />}
                     size="medium"
-                    disabled={isTransferRequested}
                   />
                 )}
                 {mode === "OP_EMPLOYEE" && ticket.status === "ACCEPTED" && (
@@ -207,20 +183,14 @@ const TicketActions = ({
                     className="bg-red-600 hover:bg-red-700"
                     icon={<FaTimes />}
                     size="medium"
-                    disabled={isTransferRequested}
                   />
                 )}
                 <Button
                   text="Request Transfer"
                   onClick={() => onTransferRequest("EMPLOYEE")}
-                  className={`${
-                    isTransferRequested
-                      ? "bg-gray-400"
-                      : "bg-orange-600 hover:bg-orange-700"
-                  }`}
+                  className="bg-orange-600 hover:bg-orange-700"
                   icon={<FaExchangeAlt />}
                   size="medium"
-                  disabled={isTransferRequested}
                 />
               </>
             )}

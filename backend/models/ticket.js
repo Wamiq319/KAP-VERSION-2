@@ -54,14 +54,7 @@ const ticketSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: [
-      "CREATED",
-      "ACCEPTED",
-      "IN_PROGRESS",
-      "COMPLETED",
-      "CLOSED",
-      "TRANSFER_REQUESTED",
-    ],
+    enum: ["CREATED", "ACCEPTED", "IN_PROGRESS", "COMPLETED", "CLOSED"],
     default: "CREATED",
   },
 
@@ -571,12 +564,11 @@ ticketSchema.statics.updateStatus = async function (data) {
 
     // Define allowed status transitions
     const statusTransitions = {
-      CREATED: ["ACCEPTED", "TRANSFER_REQUESTED"],
-      ACCEPTED: ["IN_PROGRESS", "TRANSFER_REQUESTED", "CREATED"],
-      IN_PROGRESS: ["COMPLETED", "TRANSFER_REQUESTED", "ACCEPTED"],
+      CREATED: ["ACCEPTED"],
+      ACCEPTED: ["IN_PROGRESS", "CREATED"],
+      IN_PROGRESS: ["COMPLETED", "ACCEPTED"],
       COMPLETED: ["CLOSED", "IN_PROGRESS"],
       CLOSED: [],
-      TRANSFER_REQUESTED: ["ACCEPTED", "CREATED"],
     };
 
     // Validate the transition
@@ -729,11 +721,6 @@ ticketSchema.statics.createTransferRequest = async function (data) {
       transferRequest,
     ];
 
-    // Only update ticket status for DEPARTMENT transfers
-    if (requestType === "DEPARTMENT") {
-      ticket.status = "TRANSFER_REQUESTED";
-    }
-
     ticket.updatedAt = new Date();
 
     await ticket.save();
@@ -789,12 +776,6 @@ ticketSchema.statics.acceptTransferRequest = async function (data) {
     // Update transfer request status
     transferRequest.status = "ACCEPTED";
     transferRequest.updatedAt = new Date();
-
-    // Update ticket status back to previous state (remove TRANSFER_REQUESTED)
-    // Find the most recent non-transfer status or default to CREATED
-    const nonTransferStatuses =
-      ticket.progress.length > 0 ? "IN_PROGRESS" : "CREATED";
-    ticket.status = nonTransferStatuses;
 
     // If it's an employee transfer, update the assignment
     if (transferRequest.type === "EMPLOYEE") {
@@ -867,12 +848,6 @@ ticketSchema.statics.declineTransferRequest = async function (data) {
     transferRequest.status = "DECLINED";
     transferRequest.declineReason = declineReason;
     transferRequest.updatedAt = new Date();
-
-    // Update ticket status back to previous state (remove TRANSFER_REQUESTED)
-    // Find the most recent non-transfer status or default to CREATED
-    const nonTransferStatuses =
-      ticket.progress.length > 0 ? "IN_PROGRESS" : "CREATED";
-    ticket.status = nonTransferStatuses;
 
     ticket.updatedAt = new Date();
     await ticket.save();
