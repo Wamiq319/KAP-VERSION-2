@@ -84,7 +84,7 @@ const TicketInfo = ({ ticket, mode }) => {
       );
     }
     return (
-      <div className="space-y-3 h-[500px] overflow-y-auto">
+      <div className="space-y-3">
         {ticket.progress.map((update, idx) => (
           <div
             key={idx}
@@ -451,19 +451,33 @@ const TicketInfo = ({ ticket, mode }) => {
           </div>
         </div>
 
-        {/* Progress History (moved here) */}
-        <div className="bg-white rounded-lg shadow p-6 ">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <BsClock className="w-5 h-5 text-blue-500 mr-2" />
-            Progress History
-          </h2>
-          {renderProgress()}
+        {/* Progress History and Transfer Requests - Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[420px]">
+          {/* Progress History */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <BsClock className="w-5 h-5 text-blue-500 mr-2" />
+              Progress History
+            </h2>
+            <div className="max-h-80 overflow-y-auto">{renderProgress()}</div>
+          </div>
+
+          {/* Transfer Requests */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <BsClock className="w-5 h-5 text-blue-500 mr-2" />
+              Transfer Requests
+            </h2>
+            <div className="max-h-80 overflow-y-auto">
+              {renderTransferRequests()}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Side Column */}
       <div className="w-full md:w-[350px] flex flex-col gap-4">
-        {/* Assignments Card (moved to top, enhanced UI) */}
+        {/* Assignments Card */}
         <div className="bg-white rounded-lg shadow-md flex flex-col mb-2">
           <div className="p-4 border-b border-gray-200 flex items-center">
             <BsPerson className="w-5 h-5 text-indigo-500 mr-2" />
@@ -492,8 +506,9 @@ const TicketInfo = ({ ticket, mode }) => {
             </div>
           </div>
         </div>
-        {/* KAP Notes Card */}
-        <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
+
+        {/* KAP Notes Card - Increased Height */}
+        <div className="bg-white rounded-lg shadow-md h-[26rem] flex flex-col">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center">
               <BsClipboardData className="w-5 h-5 text-blue-500 mr-2" />
@@ -502,37 +517,33 @@ const TicketInfo = ({ ticket, mode }) => {
           </div>
           <div className="p-4 flex-1 overflow-y-auto">{renderKapNotes()}</div>
         </div>
-        {/* Organization Notes Card */}
-        <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
+
+        {/* Organization Notes Card - Increased Height */}
+        <div className="bg-white rounded-lg shadow-md h-[26rem] flex flex-col">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center">
               <BsPerson className="w-5 h-5 text-green-500 mr-2" />
-              Notes by {ticket.requestor.org.name}
+              Notes by {ticket.requestor?.org?.name || "Organization"}
             </h3>
           </div>
           <div className="p-4 flex-1 overflow-y-auto">{renderOrgNotes()}</div>
-        </div>
-        {/* Transfer Requests Card */}
-        <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <BsClock className="w-5 h-5 text-blue-500 mr-2" />
-              Transfer Requests
-            </h3>
-          </div>
-          <div className="p-4 flex-1 overflow-y-auto">
-            {renderTransferRequests()}
-          </div>
         </div>
       </div>
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={"Progress Visual"}
-        imageUrl={modalImageUrl}
-        size="md"
+        size="lg"
       >
-        {!modalImageUrl && (
+        {modalImageUrl ? (
+          <div className="flex flex-col items-center justify-center w-full">
+            <img
+              src={modalImageUrl}
+              alt="Progress Attachment"
+              className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+            />
+          </div>
+        ) : (
           <div className="flex flex-col items-center justify-center w-full h-64">
             <BsBarChartSteps className="w-20 h-20 text-green-400 mb-4" />
             <div className="text-gray-500 text-lg">
