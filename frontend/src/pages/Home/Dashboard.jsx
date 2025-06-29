@@ -47,6 +47,12 @@ const DashboardHome = ({ role }) => {
           className:
             "w-full bg-green-600 hover:bg-green-700 text-lg py-3 shadow",
         },
+        {
+          text: words["Transfer Request"] || "Transfer Request",
+          path: "/transfer-request",
+          className:
+            "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
+        },
       ],
     },
     OP_MANAGER: {
@@ -67,6 +73,12 @@ const DashboardHome = ({ role }) => {
           path: "/manage-op-tickets",
           className: "w-full bg-blue-600 hover:bg-blue-700 text-lg py-3 shadow",
         },
+        {
+          text: words["Transfer Request"] || "Transfer Request",
+          path: "/transfer-request",
+          className:
+            "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
+        },
       ],
     },
     GOV_EMPLOYEE: {
@@ -78,10 +90,10 @@ const DashboardHome = ({ role }) => {
       department: userData?.department?.name || "Department",
       buttons: [
         {
-          text: words["All Tickets"] || "All Tickets",
+          text: words["Transfer Request"] || "Transfer Request",
           path: "/gov-employee-tickets",
           className:
-            "w-full bg-green-600 hover:bg-green-700 text-lg py-3 shadow",
+            "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },
         {
           text: words["My Assigned Tickets"] || "My Assigned Tickets",
@@ -99,9 +111,10 @@ const DashboardHome = ({ role }) => {
       department: userData?.department?.name || "Department",
       buttons: [
         {
-          text: words["All Tickets"] || "All Tickets",
+          text: words["Transfer Request"] || "Transfer Request",
           path: "/op-employee-tickets",
-          className: "w-full bg-blue-600 hover:bg-blue-700 text-lg py-3 shadow",
+          className:
+            "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },
         {
           text: words["My Assigned Tickets"] || "My Assigned Tickets",
@@ -148,7 +161,7 @@ const DashboardHome = ({ role }) => {
       )}
 
       {/* Control Panel Box */}
-      <div className="bg-gray-300 p-6 rounded-lg shadow-lg max-w-md md:max-w-lg lg:max-w-xl space-y-6">
+      <div className="bg-gray-300 p-6 rounded-lg shadow-lg min-w-[320px] w-full max-w-md md:max-w-lg lg:max-w-xl space-y-6">
         <div className="flex flex-col items-center gap-4 mb-8">
           <div className="flex justify-center bg-white rounded-full shadow-lg">
             <img

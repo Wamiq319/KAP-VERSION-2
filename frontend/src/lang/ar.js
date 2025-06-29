@@ -139,6 +139,7 @@ export const ar = {
   to: "إلى",
   of: "من",
   entries: "إدخالات",
+  "Transfer Request": "طلب النقل",
 };
 
 export default ar;

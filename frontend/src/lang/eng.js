@@ -185,6 +185,7 @@ export const eng = {
   Tickets: "Tickets",
   "Failed to create ticket": "Failed to create ticket",
   "Ticket created successfully": "Ticket created successfully",
+  "Transfer Request": "Transfer Request",
 };
 
 export default eng;
