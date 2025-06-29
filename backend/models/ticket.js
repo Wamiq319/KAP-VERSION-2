@@ -159,6 +159,51 @@ const ticketSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  transferRequests: [
+    {
+      id: { type: String, required: true }, // Unique ID for the request
+
+      type: {
+        type: String,
+        enum: ["DEPARTMENT", "EMPLOYEE"],
+        required: true,
+      },
+
+      // From: Department ID (for department transfer) or Employee ID (for employee transfer)
+      from: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: "model",
+      },
+
+      // To: Department ID (for department transfer) or Employee ID (for employee transfer)
+      to: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: "model",
+      },
+
+      model: {
+        type: String,
+        enum: ["Department", "User"],
+        required: true,
+      },
+
+      // Status
+      status: {
+        type: String,
+        enum: ["PENDING", "ACCEPTED", "DECLINED"],
+        default: "PENDING",
+      },
+
+      reason: { type: String, required: true },
+      declineReason: { type: String },
+
+      // Timestamps
+      createdAt: { type: Date, default: Date.now },
+      updatedAt: { type: Date, default: Date.now },
+    },
+  ],
 
   endDate: { type: Date },
   createdAt: { type: Date, default: Date.now },
@@ -188,6 +233,8 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
       .populate("kapNotes.addedBy", "name kapRole")
       .populate("orgNotes.addedBy", "name role")
       .populate("kapNotes.targetOrg", "name _id")
+      .populate("transferRequests.from", "name _id")
+      .populate("transferRequests.to", "name _id")
       .lean();
 
     const formattedTicket = {
@@ -302,15 +349,22 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
         })) || [],
 
       transferRequests: ticket.transferRequests?.map((request) => ({
+        id: request.id,
         type: request.type,
-        requestedBy: request.requestedBy,
-        organization: request.organization,
-        currentDepartment: request.currentDepartment,
-        targetDepartment: request.targetDepartment,
-        targetEmployee: request.targetEmployee,
-        reason: request.reason,
+        from: {
+          id: request.from?._id || request.from,
+          name: request.from?.name || "Unknown",
+        },
+        to: {
+          id: request.to?._id || request.to,
+          name: request.to?.name || "Unknown",
+        },
+        model: request.model,
         status: request.status,
+        reason: request.reason,
+        declineReason: request.declineReason,
         createdAt: request.createdAt,
+        updatedAt: request.updatedAt,
       })),
     };
     return formattedTicket;
@@ -601,6 +655,230 @@ ticketSchema.statics.handleTransfer = async function (data) {
     };
   } catch (error) {
     console.error("[handleTransfer] Error handling transfer:", error);
+    return { success: false, message: "Internal server error", data: null };
+  }
+};
+
+// New static methods for transfer requests
+ticketSchema.statics.createTransferRequest = async function (data) {
+  try {
+    const { ticketId, userId, transferData } = data;
+    console.log(
+      "[createTransferRequest] ticketId:",
+      ticketId,
+      "userId:",
+      userId,
+      "transferData:",
+      transferData
+    );
+
+    const ticket = await this.findById(ticketId);
+    if (!ticket) {
+      return { success: false, message: "Ticket not found", data: null };
+    }
+
+    // Get current user info
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return { success: false, message: "User not found", data: null };
+    }
+
+    // Determine request type based on user role
+    let requestType = "EMPLOYEE"; // Default
+    let fromField = null;
+    let modelType = "User"; // Default
+
+    if (
+      currentUser.role === "GOV_MANAGER" ||
+      currentUser.role === "OP_MANAGER"
+    ) {
+      // Manager role - Department transfer
+      requestType = "DEPARTMENT";
+      fromField = currentUser.department; // User's department ID
+      modelType = "Department";
+    } else {
+      // Employee role - Employee transfer
+      requestType = "EMPLOYEE";
+      fromField = currentUser._id; // User's ID
+      modelType = "User";
+    }
+
+    // Generate unique ID for the transfer request
+    const requestId = `TR-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
+    // Create transfer request object
+    const transferRequest = {
+      id: requestId,
+      type: requestType,
+      from: fromField,
+      to: transferData.to,
+      model: modelType,
+      status: "PENDING",
+      reason: transferData.reason,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Add to ticket's transfer requests
+    ticket.transferRequests = [
+      ...(ticket.transferRequests || []),
+      transferRequest,
+    ];
+    ticket.status = "TRANSFER_REQUESTED";
+    ticket.updatedAt = new Date();
+
+    await ticket.save();
+
+    // Return formatted ticket
+    const formattedTicket = await this.getFormattedTicket(ticketId);
+    return {
+      success: true,
+      message: "Transfer request created successfully",
+      data: formattedTicket,
+    };
+  } catch (error) {
+    console.error("[createTransferRequest] Error:", error);
+    return { success: false, message: "Internal server error", data: null };
+  }
+};
+
+ticketSchema.statics.acceptTransferRequest = async function (data) {
+  try {
+    const { ticketId, requestId, acceptedBy } = data;
+    console.log(
+      "[acceptTransferRequest] ticketId:",
+      ticketId,
+      "requestId:",
+      requestId
+    );
+
+    const ticket = await this.findById(ticketId);
+    if (!ticket) {
+      return { success: false, message: "Ticket not found", data: null };
+    }
+
+    // Find the transfer request
+    const transferRequest = ticket.transferRequests.find(
+      (req) => req.id === requestId
+    );
+    if (!transferRequest) {
+      return {
+        success: false,
+        message: "Transfer request not found",
+        data: null,
+      };
+    }
+
+    if (transferRequest.status !== "PENDING") {
+      return {
+        success: false,
+        message: "Transfer request is not pending",
+        data: null,
+      };
+    }
+
+    // Update transfer request status
+    transferRequest.status = "ACCEPTED";
+    transferRequest.updatedAt = new Date();
+
+    // Update ticket status back to previous state (remove TRANSFER_REQUESTED)
+    // Find the most recent non-transfer status or default to CREATED
+    const nonTransferStatuses =
+      ticket.progress.length > 0 ? "IN_PROGRESS" : "CREATED";
+    ticket.status = nonTransferStatuses;
+
+    // If it's an employee transfer, update the assignment
+    if (transferRequest.type === "EMPLOYEE") {
+      // Determine which side (requestor/operator) to update based on the transfer
+      // This logic needs to be refined based on your business rules
+      if (transferRequest.to) {
+        // Update assignment based on the transfer direction
+        // You might need to add logic here to determine which assignment to update
+      }
+    }
+
+    // If it's a department transfer, update the department assignment
+    if (transferRequest.type === "DEPARTMENT") {
+      // Update department assignment based on the transfer
+      // This logic needs to be refined based on your business rules
+    }
+
+    ticket.updatedAt = new Date();
+    await ticket.save();
+
+    // Return formatted ticket
+    const formattedTicket = await this.getFormattedTicket(ticketId);
+    return {
+      success: true,
+      message: "Transfer request accepted successfully",
+      data: formattedTicket,
+    };
+  } catch (error) {
+    console.error("[acceptTransferRequest] Error:", error);
+    return { success: false, message: "Internal server error", data: null };
+  }
+};
+
+ticketSchema.statics.declineTransferRequest = async function (data) {
+  try {
+    const { ticketId, requestId, declineReason } = data;
+    console.log(
+      "[declineTransferRequest] ticketId:",
+      ticketId,
+      "requestId:",
+      requestId
+    );
+
+    const ticket = await this.findById(ticketId);
+    if (!ticket) {
+      return { success: false, message: "Ticket not found", data: null };
+    }
+
+    // Find the transfer request
+    const transferRequest = ticket.transferRequests.find(
+      (req) => req.id === requestId
+    );
+    if (!transferRequest) {
+      return {
+        success: false,
+        message: "Transfer request not found",
+        data: null,
+      };
+    }
+
+    if (transferRequest.status !== "PENDING") {
+      return {
+        success: false,
+        message: "Transfer request is not pending",
+        data: null,
+      };
+    }
+
+    // Update transfer request status
+    transferRequest.status = "DECLINED";
+    transferRequest.declineReason = declineReason;
+    transferRequest.updatedAt = new Date();
+
+    // Update ticket status back to previous state (remove TRANSFER_REQUESTED)
+    // Find the most recent non-transfer status or default to CREATED
+    const nonTransferStatuses =
+      ticket.progress.length > 0 ? "IN_PROGRESS" : "CREATED";
+    ticket.status = nonTransferStatuses;
+
+    ticket.updatedAt = new Date();
+    await ticket.save();
+
+    // Return formatted ticket
+    const formattedTicket = await this.getFormattedTicket(ticketId);
+    return {
+      success: true,
+      message: "Transfer request declined successfully",
+      data: formattedTicket,
+    };
+  } catch (error) {
+    console.error("[declineTransferRequest] Error:", error);
     return { success: false, message: "Internal server error", data: null };
   }
 };

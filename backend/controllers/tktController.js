@@ -283,7 +283,18 @@ export const updateTicket = async (req, res) => {
           transferData: {
             assignTo: data.assignTo,
             targetOrg: data.targetOrg,
-            transferKind: "TRANSFER_TICKET",
+          },
+        });
+        break;
+
+      case "OPEN_TRANSFER_REQUEST":
+        console.log("[updateTicket] Entering OPEN_TRANSFER_REQUEST case");
+        response = await Ticket.createTransferRequest({
+          ticketId: tktId,
+          userId: userId,
+          transferData: {
+            to: data.to,
+            reason: data.reason,
           },
         });
         break;
@@ -345,6 +356,9 @@ export const updateTicket = async (req, res) => {
             break;
           case "TRANSFER_TICKET":
             message = `📦 Ticket #${ticketNumber} has been transferred to you`;
+            break;
+          case "OPEN_TRANSFER_REQUEST":
+            message = `📦 Ticket #${ticketNumber} transfer request opened`;
             break;
           default:
             message = `🔔 Ticket #${ticketNumber} was updated`;
