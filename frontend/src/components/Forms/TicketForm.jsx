@@ -174,6 +174,7 @@ const TicketForm = ({
       "requestor",
       "operator",
     ];
+
     if (formData.ticketType === "SCHEDULED") {
       requiredFields.push("scheduledDate");
     }
@@ -194,22 +195,40 @@ const TicketForm = ({
         words["This field is required"] || "This field is required";
     }
 
+    // Date validation
     if (formData.ticketType === "SCHEDULED") {
-      const scheduledDate = new Date(formData.scheduledDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      if (scheduledDate < now) {
-        errors.scheduledDate =
-          words["Scheduled date must be in the future"] ||
-          "Scheduled date must be in the future";
-      }
-      if (formData.finishDate) {
-        const finishDate = new Date(formData.finishDate);
-        if (finishDate < scheduledDate) {
-          errors.finishDate =
-            words["Finish date must be after scheduled date"] ||
-            "Finish date must be after scheduled date";
+      // Validate scheduled date is in the future
+      if (formData.scheduledDate) {
+        const scheduledDate = new Date(formData.scheduledDate);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        if (scheduledDate < now) {
+          errors.scheduledDate =
+            words["Scheduled date must be in the future"] ||
+            "Scheduled date must be in the future";
         }
+      }
+    }
+
+    // Validate finish date if provided (for both INSTANT and SCHEDULED)
+    if (formData.finishDate) {
+      const finishDate = new Date(formData.finishDate);
+      let referenceDate;
+
+      if (formData.ticketType === "SCHEDULED" && formData.scheduledDate) {
+        // For SCHEDULED tickets, finish date should be after scheduled date
+        referenceDate = new Date(formData.scheduledDate);
+      } else {
+        // For INSTANT tickets, finish date should be after current date
+        referenceDate = new Date();
+        referenceDate.setHours(0, 0, 0, 0);
+      }
+
+      if (finishDate <= referenceDate) {
+        errors.finishDate =
+          words["Finish date must be after start date"] ||
+          "Finish date must be after start date";
       }
     }
 
@@ -435,34 +454,33 @@ const TicketForm = ({
 
       {/* Scheduled Date (only show if SCHEDULED type) */}
       {formData.ticketType === "SCHEDULED" && (
-        <>
-          <DatePicker
-            label={words["Scheduled Date"] || "Scheduled Date"}
-            name="scheduledDate"
-            value={formData.scheduledDate}
-            onChange={handleChange}
-            required
-            className="w-full"
-            minDate={new Date()} // Can't schedule in the past
-            error={formErrors.scheduledDate}
-          />
-          {/* Finish Date Picker */}
-          <DatePicker
-            label={words["Finish Date"] || "Finish Date"}
-            name="finishDate"
-            value={formData.finishDate}
-            onChange={handleChange}
-            required={false}
-            className="w-full"
-            minDate={
-              formData.scheduledDate
-                ? new Date(formData.scheduledDate)
-                : new Date()
-            }
-            error={formErrors.finishDate}
-          />
-        </>
+        <DatePicker
+          label={words["Scheduled Date"] || "Scheduled Date"}
+          name="scheduledDate"
+          value={formData.scheduledDate}
+          onChange={handleChange}
+          required
+          className="w-full"
+          minDate={new Date()} // Keep future date restriction for scheduled tickets
+          error={formErrors.scheduledDate}
+        />
       )}
+
+      {/* Finish Date Picker - Show for both INSTANT and SCHEDULED */}
+      <DatePicker
+        label={words["Expected Finish Date"] || "Expected Finish Date"}
+        name="finishDate"
+        value={formData.finishDate}
+        onChange={handleChange}
+        required={false}
+        className="w-full"
+        minDate={
+          formData.ticketType === "SCHEDULED" && formData.scheduledDate
+            ? new Date(formData.scheduledDate)
+            : new Date()
+        }
+        error={formErrors.finishDate}
+      />
 
       {/* Requestor and Department */}
       <Dropdown

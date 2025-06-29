@@ -142,10 +142,12 @@ const ticketSchema = new mongoose.Schema({
     required: function () {
       return this.ticketType === "SCHEDULED";
     },
+    default: null,
   },
 
   finishDate: {
     type: Date,
+    default: null,
   },
 
   startDate: {
@@ -196,7 +198,10 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
       status: ticket.status,
       priority: ticket.priority,
       ticketType: ticket.ticketType,
+
+      // All date fields
       scheduledDate: ticket.scheduledDate,
+      finishDate: ticket.finishDate,
       startDate: ticket.startDate,
       endDate: ticket.endDate,
       createdAt: ticket.createdAt,
@@ -326,7 +331,7 @@ ticketSchema.statics.createTicket = async function (ticketData) {
     const newTicketData = {
       ...ticketData,
       ticketNumber,
-      scheduledDate: isInstant ? new Date() : ticketData.scheduledDate,
+      scheduledDate: isInstant ? null : ticketData.scheduledDate,
       status: "CREATED",
     };
 
@@ -472,19 +477,10 @@ ticketSchema.statics.updateStatus = async function (data) {
       return { success: false, message: "Ticket not found", data: null };
     }
 
-    // 2. Check if scheduled date has passed and should auto-progress
     const now = new Date();
     let statusToSet = newStatus;
-    if (
-      newStatus === "ACCEPTED" &&
-      ticket.ticketType === "SCHEDULED" &&
-      ticket.scheduledDate &&
-      ticket.scheduledDate <= now
-    ) {
-      statusToSet = "IN_PROGRESS";
-    }
 
-    // 3. Define allowed status transitions
+    // Define allowed status transitions
     const statusTransitions = {
       CREATED: ["ACCEPTED", "TRANSFER_REQUESTED"],
       ACCEPTED: ["IN_PROGRESS", "TRANSFER_REQUESTED", "CREATED"],
@@ -494,7 +490,7 @@ ticketSchema.statics.updateStatus = async function (data) {
       TRANSFER_REQUESTED: ["ACCEPTED", "CREATED"],
     };
 
-    // 4. Validate the transition
+    // Validate the transition
     const currentStatus = ticket.status;
     const allowedNextStatuses = statusTransitions[currentStatus] || [];
 
@@ -507,20 +503,22 @@ ticketSchema.statics.updateStatus = async function (data) {
       };
     }
 
-    // 6. Update the status
+    // Update the status
     ticket.status = statusToSet;
     ticket.updatedAt = new Date();
 
+    // Handle date updates based on status
     if (statusToSet === "COMPLETED") {
       ticket.closedBy = addedBy;
       ticket.endDate = new Date();
     } else if (statusToSet === "IN_PROGRESS") {
-      ticket.startDate = ticket.startDate || new Date();
+      // Set startDate when work begins (for both INSTANT and SCHEDULED)
+      // No validation against scheduled date - allow early start
+      ticket.startDate = new Date();
     }
 
     await ticket.save();
 
-    // 8. Return formatted response
     const updatedTicket = await this.getFormattedTicket(Id);
     return {
       success: true,
