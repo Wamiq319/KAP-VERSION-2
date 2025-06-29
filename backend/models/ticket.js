@@ -173,19 +173,11 @@ const ticketSchema = new mongoose.Schema({
       from: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        refPath: "model",
       },
 
       // To: Department ID (for department transfer) or Employee ID (for employee transfer)
       to: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        refPath: "model",
-      },
-
-      model: {
-        type: String,
-        enum: ["Department", "User"],
         required: true,
       },
 
@@ -233,8 +225,6 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
       .populate("kapNotes.addedBy", "name kapRole")
       .populate("orgNotes.addedBy", "name role")
       .populate("kapNotes.targetOrg", "name _id")
-      .populate("transferRequests.from", "name _id")
-      .populate("transferRequests.to", "name _id")
       .lean();
 
     const formattedTicket = {
@@ -348,24 +338,69 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
           createdAt: note.createdAt,
         })) || [],
 
-      transferRequests: ticket.transferRequests?.map((request) => ({
-        id: request.id,
-        type: request.type,
-        from: {
-          id: request.from?._id || request.from,
-          name: request.from?.name || "Unknown",
-        },
-        to: {
-          id: request.to?._id || request.to,
-          name: request.to?.name || "Unknown",
-        },
-        model: request.model,
-        status: request.status,
-        reason: request.reason,
-        declineReason: request.declineReason,
-        createdAt: request.createdAt,
-        updatedAt: request.updatedAt,
-      })),
+      transferRequests: await Promise.all(
+        ticket.transferRequests?.map(async (request) => {
+          // Populate from and to fields based on type
+          let fromName = "Unknown";
+          let toName = "Unknown";
+
+          try {
+            if (request.type === "DEPARTMENT") {
+              // For department transfers, populate department names
+              if (request.from) {
+                const fromDept = await mongoose
+                  .model("Department")
+                  .findById(request.from)
+                  .select("name");
+                fromName = fromDept?.name || "Unknown";
+              }
+              if (request.to) {
+                const toDept = await mongoose
+                  .model("Department")
+                  .findById(request.to)
+                  .select("name");
+                toName = toDept?.name || "Unknown";
+              }
+            } else if (request.type === "EMPLOYEE") {
+              // For user transfers, populate user names
+              if (request.from) {
+                const fromUser = await mongoose
+                  .model("User")
+                  .findById(request.from)
+                  .select("name");
+                fromName = fromUser?.name || "Unknown";
+              }
+              if (request.to) {
+                const toUser = await mongoose
+                  .model("User")
+                  .findById(request.to)
+                  .select("name");
+                toName = toUser?.name || "Unknown";
+              }
+            }
+          } catch (populateError) {
+            console.error("Error populating transfer request:", populateError);
+          }
+
+          return {
+            id: request.id,
+            type: request.type,
+            from: {
+              id: request.from,
+              name: fromName,
+            },
+            to: {
+              id: request.to,
+              name: toName,
+            },
+            status: request.status,
+            reason: request.reason,
+            declineReason: request.declineReason,
+            createdAt: request.createdAt,
+            updatedAt: request.updatedAt,
+          };
+        }) || []
+      ),
     };
     return formattedTicket;
   } catch (error) {
@@ -594,51 +629,22 @@ ticketSchema.statics.handleTransfer = async function (data) {
       return { success: false, message: "Ticket not found", data: null };
     }
 
-    if (transferData.transferKind === "TRANSFER_TICKET") {
-      // Direct assignment
-      const { assignTo, targetOrg } = transferData;
-      if (targetOrg === "operator") {
-        ticket.assignments.operator = {
-          user: assignTo,
-          assignedAt: new Date(),
-        };
-      } else if (targetOrg === "requestor") {
-        ticket.assignments.requestor = {
-          user: assignTo,
-          assignedAt: new Date(),
-        };
-      } else {
-        return {
-          success: false,
-          message: "Invalid targetOrg for transfer",
-          data: null,
-        };
-      }
-    } else if (transferData.transferKind === "TRANSFER_REQUEST") {
-      // Add a transfer request
-      const transferRequest = {
-        type: transferData.type, // e.g., "DEPARTMENT" or "EMPLOYEE"
-        requestedBy: transferData.requestedBy,
-        organization: transferData.organization,
-        currentDepartment: transferData.currentDepartment,
-        reason: transferData.reason,
-        status: "PENDING",
-        createdAt: new Date(),
+    // Direct assignment - simplified without transferKind logic
+    const { assignTo, targetOrg } = transferData;
+    if (targetOrg === "operator") {
+      ticket.assignments.operator = {
+        user: assignTo,
+        assignedAt: new Date(),
       };
-      if (transferData.type === "DEPARTMENT") {
-        transferRequest.targetDepartment = transferData.targetDepartment;
-      } else if (transferData.type === "EMPLOYEE") {
-        transferRequest.targetEmployee = transferData.targetEmployee;
-      }
-      ticket.transferRequests = [
-        ...(ticket.transferRequests || []),
-        transferRequest,
-      ];
-      ticket.status = "TRANSFER_REQUESTED";
+    } else if (targetOrg === "requestor") {
+      ticket.assignments.requestor = {
+        user: assignTo,
+        assignedAt: new Date(),
+      };
     } else {
       return {
         success: false,
-        message: "Invalid transferKind for transfer",
+        message: "Invalid targetOrg for transfer",
         data: null,
       };
     }
@@ -686,7 +692,6 @@ ticketSchema.statics.createTransferRequest = async function (data) {
     // Determine request type based on user role
     let requestType = "EMPLOYEE"; // Default
     let fromField = null;
-    let modelType = "User"; // Default
 
     if (
       currentUser.role === "GOV_MANAGER" ||
@@ -695,12 +700,10 @@ ticketSchema.statics.createTransferRequest = async function (data) {
       // Manager role - Department transfer
       requestType = "DEPARTMENT";
       fromField = currentUser.department; // User's department ID
-      modelType = "Department";
     } else {
       // Employee role - Employee transfer
       requestType = "EMPLOYEE";
       fromField = currentUser._id; // User's ID
-      modelType = "User";
     }
 
     // Generate unique ID for the transfer request
@@ -714,7 +717,6 @@ ticketSchema.statics.createTransferRequest = async function (data) {
       type: requestType,
       from: fromField,
       to: transferData.to,
-      model: modelType,
       status: "PENDING",
       reason: transferData.reason,
       createdAt: new Date(),
@@ -726,7 +728,12 @@ ticketSchema.statics.createTransferRequest = async function (data) {
       ...(ticket.transferRequests || []),
       transferRequest,
     ];
-    ticket.status = "TRANSFER_REQUESTED";
+
+    // Only update ticket status for DEPARTMENT transfers
+    if (requestType === "DEPARTMENT") {
+      ticket.status = "TRANSFER_REQUESTED";
+    }
+
     ticket.updatedAt = new Date();
 
     await ticket.save();

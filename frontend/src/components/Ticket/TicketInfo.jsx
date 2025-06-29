@@ -137,28 +137,65 @@ const TicketInfo = ({ ticket, mode }) => {
     );
   };
 
-  const renderTransferHistory = () => {
-    if (!ticket.transferHistory || ticket.transferHistory.length === 0) {
+  const renderTransferRequests = () => {
+    if (!ticket.transferRequests || ticket.transferRequests.length === 0) {
       return (
         <div className="text-gray-500 italic">
-          No transfer history available
+          No transfer requests available
         </div>
       );
     }
+
     return (
-      <div className="space-y-2">
-        {ticket.transferHistory.map((item, idx) => (
-          <div key={idx} className="bg-gray-50 rounded p-2">
-            <div className="flex justify-between">
-              <span className="font-semibold text-xs text-gray-700">
-                {item.transferredBy?.name || "Unknown"}
+      <div className="space-y-3">
+        {ticket.transferRequests.map((request, idx) => (
+          <div
+            key={request.id || idx}
+            className={`bg-gray-50 rounded-lg p-3 border-l-4 ${
+              request.status === "PENDING"
+                ? "border-yellow-500"
+                : request.status === "ACCEPTED"
+                ? "border-green-500"
+                : "border-red-500"
+            } mb-2`}
+          >
+            <div>
+              <span className="font-semibold text-gray-700 text-sm">
+                {request.type} Transfer Request
               </span>
-              <span className="text-xs text-gray-500">
-                {formatDate(item.date)}
+              <span
+                className={`text-xs ml-2 px-2 py-1 rounded-full ${
+                  request.status === "PENDING"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : request.status === "ACCEPTED"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {request.status}
               </span>
             </div>
-            <div className="text-xs text-gray-500">To: {item.to || "N/A"}</div>
-            <div className="text-xs text-gray-700">{item.note}</div>
+            <div className="text-xs text-gray-500 mb-1">
+              <span className="text-blue-600 font-medium">Date:</span>
+              {formatDate(request.createdAt)}
+            </div>
+            <div className="text-xs text-gray-500 mb-1">
+              <span className="text-green-600 font-medium">From:</span>
+              <span className="text-gray-700 ml-1">{request.from.name}</span>
+              <span className="text-green-600 font-medium ml-4">To:</span>
+              <span className="text-gray-700 ml-1">{request.to.name}</span>
+            </div>
+            <p className="text-gray-700 text-sm">{request.reason}</p>
+            {request.declineReason && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <span className="text-red-500 text-xs font-medium">
+                  Declined:{" "}
+                </span>
+                <span className="text-red-700 text-xs">
+                  {request.declineReason}
+                </span>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -475,16 +512,16 @@ const TicketInfo = ({ ticket, mode }) => {
           </div>
           <div className="p-4 flex-1 overflow-y-auto">{renderOrgNotes()}</div>
         </div>
-        {/* Transfer History Card (replaces Progress History) */}
+        {/* Transfer Requests Card */}
         <div className="bg-white rounded-lg shadow-md h-80 flex flex-col">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center">
               <BsClock className="w-5 h-5 text-blue-500 mr-2" />
-              Transfer History
+              Transfer Requests
             </h3>
           </div>
           <div className="p-4 flex-1 overflow-y-auto">
-            {renderTransferHistory()}
+            {renderTransferRequests()}
           </div>
         </div>
       </div>
