@@ -99,6 +99,17 @@ const TicketInput = ({
       delete dataToSend.observation;
     }
 
+    // For OPEN_TRANSFER_REQUEST, ensure we send the correct field names
+    if (type === "OPEN_TRANSFER_REQUEST") {
+      // Keep only the fields we need
+      const transferData = {
+        to: inputData.department || inputData.employee,
+        reason: inputData.reason,
+      };
+      onSubmit(transferData);
+      return;
+    }
+
     onSubmit(dataToSend);
   };
 
@@ -256,8 +267,8 @@ const TicketInput = ({
           />
         )}
 
-        {/* TRANSFER_REQUEST */}
-        {type === "TRANSFER_REQUEST" && (
+        {/* OPEN_TRANSFER_REQUEST */}
+        {type === "OPEN_TRANSFER_REQUEST" && (
           <>
             {Role === "MANAGER" && (
               <Dropdown

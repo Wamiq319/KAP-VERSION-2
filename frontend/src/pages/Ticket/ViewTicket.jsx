@@ -241,7 +241,7 @@ const ViewTicket = ({ mode }) => {
     }
 
     setTransferOptions(optionsForTransferRequest);
-    setInputType("TRANSFER_REQUEST");
+    setInputType("OPEN_TRANSFER_REQUEST");
     setInputTarget(requestType);
     setInputRole(getRoleFromMode());
     setShowInput(true);
@@ -298,15 +298,10 @@ const ViewTicket = ({ mode }) => {
           };
           break;
 
-        case "TRANSFER_REQUEST":
+        case "OPEN_TRANSFER_REQUEST":
           payload.actionType = "OPEN_TRANSFER_REQUEST";
           payload.data = {
-            requestType: inputTarget,
-            targetId:
-              currentUser.role === "OP_MANAGER" ||
-              currentUser.role === "GOV_MANAGER"
-                ? data.department
-                : data.employee,
+            to: data.to,
             reason: data.reason || "Transfer request initiated",
           };
           break;
@@ -493,7 +488,7 @@ const getModalTitle = (type) => {
       return "Update Progress";
     case "TRANSFER":
       return "Transfer Ticket";
-    case "TRANSFER_REQUEST":
+    case "OPEN_TRANSFER_REQUEST":
       return "Request Transfer";
     default:
       return "";
