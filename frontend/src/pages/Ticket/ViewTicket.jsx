@@ -386,12 +386,12 @@ const ViewTicket = ({ mode }) => {
   }
 
   return (
-    <div className="ticket-container">
+    <div className="ticket-container px-4 py-6 max-w-7xl mx-auto">
       {/* Development Raw Data */}
       {import.meta.env.VITE_MODE === "development" && (
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-500">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-500">
               Development Data :: View Ticket
             </h3>
             <button
@@ -413,7 +413,7 @@ const ViewTicket = ({ mode }) => {
               Copy
             </button>
           </div>
-          <div className="border rounded p-2 overflow-auto max-h-52">
+          <div className="border rounded p-2 overflow-auto max-h-40 sm:max-h-52">
             <pre className="text-xs text-gray-600">
               {JSON.stringify(
                 {
@@ -429,13 +429,17 @@ const ViewTicket = ({ mode }) => {
         </div>
       )}
 
-      <div className="ticket-header">
-        <h1>Ticket Details</h1>
-        <p>View and manage ticket information</p>
+      <div className="ticket-header mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+          Ticket Details
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600">
+          View and manage ticket information
+        </p>
       </div>
 
       {/* Top Actions Bar */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <TicketActions
           ticket={currentTicket}
           mode={mode}

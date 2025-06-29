@@ -26,19 +26,19 @@ const TicketActions = ({
   const isInProgress = ticket.status === "IN_PROGRESS";
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
+    <div className="bg-white rounded-lg shadow-md p-3 sm:p-4">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-800 border-b pb-2 mb-3 sm:mb-4">
         Actions
       </h2>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
         {/* Print Action - Always available */}
         <Button
-          text="Print Ticket"
+          text="Print"
           onClick={onPrint}
-          className="bg-purple-600 hover:bg-purple-700"
-          icon={<FaPrint />}
-          size="medium"
+          className="bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm"
+          icon={<FaPrint className="w-3 h-3 sm:w-4 sm:h-4" />}
+          size="small"
         />
 
         {/* Status-based actions */}
@@ -49,9 +49,9 @@ const TicketActions = ({
               <Button
                 text="Add Note"
                 onClick={() => onAddNote("KAP_NOTE")}
-                className="bg-blue-600 hover:bg-blue-700"
-                icon={<FaPlus />}
-                size="medium"
+                className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                size="small"
               />
             )}
 
@@ -60,58 +60,58 @@ const TicketActions = ({
               <>
                 {canAccept && (
                   <Button
-                    text="Accept Ticket"
+                    text="Accept"
                     onClick={onAcceptTicket}
-                    className="bg-green-600 hover:bg-green-700"
-                    icon={<FaCheck />}
-                    size="medium"
+                    className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
                   />
                 )}
                 {!canAccept && (
                   <>
                     {isInProgress && (
                       <Button
-                        text="Update Progress"
+                        text="Progress"
                         onClick={onAddProgress}
-                        className="bg-blue-600 hover:bg-blue-700"
-                        icon={<FaCheck />}
-                        size="medium"
+                        className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                        icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                        size="small"
                       />
                     )}
                     {/* Transfer Ticket Button */}
                     <Button
-                      text="Transfer Ticket"
+                      text="Transfer"
                       onClick={() => onTransferTicket("TICKET")}
-                      className="bg-orange-600 hover:bg-orange-700"
-                      icon={<FaExchangeAlt />}
-                      size="medium"
+                      className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                      icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
+                      size="small"
                     />
                     {/* Transfer Request Button */}
                     <Button
-                      text="Request Transfer"
+                      text="Request"
                       onClick={() => onTransferRequest("MANAGER")}
-                      className="bg-orange-600 hover:bg-orange-700"
-                      icon={<FaExchangeAlt />}
-                      size="medium"
+                      className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                      icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
+                      size="small"
                     />
                   </>
                 )}
                 {mode === "OP_MANAGER" && ticket.status === "IN_PROGRESS" && (
                   <Button
-                    text="Close Ticket"
+                    text="Close"
                     onClick={onCloseTicket}
-                    className="bg-red-600 hover:bg-red-700"
-                    icon={<FaTimes />}
-                    size="medium"
+                    className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
+                    icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
                   />
                 )}
                 {mode === "OP_MANAGER" && ticket.status === "ACCEPTED" && (
                   <Button
-                    text="Start Work"
+                    text="Start"
                     onClick={onStartWork}
-                    className="bg-yellow-600 hover:bg-yellow-700"
-                    icon={<FaCheck />}
-                    size="medium"
+                    className="bg-yellow-600 hover:bg-yellow-700 text-xs sm:text-sm"
+                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
                   />
                 )}
               </>
@@ -123,25 +123,25 @@ const TicketActions = ({
                 <Button
                   text="Add Note"
                   onClick={() => onAddNote("ORG_NOTE")}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  icon={<FaPlus />}
-                  size="medium"
+                  className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                  icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  size="small"
                 />
                 {/* Transfer Ticket Button */}
                 <Button
-                  text="Transfer Ticket"
+                  text="Transfer"
                   onClick={() => onTransferTicket("TICKET")}
-                  className="bg-orange-600 hover:bg-orange-700"
-                  icon={<FaExchangeAlt />}
-                  size="medium"
+                  className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                  icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  size="small"
                 />
                 {/* Transfer Request Button */}
                 <Button
-                  text="Request Transfer"
+                  text="Request"
                   onClick={() => onTransferRequest("MANAGER")}
-                  className="bg-orange-600 hover:bg-orange-700"
-                  icon={<FaExchangeAlt />}
-                  size="medium"
+                  className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                  icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  size="small"
                 />
               </>
             )}
@@ -153,44 +153,44 @@ const TicketActions = ({
                   <Button
                     text="Add Note"
                     onClick={() => onAddNote("ORG_NOTE")}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    icon={<FaPlus />}
-                    size="medium"
+                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                    icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
                   />
                 )}
                 {isInProgress && (
                   <Button
-                    text="Update Progress"
+                    text="Progress"
                     onClick={onAddProgress}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    icon={<FaCheck />}
-                    size="medium"
+                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
                   />
                 )}
                 {mode === "OP_EMPLOYEE" && ticket.status === "ACCEPTED" && (
                   <Button
-                    text="Start Work"
+                    text="Start"
                     onClick={onStartWork}
-                    className="bg-yellow-600 hover:bg-yellow-700"
-                    icon={<FaCheck />}
-                    size="medium"
+                    className="bg-yellow-600 hover:bg-yellow-700 text-xs sm:text-sm"
+                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
                   />
                 )}
                 {mode === "OP_EMPLOYEE" && ticket.status === "IN_PROGRESS" && (
                   <Button
-                    text="Close Ticket"
+                    text="Close"
                     onClick={onCloseTicket}
-                    className="bg-red-600 hover:bg-red-700"
-                    icon={<FaTimes />}
-                    size="medium"
+                    className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
+                    icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
                   />
                 )}
                 <Button
-                  text="Request Transfer"
+                  text="Request"
                   onClick={() => onTransferRequest("EMPLOYEE")}
-                  className="bg-orange-600 hover:bg-orange-700"
-                  icon={<FaExchangeAlt />}
-                  size="medium"
+                  className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                  icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  size="small"
                 />
               </>
             )}
