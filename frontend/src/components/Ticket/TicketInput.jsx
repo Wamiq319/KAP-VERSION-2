@@ -4,7 +4,7 @@ import { Button, InputField, Dropdown, ImageInput } from "../FormComponents";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const TicketInput = ({
-  type, // 'NOTE' , 'PROGRESS' , 'TRANSFER' , 'TRANSFER_REQUEST'
+  type, // 'NOTE' , 'PROGRESS' , 'TRANSFER' , 'TRANSFER_REQUEST', 'ACCEPT', 'DECLINE'
   Role, // 'KAP', 'MANAGER', 'EMPLOYEE'
   onClose,
   onSubmit,
@@ -13,7 +13,7 @@ const TicketInput = ({
 }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user._id;
-  const orgId = user.organization?._id; // Adjust as per your user object structure
+  const orgId = user.organization?._id;
 
   const progressOptions = [
     { value: 20, label: "20%" },
@@ -44,6 +44,7 @@ const TicketInput = ({
     department: "",
     employee: "",
     reason: "",
+    acceptNote: "", // Add this for accept
   });
 
   // Add state for progress image
@@ -58,8 +59,14 @@ const TicketInput = ({
           const res = await fetch(`/api/organization/${orgId}/departments`);
           const data = await res.json();
           if (Array.isArray(data.departments)) {
+            // Filter out the department that the current manager belongs to
+            const currentUserDeptId = user.department?._id;
+            const filteredDepartments = data.departments.filter(
+              (dept) => dept._id !== currentUserDeptId
+            );
+
             setDepartmentOptions(
-              data.departments.map((dept) => ({
+              filteredDepartments.map((dept) => ({
                 value: dept._id,
                 label: dept.name,
               }))
@@ -107,6 +114,22 @@ const TicketInput = ({
         reason: inputData.reason,
       };
       onSubmit(transferData);
+      return;
+    }
+
+    // For ACCEPT, send the accept note (optional)
+    if (type === "ACCEPT") {
+      const acceptData = {
+        acceptNote: inputData.acceptNote || "",
+      };
+      onSubmit(acceptData);
+      return;
+    }
+
+    // For DECLINE, send empty object (no reason needed)
+    if (type === "DECLINE") {
+      const declineData = {};
+      onSubmit(declineData);
       return;
     }
 
@@ -320,6 +343,56 @@ const TicketInput = ({
           </>
         )}
 
+        {/* ACCEPT */}
+        {type === "ACCEPT" && (
+          <InputField
+            label="Accept Note (Optional)"
+            value={inputData.acceptNote}
+            onChange={(e) =>
+              setInputData((prev) => ({
+                ...prev,
+                acceptNote: e.target.value,
+              }))
+            }
+            type="textarea"
+            rows={3}
+            required={false}
+            placeholder="Optional note for accepting this transfer request..."
+          />
+        )}
+
+        {/* DECLINE - No input needed, just confirmation */}
+        {type === "DECLINE" && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-yellow-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Confirm Decline
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    Are you sure you want to decline this transfer request? This
+                    action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 mt-6">
           <Button
             text="Cancel"
@@ -334,10 +407,22 @@ const TicketInput = ({
                 ? "Update Progress"
                 : type === "TRANSFER"
                 ? "Transfer"
-                : "Request Transfer"
+                : type === "OPEN_TRANSFER_REQUEST"
+                ? "Request Transfer"
+                : type === "ACCEPT"
+                ? "Accept Request"
+                : type === "DECLINE"
+                ? "Decline Request"
+                : "Submit"
             }
             type="submit"
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className={
+              type === "DECLINE"
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : type === "ACCEPT"
+                ? "bg-green-500 hover:bg-green-600 text-white"
+                : "bg-blue-500 hover:bg-blue-600 text-white"
+            }
           />
         </div>
       </form>

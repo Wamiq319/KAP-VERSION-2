@@ -1,17 +1,73 @@
 import { useNavigate } from "react-router-dom";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../../components";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchEntities } from "../../redux/slices/crudSlice";
 import { logo } from "../../assets";
 
 const DashboardHome = ({ role }) => {
   //KAP_EMPLOYEE | GOV_MANAGER | OP_MANAGER | GOV_EMPLOYEE | OP_EMPLOYEE
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { data } = useSelector((state) => state.auth);
   const words = useSelector((state) => state.lang.words);
+  const [transferRequestCount, setTransferRequestCount] = useState(0);
 
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Fetch transfer request count
+  const fetchTransferRequestCount = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) return;
+
+      let queryParams = {
+        role: role,
+        transferRequestMode: true,
+      };
+
+      // Add role-specific parameters
+      switch (role) {
+        case "GOV_MANAGER":
+        case "OP_MANAGER":
+          queryParams.userId = user._id;
+          queryParams.orgId = user.organization?._id;
+          queryParams.departmentId = user.department?._id;
+          break;
+        case "GOV_EMPLOYEE":
+        case "OP_EMPLOYEE":
+          queryParams.userId = user._id;
+          break;
+        default:
+          return; // KAP_EMPLOYEE doesn't have transfer requests
+      }
+
+      const response = await dispatch(
+        fetchEntities({
+          entityType: "tickets",
+          params: queryParams,
+        })
+      );
+
+      if (response.payload?.success) {
+        setTransferRequestCount(response.payload.data?.length || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching transfer request count:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Only fetch count for roles that have transfer requests
+    if (
+      ["GOV_MANAGER", "OP_MANAGER", "GOV_EMPLOYEE", "OP_EMPLOYEE"].includes(
+        role
+      )
+    ) {
+      fetchTransferRequestCount();
+    }
+  }, [role, dispatch]);
 
   // Role-specific configurations
   const roleConfig = {
@@ -48,8 +104,10 @@ const DashboardHome = ({ role }) => {
             "w-full bg-green-600 hover:bg-green-700 text-lg py-3 shadow",
         },
         {
-          text: words["Transfer Request"] || "Transfer Request",
-          path: "/transfer-request",
+          text: `${
+            words["Transfer Requests"] || "Transfer Requests"
+          } (${transferRequestCount})`,
+          path: "/manage-gov-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },
@@ -74,8 +132,10 @@ const DashboardHome = ({ role }) => {
           className: "w-full bg-blue-600 hover:bg-blue-700 text-lg py-3 shadow",
         },
         {
-          text: words["Transfer Request"] || "Transfer Request",
-          path: "/transfer-request",
+          text: `${
+            words["Transfer Requests"] || "Transfer Requests"
+          } (${transferRequestCount})`,
+          path: "/manage-op-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },
@@ -90,8 +150,10 @@ const DashboardHome = ({ role }) => {
       department: userData?.department?.name || "Department",
       buttons: [
         {
-          text: words["Transfer Request"] || "Transfer Request",
-          path: "/gov-employee-tickets",
+          text: `${
+            words["Transfer Requests"] || "Transfer Requests"
+          } (${transferRequestCount})`,
+          path: "/manage-gov-employee-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },
@@ -111,8 +173,10 @@ const DashboardHome = ({ role }) => {
       department: userData?.department?.name || "Department",
       buttons: [
         {
-          text: words["Transfer Request"] || "Transfer Request",
-          path: "/op-employee-tickets",
+          text: `${
+            words["Transfer Requests"] || "Transfer Requests"
+          } (${transferRequestCount})`,
+          path: "/manage-op-employee-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },

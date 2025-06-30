@@ -773,7 +773,9 @@ ticketSchema.statics.acceptTransferRequest = async function (data) {
       "[acceptTransferRequest] ticketId:",
       ticketId,
       "requestId:",
-      requestId
+      requestId,
+      "acceptedBy:",
+      acceptedBy
     );
 
     const ticket = await this.findById(ticketId);
@@ -805,20 +807,26 @@ ticketSchema.statics.acceptTransferRequest = async function (data) {
     transferRequest.status = "ACCEPTED";
     transferRequest.updatedAt = new Date();
 
-    // If it's an employee transfer, update the assignment
-    if (transferRequest.type === "EMPLOYEE") {
-      // Determine which side (requestor/operator) to update based on the transfer
-      // This logic needs to be refined based on your business rules
-      if (transferRequest.to) {
-        // Update assignment based on the transfer direction
-        // You might need to add logic here to determine which assignment to update
-      }
+    // Handle the transfer based on type
+    if (transferRequest.type === "DEPARTMENT") {
+      // For department transfers, update the operator department
+      ticket.operator.department = transferRequest.to;
+      // Clear operator assignment
+      ticket.assignments.operator = {
+        user: null,
+        assignedAt: new Date(),
+      };
+    } else if (transferRequest.type === "EMPLOYEE") {
+      // For employee transfers, update the operator assignment
+      ticket.assignments.operator = {
+        user: transferRequest.to,
+        assignedAt: new Date(),
+      };
     }
 
-    // If it's a department transfer, update the department assignment
-    if (transferRequest.type === "DEPARTMENT") {
-      // Update department assignment based on the transfer
-      // This logic needs to be refined based on your business rules
+    // Update ticket status to ACCEPTED if it was in a different state
+    if (ticket.status !== "ACCEPTED") {
+      ticket.status = "ACCEPTED";
     }
 
     ticket.updatedAt = new Date();
@@ -839,12 +847,14 @@ ticketSchema.statics.acceptTransferRequest = async function (data) {
 
 ticketSchema.statics.declineTransferRequest = async function (data) {
   try {
-    const { ticketId, requestId, declineReason } = data;
+    const { ticketId, requestId, declinedBy } = data;
     console.log(
       "[declineTransferRequest] ticketId:",
       ticketId,
       "requestId:",
-      requestId
+      requestId,
+      "declinedBy:",
+      declinedBy
     );
 
     const ticket = await this.findById(ticketId);
@@ -872,9 +882,8 @@ ticketSchema.statics.declineTransferRequest = async function (data) {
       };
     }
 
-    // Update transfer request status
+    // Update transfer request status to DECLINED
     transferRequest.status = "DECLINED";
-    transferRequest.declineReason = declineReason;
     transferRequest.updatedAt = new Date();
 
     ticket.updatedAt = new Date();
@@ -922,67 +931,105 @@ ticketSchema.statics.getTickets = async function ({
   userId,
   orgId,
   departmentId,
+  transferRequestMode = false, // New parameter
 }) {
   try {
     const filter = {};
 
-    switch (role) {
-      case "KAP_EMPLOYEE":
-        filter["createdBy"] = userId;
-        break;
+    if (transferRequestMode) {
+      // Transfer request filtering logic
+      filter["transferRequests"] = { $exists: true, $ne: [] };
+      filter["transferRequests.status"] = "PENDING";
 
-      case "GOV_EMPLOYEE":
-        filter.$or = [{ "assignments.requestor.user": userId }];
-        break;
+      switch (role) {
+        case "GOV_MANAGER":
+        case "OP_MANAGER":
+          // Managers see department transfer requests TO their department
+          filter["transferRequests.type"] = "DEPARTMENT";
+          filter["transferRequests.to"] = departmentId;
+          break;
 
-      case "OP_EMPLOYEE":
-        console.log(userId);
-        filter.$or = [{ "assignments.operator.user": userId }];
-        break;
+        case "GOV_EMPLOYEE":
+        case "OP_EMPLOYEE":
+          // Employees see employee transfer requests TO them
+          filter["transferRequests.type"] = "EMPLOYEE";
+          filter["transferRequests.to"] = userId;
+          break;
 
-      case "GOV_MANAGER":
-        if (orgId) filter["requestor.org"] = orgId;
-        if (departmentId) filter["requestor.department"] = departmentId;
-        break;
+        default:
+          return {
+            success: false,
+            message: "Invalid role for transfer requests",
+            data: [],
+          };
+      }
+    } else {
+      // Existing regular ticket filtering logic
+      switch (role) {
+        case "KAP_EMPLOYEE":
+          filter["createdBy"] = userId;
+          break;
 
-      case "OP_MANAGER":
-        if (orgId) filter["operator.org"] = orgId;
-        if (departmentId) filter["operator.department"] = departmentId;
-        break;
+        case "GOV_EMPLOYEE":
+          filter.$or = [{ "assignments.requestor.user": userId }];
+          break;
 
-      default:
-        return { success: false, message: "Invalid role", data: [] };
+        case "OP_EMPLOYEE":
+          console.log(userId);
+          filter.$or = [{ "assignments.operator.user": userId }];
+          break;
+
+        case "GOV_MANAGER":
+          if (orgId) filter["requestor.org"] = orgId;
+          if (departmentId) filter["requestor.department"] = departmentId;
+          break;
+
+        case "OP_MANAGER":
+          if (orgId) filter["operator.org"] = orgId;
+          if (departmentId) filter["operator.department"] = departmentId;
+          break;
+
+        default:
+          return { success: false, message: "Invalid role", data: [] };
+      }
     }
 
-    const tickets = await this.find(filter)
-      .sort({ createdAt: -1 })
-      .populate("requestor.org", "name")
-      .populate("requestor.department", "name")
-      .populate("operator.org", "name")
-      .populate("operator.department", "name")
-      .populate("createdBy", "name role")
-      .populate("assignments.requestor.user", "name role department")
-      .populate("assignments.operator.user", "name role department")
-      .lean();
+    const tickets = await this.find(filter).sort({ createdAt: -1 }).lean();
 
-    const formattedData = tickets.map((t) => ({
-      _id: t._id,
-      ticketNumber: t.ticketNumber,
-      request: t.request,
-      requestor: {
-        orgName: t.requestor?.org?.name || null,
-        departmentName: t.requestor?.department?.name || null,
-      },
-      operator: {
-        orgName: t.operator?.org?.name || null,
-        departmentName: t.operator?.department?.name || null,
-      },
-    }));
+    // Use getFormattedTicket for each ticket to maintain consistency
+    const formattedTickets = await Promise.all(
+      tickets.map(async (ticket) => {
+        const formattedTicket = await this.getFormattedTicket(ticket._id);
+        if (formattedTicket) {
+          // For list view, we only need essential fields
+          return {
+            _id: formattedTicket._id,
+            ticketNumber: formattedTicket.ticketNumber,
+            request: formattedTicket.request,
+            status: formattedTicket.status,
+            priority: formattedTicket.priority,
+            createdAt: formattedTicket.createdAt,
+            requestor: formattedTicket.requestor,
+            operator: formattedTicket.operator,
+            // Include transfer requests for transfer request mode
+            transferRequests: transferRequestMode
+              ? formattedTicket.transferRequests
+              : undefined,
+          };
+        }
+        return null;
+      })
+    );
+
+    // Filter out any null values (tickets that couldn't be formatted)
+    const validTickets = formattedTickets.filter((ticket) => ticket !== null);
 
     return {
       success: true,
-      message: "Tickets fetched successfully",
-      data: formattedData,
+      message: transferRequestMode
+        ? "Transfer requests fetched successfully"
+        : "Tickets fetched successfully",
+      data: validTickets,
     };
   } catch (error) {
     console.error("Error in getTickets:", error);

@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEntities, updateEntity } from "../../redux/slices/crudSlice";
 import {
@@ -12,9 +12,12 @@ import {
 } from "../../components";
 import { formatDate } from "../../utils/dateUtils";
 import { useCallback } from "react";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 const ViewTicket = ({ mode }) => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [currentUser, setCurrentUser] = useState(null);
   const [showInput, setShowInput] = useState(false);
@@ -22,6 +25,10 @@ const ViewTicket = ({ mode }) => {
   const [inputTarget, setInputTarget] = useState(null);
   const [inputRole, setInputRole] = useState(null);
   const [transferOptions, setTransferOptions] = useState([]);
+
+  // Check if we're in transfer request mode
+  const transferRequestMode =
+    searchParams.get("transferRequestMode") === "true";
 
   const { currentTicket, status, error } = useSelector((state) => state.crud);
 
@@ -211,9 +218,16 @@ const ViewTicket = ({ mode }) => {
           "[handleTransferRequest] fetchEntities result for departments:",
           result
         );
-        optionsForTransferRequest = result?.payload?.data || [];
+
+        // Filter out the current manager's department
+        const allDepartments = result?.payload?.data || [];
+        const currentUserDeptId = currentUser.department?._id;
+        optionsForTransferRequest = allDepartments.filter(
+          (dept) => dept._id !== currentUserDeptId
+        );
+
         console.log(
-          "[handleTransferRequest] department optionsForTransferRequest:",
+          "[handleTransferRequest] filtered department optionsForTransferRequest:",
           optionsForTransferRequest
         );
       } else {
@@ -267,6 +281,130 @@ const ViewTicket = ({ mode }) => {
     setInputTarget(requestType);
     setInputRole(getRoleFromMode());
     setShowInput(true);
+  };
+
+  // Add handlers for transfer request actions - direct handlers
+  const handleAcceptTransferRequest = async () => {
+    try {
+      // Find the pending transfer request
+      const pendingRequest = currentTicket.transferRequests?.find(
+        (req) => req.status === "PENDING"
+      );
+
+      if (!pendingRequest) {
+        alert("No pending transfer request found");
+        return;
+      }
+
+      // Confirm action
+      const confirmed = window.confirm(
+        "Are you sure you want to accept this transfer request?"
+      );
+      if (!confirmed) return;
+
+      const payload = {
+        actionType: "ACCEPT_TRANSFER_REQUEST",
+        data: {
+          requestId: pendingRequest.id,
+        },
+        userId: currentUser._id,
+      };
+
+      console.log("Accepting transfer request:", payload);
+
+      const response = await dispatch(
+        updateEntity({
+          entityType: "tickets",
+          id: currentTicket._id,
+          formData: payload,
+        })
+      );
+
+      if (response.payload?.success) {
+        alert("Transfer request accepted successfully!");
+
+        // Redirect to normal ticket view (without transferRequestMode)
+        const roleUrls = {
+          KAP_EMPLOYEE: `/manage-kap-tickets/view/${id}`,
+          GOV_EMPLOYEE: `/manage-gov-employee-tickets/view/${id}`,
+          GOV_MANAGER: `/manage-gov-tickets/view/${id}`,
+          OP_MANAGER: `/manage-op-tickets/view/${id}`,
+          OP_EMPLOYEE: `/manage-op-employee-tickets/view/${id}`,
+        };
+
+        const normalTicketUrl = roleUrls[mode] || `/tickets/${id}`;
+        navigate(normalTicketUrl);
+      } else {
+        throw new Error(
+          response.payload?.message || "Failed to accept transfer request"
+        );
+      }
+    } catch (error) {
+      console.error("Accept transfer request error:", error);
+      alert("Failed to accept transfer request. Please try again.");
+    }
+  };
+
+  const handleDeclineTransferRequest = async () => {
+    try {
+      // Find the pending transfer request
+      const pendingRequest = currentTicket.transferRequests?.find(
+        (req) => req.status === "PENDING"
+      );
+
+      if (!pendingRequest) {
+        alert("No pending transfer request found");
+        return;
+      }
+
+      // Confirm action
+      const confirmed = window.confirm(
+        "Are you sure you want to decline this transfer request? This action cannot be undone."
+      );
+      if (!confirmed) return;
+
+      const payload = {
+        actionType: "DECLINE_TRANSFER_REQUEST",
+        data: {
+          requestId: pendingRequest.id,
+        },
+        userId: currentUser._id,
+      };
+
+      console.log("Declining transfer request:", payload);
+
+      const response = await dispatch(
+        updateEntity({
+          entityType: "tickets",
+          id: currentTicket._id,
+          formData: payload,
+        })
+      );
+
+      if (response.payload?.success) {
+        alert("Transfer request declined successfully!");
+
+        // For decline, redirect back to transfer request list
+        const roleUrls = {
+          KAP_EMPLOYEE: `/manage-kap-tickets?transferRequestMode=true`,
+          GOV_EMPLOYEE: `/manage-gov-employee-tickets?transferRequestMode=true`,
+          GOV_MANAGER: `/manage-gov-tickets?transferRequestMode=true`,
+          OP_MANAGER: `/manage-op-tickets?transferRequestMode=true`,
+          OP_EMPLOYEE: `/manage-op-employee-tickets?transferRequestMode=true`,
+        };
+
+        const transferRequestListUrl =
+          roleUrls[mode] || `/tickets?transferRequestMode=true`;
+        navigate(transferRequestListUrl);
+      } else {
+        throw new Error(
+          response.payload?.message || "Failed to decline transfer request"
+        );
+      }
+    } catch (error) {
+      console.error("Decline transfer request error:", error);
+      alert("Failed to decline transfer request. Please try again.");
+    }
   };
 
   const handleSubmitInput = async (data) => {
@@ -328,6 +466,40 @@ const ViewTicket = ({ mode }) => {
           };
           break;
 
+        case "ACCEPT":
+          // Find the pending transfer request
+          const pendingRequest = currentTicket.transferRequests?.find(
+            (req) => req.status === "PENDING"
+          );
+
+          if (!pendingRequest) {
+            throw new Error("No pending transfer request found");
+          }
+
+          payload.actionType = "ACCEPT_TRANSFER_REQUEST";
+          payload.data = {
+            requestId: pendingRequest.id,
+            acceptNote: data.acceptNote || "",
+          };
+          break;
+
+        case "DECLINE":
+          // Find the pending transfer request
+          const pendingRequestForDecline = currentTicket.transferRequests?.find(
+            (req) => req.status === "PENDING"
+          );
+
+          if (!pendingRequestForDecline) {
+            throw new Error("No pending transfer request found");
+          }
+
+          payload.actionType = "DECLINE_TRANSFER_REQUEST";
+          payload.data = {
+            requestId: pendingRequestForDecline.id,
+            declineReason: data.declineReason,
+          };
+          break;
+
         default:
           throw new Error("Invalid action type");
       }
@@ -363,7 +535,7 @@ const ViewTicket = ({ mode }) => {
       }
     } catch (error) {
       console.error("Action failed:", error);
-      alert("Failed to update progress. Please try again.");
+      alert("Failed to process request. Please try again.");
     }
   };
 
@@ -414,7 +586,8 @@ const ViewTicket = ({ mode }) => {
         <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs sm:text-sm font-medium text-gray-500">
-              Development Data :: View Ticket
+              Development Data :: View Ticket ::{" "}
+              {transferRequestMode ? "Transfer Request Mode" : "Normal Mode"}
             </h3>
             <button
               onClick={() => {
@@ -424,6 +597,7 @@ const ViewTicket = ({ mode }) => {
                       ticket: currentTicket,
                       currentUser: currentUser,
                       mode: mode,
+                      transferRequestMode: transferRequestMode,
                     },
                     null,
                     2
@@ -442,6 +616,7 @@ const ViewTicket = ({ mode }) => {
                   ticket: currentTicket,
                   currentUser: currentUser,
                   mode: mode,
+                  transferRequestMode: transferRequestMode,
                 },
                 null,
                 2
@@ -453,10 +628,12 @@ const ViewTicket = ({ mode }) => {
 
       <div className="ticket-header mb-4 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-          Ticket Details
+          {transferRequestMode ? "Transfer Request Details" : "Ticket Details"}
         </h1>
         <p className="text-sm sm:text-base text-gray-600">
-          View and manage ticket information
+          {transferRequestMode
+            ? "Review and respond to transfer requests"
+            : "View and manage ticket information"}
         </p>
       </div>
 
@@ -474,6 +651,9 @@ const ViewTicket = ({ mode }) => {
           onTransferRequest={handleTransferRequest}
           onPrint={() => window.print()}
           onStartWork={handleStartWork}
+          onAcceptTransferRequest={handleAcceptTransferRequest}
+          onDeclineTransferRequest={handleDeclineTransferRequest}
+          transferRequestMode={transferRequestMode}
         />
       </div>
 
@@ -517,6 +697,10 @@ const getModalTitle = (type) => {
       return "Transfer Ticket";
     case "OPEN_TRANSFER_REQUEST":
       return "Request Transfer";
+    case "ACCEPT":
+      return "Accept Transfer Request";
+    case "DECLINE":
+      return "Decline Transfer Request";
     default:
       return "";
   }

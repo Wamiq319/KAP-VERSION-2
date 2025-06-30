@@ -138,7 +138,8 @@ export const getTicketById = async (req, res) => {
 
 export const getTickets = async (req, res) => {
   try {
-    const { userId, role, orgId, departmentId } = req.query;
+    const { userId, role, orgId, departmentId, transferRequestMode } =
+      req.query;
 
     if (!userId || !role) {
       return res.status(400).json({
@@ -153,6 +154,7 @@ export const getTickets = async (req, res) => {
       role,
       orgId,
       departmentId,
+      transferRequestMode: transferRequestMode === "true",
     });
 
     return res.status(response.success ? 200 : 400).json(response);
@@ -314,6 +316,24 @@ export const updateTicket = async (req, res) => {
         });
         break;
 
+      case "ACCEPT_TRANSFER_REQUEST":
+        console.log("[updateTicket] Entering ACCEPT_TRANSFER_REQUEST case");
+        response = await Ticket.acceptTransferRequest({
+          ticketId: tktId,
+          requestId: data.requestId,
+          acceptedBy: userId,
+        });
+        break;
+
+      case "DECLINE_TRANSFER_REQUEST":
+        console.log("[updateTicket] Entering DECLINE_TRANSFER_REQUEST case");
+        response = await Ticket.declineTransferRequest({
+          ticketId: tktId,
+          requestId: data.requestId,
+          declinedBy: userId,
+        });
+        break;
+
       default:
         return res.status(400).json({
           success: false,
@@ -374,6 +394,12 @@ export const updateTicket = async (req, res) => {
             break;
           case "OPEN_TRANSFER_REQUEST":
             message = `📦 Ticket #${ticketNumber} transfer request opened`;
+            break;
+          case "ACCEPT_TRANSFER_REQUEST":
+            message = `✅ Transfer request for ticket #${ticketNumber} has been accepted`;
+            break;
+          case "DECLINE_TRANSFER_REQUEST":
+            message = `❌ Transfer request for ticket #${ticketNumber} has been declined`;
             break;
           default:
             message = `🔔 Ticket #${ticketNumber} was updated`;

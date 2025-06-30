@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTrash, FaPlus, FaEye } from "react-icons/fa";
+import { useSearchParams } from "react-router-dom";
 import {
   fetchEntities,
   deleteEntity,
@@ -25,7 +26,18 @@ const TicketPage = ({ mode }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   const words = useSelector((state) => state.lang.words);
   const navigate = useNavigate();
-  console.log(user);
+  const [searchParams] = useSearchParams();
+
+  // Check if we're in transfer request mode
+  const transferRequestMode =
+    searchParams.get("transferRequestMode") === "true";
+
+  console.log("TicketPage Debug:", {
+    mode,
+    transferRequestMode,
+    user,
+    entities: entities?.tickets?.length || 0,
+  });
 
   const [uiState, setUiState] = useState({
     showToast: false,
@@ -67,7 +79,6 @@ const TicketPage = ({ mode }) => {
     case "GOV MANAGER":
     case "GOV_EMPLOYEE":
       tableHeaders.push({ key: "operator", label: words["Operator"] });
-
       break;
   }
 
@@ -77,6 +88,7 @@ const TicketPage = ({ mode }) => {
 
       let queryParams = {
         role: mode,
+        transferRequestMode: transferRequestMode, // Add this parameter
       };
 
       switch (mode) {
@@ -92,6 +104,7 @@ const TicketPage = ({ mode }) => {
             ...queryParams,
             userId: user._id,
             departmentId: user.department._id,
+            orgId: user.organization?._id,
           };
           break;
 
@@ -107,12 +120,14 @@ const TicketPage = ({ mode }) => {
             ...queryParams,
             userId: user._id,
             departmentId: user.department._id,
+            orgId: user.organization?._id,
           };
           break;
 
         case "GOV_EMPLOYEE":
           queryParams = {
             ...queryParams,
+            userId: user._id,
             organizationId: user.organizationId,
             departmentId: user.departmentId,
             assigneeId: user._id,
@@ -128,6 +143,8 @@ const TicketPage = ({ mode }) => {
           };
       }
 
+      console.log("Fetching tickets with params:", queryParams);
+
       // Fetch tickets
       const ticketResponse = await dispatch(
         fetchEntities({
@@ -135,6 +152,8 @@ const TicketPage = ({ mode }) => {
           params: queryParams,
         })
       );
+
+      console.log("Ticket response:", ticketResponse);
     } finally {
       setUiState((prev) => ({ ...prev, isLoading: false }));
     }
@@ -142,7 +161,7 @@ const TicketPage = ({ mode }) => {
 
   useEffect(() => {
     fetchData();
-  }, [dispatch, mode]);
+  }, [dispatch, mode, transferRequestMode]); // Add transferRequestMode to dependencies
 
   const tableData =
     entities?.tickets?.map((item, index) => ({
@@ -150,10 +169,10 @@ const TicketPage = ({ mode }) => {
       id: item._id,
       ticketNumber: item.ticketNumber,
       request: item.request,
-      operator: item.operator.orgName ?? words["N/A"],
-      requestor: item.requestor.orgName ?? words["N/A"],
-      reqDepartment: item.requestor.departmentName ?? words["N/A"],
-      optDepartment: item.operator.departmentName ?? words["N/A"],
+      operator: item.operator?.org?.name ?? words["N/A"],
+      requestor: item.requestor?.org?.name ?? words["N/A"],
+      reqDepartment: item.requestor?.department?.name ?? words["N/A"],
+      optDepartment: item.operator?.department?.name ?? words["N/A"],
     })) || [];
 
   const handleSubmit = async (formData) => {
@@ -223,7 +242,13 @@ const TicketPage = ({ mode }) => {
       OP_MANAGER: `/manage-op-tickets/view/${ticket.id}`,
       OP_EMPLOYEE: `/manage-op-employee-tickets/view/${ticket.id}`,
     };
-    navigate(roleUrls[mode] || `/tickets/${ticket.id}`);
+
+    // Add transfer request mode to URL if needed
+    const baseUrl = roleUrls[mode] || `/tickets/${ticket.id}`;
+    const url = transferRequestMode
+      ? `${baseUrl}?transferRequestMode=true`
+      : baseUrl;
+    navigate(url);
   };
 
   const handleDelete = (ticket) => {
@@ -253,7 +278,7 @@ const TicketPage = ({ mode }) => {
 
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));
-      
+
       await Promise.all(
         confirmDelete.ids.map((id) =>
           dispatch(deleteEntity({ entityType: "tickets", id }))
@@ -283,14 +308,16 @@ const TicketPage = ({ mode }) => {
   const getTableButtons = () => {
     const buttons = [
       {
-        text: words["Follow Up"],
+        text: transferRequestMode
+          ? words["View Details"] || "View Details"
+          : words["Follow Up"],
         icon: <FaEye className="text-white" />,
         className: "bg-blue-500 hover:bg-blue-600 text-white",
         onClick: handleFollowUp,
       },
     ];
 
-    if (mode === "KAP_EMPLOYEE") {
+    if (mode === "KAP_EMPLOYEE" && !transferRequestMode) {
       buttons.push({
         text: words["Remove"],
         icon: <FaTrash className="text-white" />,
@@ -304,7 +331,7 @@ const TicketPage = ({ mode }) => {
 
   // Generate bulk actions based on role
   const getBulkActions = () => {
-    if (mode !== "KAP_EMPLOYEE") return [];
+    if (mode !== "KAP_EMPLOYEE" || transferRequestMode) return [];
     return [
       {
         text: words["Remove Selected"],
@@ -317,6 +344,66 @@ const TicketPage = ({ mode }) => {
 
   return (
     <div className="p-4">
+      {/* Development Debug Card */}
+      {import.meta.env.VITE_MODE === "development" && (
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-500">
+              Development Data :: Ticket Page ::{" "}
+              {transferRequestMode ? "Transfer Request Mode" : "Normal Mode"}
+            </h3>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  JSON.stringify(
+                    {
+                      mode,
+                      transferRequestMode,
+                      user,
+                      entities: entities?.tickets?.length || 0,
+                      tableData: tableData.length,
+                      queryParams: {
+                        role: mode,
+                        transferRequestMode,
+                        userId: user._id,
+                        departmentId: user.department?._id,
+                        orgId: user.organization?._id,
+                      },
+                    },
+                    null,
+                    2
+                  )
+                );
+              }}
+              className="text-xs text-blue-500 hover:text-blue-600"
+            >
+              Copy
+            </button>
+          </div>
+          <div className="border rounded p-2 overflow-auto max-h-40 sm:max-h-52">
+            <pre className="text-xs text-gray-600">
+              {JSON.stringify(
+                {
+                  mode,
+                  transferRequestMode,
+                  user: {
+                    _id: user._id,
+                    role: user.role,
+                    department: user.department?._id,
+                    organization: user.organization?._id,
+                  },
+                  entities: entities?.tickets?.length || 0,
+                  tableData: tableData.length,
+                  sampleTicket: entities?.tickets?.[0] || null,
+                },
+                null,
+                2
+              )}
+            </pre>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmDelete.ids.length > 0}
@@ -344,7 +431,7 @@ const TicketPage = ({ mode }) => {
       )}
 
       <div className="w-full justify-center align-center">
-        {mode === "KAP_EMPLOYEE" && (
+        {mode === "KAP_EMPLOYEE" && !transferRequestMode && (
           <Button
             text={words["Create Ticket"]}
             onClick={openCreateModal}
@@ -379,7 +466,11 @@ const TicketPage = ({ mode }) => {
         </div>
       ) : (
         <DataTable
-          heading={words["Tickets"]}
+          heading={
+            transferRequestMode
+              ? words["Transfer Requests"] || "Transfer Requests"
+              : words["Tickets"]
+          }
           tableHeader={tableHeaders}
           tableData={tableData}
           headerBgColor="bg-gray-200"

@@ -21,6 +21,9 @@ const TicketActions = ({
   onTransferRequest,
   onPrint,
   onStartWork,
+  onAcceptTransferRequest,
+  onDeclineTransferRequest,
+  transferRequestMode,
 }) => {
   // Disable conditions based on ticket status
   const isClosed = ticket.status === "CLOSED";
@@ -28,10 +31,15 @@ const TicketActions = ({
   const canAccept = ticket.status === "CREATED" && mode === "OP_MANAGER";
   const isInProgress = ticket.status === "IN_PROGRESS";
 
+  // Check if there are pending transfer requests
+  const hasPendingTransferRequests = ticket.transferRequests?.some(
+    (req) => req.status === "PENDING"
+  );
+
   return (
     <div className="bg-white rounded-lg shadow-md p-3 sm:p-4">
       <h2 className="text-lg sm:text-xl font-semibold text-gray-800 border-b pb-2 mb-3 sm:mb-4">
-        Actions
+        {transferRequestMode ? "Transfer Request Actions" : "Actions"}
       </h2>
 
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
@@ -44,55 +52,134 @@ const TicketActions = ({
           size="small"
         />
 
-        {/* Status-based actions */}
-        {!isClosed && (
+        {/* Transfer Request Actions - Show when in transfer request mode */}
+        {transferRequestMode && hasPendingTransferRequests && (
           <>
-            {/* KAP Employee Actions */}
-            {mode === "KAP_EMPLOYEE" && (
-              <>
-                <Button
-                  text="Add Note"
-                  onClick={() => onAddNote("KAP_NOTE")}
-                  className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                  icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
-                  size="small"
-                />
-                {/* KAP Close Button - Only for KAP when ticket is IN_PROGRESS or COMPLETED */}
-                {(isInProgress || isCompleted) && (
-                  <Button
-                    text="Close Ticket"
-                    onClick={onCloseTicket}
-                    className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
-                    icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
-                )}
-              </>
-            )}
+            <Button
+              text="Accept Request"
+              onClick={onAcceptTransferRequest}
+              className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+              icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+              size="small"
+            />
+            <Button
+              text="Decline Request"
+              onClick={onDeclineTransferRequest}
+              className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
+              icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
+              size="small"
+            />
+          </>
+        )}
 
-            {/* OP Manager Actions */}
-            {mode === "OP_MANAGER" && (
+        {/* Regular Actions - Show only when NOT in transfer request mode */}
+        {!transferRequestMode && (
+          <>
+            {/* Status-based actions */}
+            {!isClosed && (
               <>
-                {canAccept && (
-                  <Button
-                    text="Accept"
-                    onClick={onAcceptTicket}
-                    className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
-                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
-                )}
-                {!canAccept && (
+                {/* KAP Employee Actions */}
+                {mode === "KAP_EMPLOYEE" && (
                   <>
-                    {isInProgress && (
+                    <Button
+                      text="Add Note"
+                      onClick={() => onAddNote("KAP_NOTE")}
+                      className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                      icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                      size="small"
+                    />
+                    {/* KAP Close Button - Only for KAP when ticket is IN_PROGRESS or COMPLETED */}
+                    {(isInProgress || isCompleted) && (
                       <Button
-                        text="Progress"
-                        onClick={onAddProgress}
-                        className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                        text="Close Ticket"
+                        onClick={onCloseTicket}
+                        className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm"
+                        icon={<FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />}
+                        size="small"
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* OP Manager Actions */}
+                {mode === "OP_MANAGER" && (
+                  <>
+                    {canAccept && (
+                      <Button
+                        text="Accept"
+                        onClick={onAcceptTicket}
+                        className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
                         icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
                         size="small"
                       />
                     )}
+                    {!canAccept && (
+                      <>
+                        {isInProgress && (
+                          <Button
+                            text="Progress"
+                            onClick={onAddProgress}
+                            className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                            icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                            size="small"
+                          />
+                        )}
+                        {/* Transfer Ticket Button */}
+                        <Button
+                          text="Transfer"
+                          onClick={() => onTransferTicket("TICKET")}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
+                          icon={
+                            <FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />
+                          }
+                          size="small"
+                        />
+                        {/* Transfer Request Button */}
+                        <Button
+                          text="Request"
+                          onClick={() => onTransferRequest("MANAGER")}
+                          className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                          icon={
+                            <FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />
+                          }
+                          size="small"
+                        />
+                      </>
+                    )}
+                    {/* Mark Complete Button - Only for OP_MANAGER when ticket is IN_PROGRESS */}
+                    {isInProgress && (
+                      <Button
+                        text="Mark Complete"
+                        onClick={onMarkComplete}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
+                        icon={
+                          <FaFlagCheckered className="w-3 h-3 sm:w-4 sm:h-4" />
+                        }
+                        size="small"
+                      />
+                    )}
+                    {mode === "OP_MANAGER" && ticket.status === "ACCEPTED" && (
+                      <Button
+                        text="Start"
+                        onClick={onStartWork}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-xs sm:text-sm"
+                        icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                        size="small"
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* GOV Manager Actions */}
+                {mode === "GOV_MANAGER" && (
+                  <>
+                    <Button
+                      text="Add Note"
+                      onClick={() => onAddNote("ORG_NOTE")}
+                      className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                      icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                      size="small"
+                    />
                     {/* Transfer Ticket Button */}
                     <Button
                       text="Transfer"
@@ -111,104 +198,58 @@ const TicketActions = ({
                     />
                   </>
                 )}
-                {/* Mark Complete Button - Only for OP_MANAGER when ticket is IN_PROGRESS */}
-                {isInProgress && (
-                  <Button
-                    text="Mark Complete"
-                    onClick={onMarkComplete}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
-                    icon={<FaFlagCheckered className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
-                )}
-                {mode === "OP_MANAGER" && ticket.status === "ACCEPTED" && (
-                  <Button
-                    text="Start"
-                    onClick={onStartWork}
-                    className="bg-yellow-600 hover:bg-yellow-700 text-xs sm:text-sm"
-                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
-                )}
-              </>
-            )}
 
-            {/* GOV Manager Actions */}
-            {mode === "GOV_MANAGER" && (
-              <>
-                <Button
-                  text="Add Note"
-                  onClick={() => onAddNote("ORG_NOTE")}
-                  className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                  icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
-                  size="small"
-                />
-                {/* Transfer Ticket Button */}
-                <Button
-                  text="Transfer"
-                  onClick={() => onTransferTicket("TICKET")}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-xs sm:text-sm"
-                  icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
-                  size="small"
-                />
-                {/* Transfer Request Button */}
-                <Button
-                  text="Request"
-                  onClick={() => onTransferRequest("MANAGER")}
-                  className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
-                  icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
-                  size="small"
-                />
-              </>
-            )}
-
-            {/* Employee Common Actions */}
-            {(mode === "GOV_EMPLOYEE" || mode === "OP_EMPLOYEE") && (
-              <>
-                {mode === "GOV_EMPLOYEE" && (
-                  <Button
-                    text="Add Note"
-                    onClick={() => onAddNote("ORG_NOTE")}
-                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                    icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
+                {/* Employee Common Actions */}
+                {(mode === "GOV_EMPLOYEE" || mode === "OP_EMPLOYEE") && (
+                  <>
+                    {mode === "GOV_EMPLOYEE" && (
+                      <Button
+                        text="Add Note"
+                        onClick={() => onAddNote("ORG_NOTE")}
+                        className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                        icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                        size="small"
+                      />
+                    )}
+                    {isInProgress && (
+                      <Button
+                        text="Progress"
+                        onClick={onAddProgress}
+                        className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                        icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                        size="small"
+                      />
+                    )}
+                    {mode === "OP_EMPLOYEE" && ticket.status === "ACCEPTED" && (
+                      <Button
+                        text="Start"
+                        onClick={onStartWork}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-xs sm:text-sm"
+                        icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                        size="small"
+                      />
+                    )}
+                    {/* Mark Complete Button - Only for OP_EMPLOYEE when ticket is IN_PROGRESS */}
+                    {mode === "OP_EMPLOYEE" && isInProgress && (
+                      <Button
+                        text="Mark Complete"
+                        onClick={onMarkComplete}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
+                        icon={
+                          <FaFlagCheckered className="w-3 h-3 sm:w-4 sm:h-4" />
+                        }
+                        size="small"
+                      />
+                    )}
+                    <Button
+                      text="Request"
+                      onClick={() => onTransferRequest("EMPLOYEE")}
+                      className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                      icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
+                      size="small"
+                    />
+                  </>
                 )}
-                {isInProgress && (
-                  <Button
-                    text="Progress"
-                    onClick={onAddProgress}
-                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
-                )}
-                {mode === "OP_EMPLOYEE" && ticket.status === "ACCEPTED" && (
-                  <Button
-                    text="Start"
-                    onClick={onStartWork}
-                    className="bg-yellow-600 hover:bg-yellow-700 text-xs sm:text-sm"
-                    icon={<FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
-                )}
-                {/* Mark Complete Button - Only for OP_EMPLOYEE when ticket is IN_PROGRESS */}
-                {mode === "OP_EMPLOYEE" && isInProgress && (
-                  <Button
-                    text="Mark Complete"
-                    onClick={onMarkComplete}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
-                    icon={<FaFlagCheckered className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    size="small"
-                  />
-                )}
-                <Button
-                  text="Request"
-                  onClick={() => onTransferRequest("EMPLOYEE")}
-                  className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
-                  icon={<FaExchangeAlt className="w-3 h-3 sm:w-4 sm:h-4" />}
-                  size="small"
-                />
               </>
             )}
           </>
