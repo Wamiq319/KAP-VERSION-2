@@ -12,7 +12,7 @@ import { ImageInput } from "./FormComponents";
 import ToastNotification from "./ToastNotification";
 import ConfirmationModal from "./ConfirmationModal";
 import Loader from "./Loader";
-import UserForm from "./Forms/userForm";
+import UserForm from "./Forms/UserForm";
 import PasswordUpdateForm from "./Forms/passUpdateForm";
 import AddOrgForm from "./Forms/OrgForm";
 import DepartmentForm from "./Forms/DeptForm";
