@@ -195,6 +195,47 @@ export const ar = {
   "selected departments?": "الأقسام المحددة؟",
   departments: "أقسام",
   "Organization Type": "نوع المنظمة",
+
+  // ========================================
+  // TICKET PAGE SECTION
+  // ========================================
+
+  "Ticket Number": "رقم التذكرة",
+  "Request Type": "نوع الطلب",
+  Operator: "المشغل",
+  Requestor: "مقدم الطلب",
+  RequestorDept: "قسم مقدم الطلب",
+  OperatorDept: "قسم المشغل",
+  "Follow Up": "متابعة",
+  "Create Ticket": "إنشاء تذكرة",
+  "No tickets selected": "لم يتم اختيار أي تذاكر",
+  "Deleted Successfully": "تم الحذف بنجاح",
+  Deleted: "تم الحذف",
+  "Bulk delete failed": "فشل الحذف الجماعي",
+  "Delete failed": "فشل الحذف",
+  "Delete Selected": "حذف المحدد",
+  "selected tickets?": "التذاكر المحددة؟",
+  Tickets: "التذاكر",
+  "Failed to create ticket": "فشل إنشاء التذكرة",
+  "Ticket created successfully": "تم إنشاء التذكرة بنجاح",
+  "Transfer Request": "طلب نقل",
+  "Transfer Requests": "طلبات النقل",
+  "View Details": "عرض التفاصيل",
+
+  // ========================================
+  // VIEW TICKET PAGE SECTION
+  // ========================================
+
+  "Ticket Details": "تفاصيل التذكرة",
+  "Transfer Request Details": "تفاصيل طلب النقل",
+  "Review and respond to transfer requests": "مراجعة والرد على طلبات النقل",
+  "View and manage ticket information": "عرض وإدارة معلومات التذكرة",
+  "Add Note": "إضافة ملاحظة",
+  "Update Progress": "تحديث التقدم",
+  "Transfer Ticket": "نقل التذكرة",
+  "Request Transfer": "طلب نقل",
+  "Accept Transfer Request": "قبول طلب النقل",
+  "Decline Transfer Request": "رفض طلب النقل",
 };
 
 export default ar;

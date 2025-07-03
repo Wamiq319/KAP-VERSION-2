@@ -186,6 +186,24 @@ export const eng = {
   "Failed to create ticket": "Failed to create ticket",
   "Ticket created successfully": "Ticket created successfully",
   "Transfer Request": "Transfer Request",
+  "Transfer Requests": "Transfer Requests",
+  "View Details": "View Details",
+
+  // ========================================
+  // VIEW TICKET PAGE SECTION
+  // ========================================
+
+  "Ticket Details": "Ticket Details",
+  "Transfer Request Details": "Transfer Request Details",
+  "Review and respond to transfer requests":
+    "Review and respond to transfer requests",
+  "View and manage ticket information": "View and manage ticket information",
+  "Add Note": "Add Note",
+  "Update Progress": "Update Progress",
+  "Transfer Ticket": "Transfer Ticket",
+  "Request Transfer": "Request Transfer",
+  "Accept Transfer Request": "Accept Transfer Request",
+  "Decline Transfer Request": "Decline Transfer Request",
 
   // ========================================
   // DASHBOARD PAGE SECTION
@@ -202,7 +220,6 @@ export const eng = {
   Department: "Department",
   "Manage Tickets": "Manage Tickets",
   "Manage Employees": "Manage Employees",
-  "Transfer Requests": "Transfer Requests",
   "My Assigned Tickets": "My Assigned Tickets",
   "Development Data :: User Object ::": "Development Data :: User Object ::",
   Copy: "Copy",
