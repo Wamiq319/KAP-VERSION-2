@@ -28,8 +28,7 @@ const PasswordUpdateForm = ({
 
     requiredFields.forEach((field) => {
       if (!passwordData[field]) {
-        errors[field] =
-          words["This field is required"] || "This field is required";
+        errors[field] = words["This field is required"];
       }
     });
 
@@ -38,14 +37,11 @@ const PasswordUpdateForm = ({
       passwordData.confirmPassword &&
       passwordData.newPassword !== passwordData.confirmPassword
     ) {
-      errors.confirmPassword =
-        words["Passwords don't match"] || "Passwords don't match";
+      errors.confirmPassword = words["Passwords don't match"];
     }
 
     if (passwordData.newPassword && passwordData.newPassword.length < 8) {
-      errors.newPassword =
-        words["Password must be at least 8 characters"] ||
-        "Password must be at least 8 characters";
+      errors.newPassword = words["Password must be at least 8 characters"];
     }
 
     setFormErrors(errors);
@@ -68,35 +64,30 @@ const PasswordUpdateForm = ({
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
       <InputField
-        label={words["Current Password"] || "Current Password"}
+        label={words["Current Password"]}
         name="oldPassword"
         type="password"
-        placeholder={
-          words["Enter current password"] || "Enter current password"
-        }
+        placeholder={words["Enter current password"]}
         value={passwordData.oldPassword}
         onChange={handleChange}
         required
         error={formErrors.oldPassword}
       />
       <InputField
-        label={words["New Password"] || "New Password"}
+        label={words["New Password"]}
         name="newPassword"
         type="password"
-        placeholder={
-          words["Enter new password (min 8 characters)"] ||
-          "Enter new password (min 8 characters)"
-        }
+        placeholder={words["Enter new password (min 8 characters)"]}
         value={passwordData.newPassword}
         onChange={handleChange}
         required
         error={formErrors.newPassword}
       />
       <InputField
-        label={words["Confirm Password"] || "Confirm Password"}
+        label={words["Confirm Password"]}
         name="confirmPassword"
         type="password"
-        placeholder={words["Confirm new password"] || "Confirm new password"}
+        placeholder={words["Confirm new password"]}
         value={passwordData.confirmPassword}
         onChange={handleChange}
         required
@@ -112,17 +103,13 @@ const PasswordUpdateForm = ({
       <div className="flex justify-end gap-2">
         <Button
           type="button"
-          text={words["Cancel"] || "Cancel"}
+          text={words["Cancel"]}
           onClick={onCancel}
           className="bg-gray-500 hover:bg-gray-700 text-white"
         />
         <Button
           type="submit"
-          text={
-            isLoading
-              ? words["Updating..."] || "Updating..."
-              : words["Update"] || "Update"
-          }
+          text={isLoading ? words["Updating..."] : words["Update"]}
           className="bg-green-600 hover:bg-green-700 text-white"
           disabled={isLoading}
         />

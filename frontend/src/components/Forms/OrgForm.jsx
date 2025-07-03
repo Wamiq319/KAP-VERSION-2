@@ -44,15 +44,13 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
 
     requiredFields.forEach((field) => {
       if (!formData[field]) {
-        errors[field] =
-          words["This field is required"] || "This field is required";
+        errors[field] = words["This field is required"];
       }
     });
 
     if (formData.mobile && !validateSaudiMobile(formData.mobile)) {
       errors.mobile =
-        words["Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)"] ||
-        "Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)";
+        words["Please enter a valid Saudi mobile number (e.g. 9665XXXXXXXX)"];
     }
 
     setFormErrors(errors);
@@ -88,11 +86,9 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <InputField
-          label={words["Organization Name"] || "Organization Name"}
+          label={words["Organization Name"]}
           name="name"
-          placeholder={
-            words["Enter organization name"] || "Enter organization name"
-          }
+          placeholder={words["Enter organization name"]}
           value={formData.name}
           onChange={handleChange}
           required
@@ -100,9 +96,9 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
         />
 
         <InputField
-          label={words["Admin Name"] || "Admin Name"}
+          label={words["Admin Name"]}
           name="adminName"
-          placeholder={words["Enter admin name"] || "Enter admin name"}
+          placeholder={words["Enter admin name"]}
           value={formData.adminName}
           onChange={handleChange}
           required
@@ -110,9 +106,9 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
         />
 
         <InputField
-          label={words["Username"] || "Username"}
+          label={words["Username"]}
           name="username"
-          placeholder={words["Enter username"] || "Enter username"}
+          placeholder={words["Enter username"]}
           value={formData.username}
           onChange={handleChange}
           required
@@ -120,7 +116,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
         />
 
         <InputField
-          label={words["Mobile Number"] || "Mobile Number"}
+          label={words["Mobile Number"]}
           name="mobile"
           placeholder="9665XXXXXXXX"
           type="mobile"
@@ -131,9 +127,9 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
         />
 
         <InputField
-          label={words["Password"] || "Password"}
+          label={words["Password"]}
           name="password"
-          placeholder={words["Set a password"] || "Set a password"}
+          placeholder={words["Set a password"]}
           type="password"
           value={formData.password}
           onChange={handleChange}
@@ -143,7 +139,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
 
         <div className="space-y-2">
           <label className="block text-sm font-bold text-gray-700">
-            {words["Organization Type"] || "Organization Type"}
+            {words["Organization Type"]}
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="flex space-x-4">
@@ -157,9 +153,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
                 className="form-radio h-4 w-4 text-green-600"
                 required
               />
-              <span className="ml-2 text-gray-700">
-                {words["Government"] || "Government"}
-              </span>
+              <span className="ml-2 text-gray-700">{words["Government"]}</span>
             </label>
             <label className="inline-flex items-center">
               <input
@@ -170,9 +164,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
                 onChange={handleChange}
                 className="form-radio h-4 w-4 text-green-600"
               />
-              <span className="ml-2 text-gray-700">
-                {words["Company"] || "Company"}
-              </span>
+              <span className="ml-2 text-gray-700">{words["Company"]}</span>
             </label>
           </div>
           {formErrors.type && (
@@ -182,7 +174,7 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
       </div>
 
       <ImageInput
-        label={words["Organization Logo"] || "Organization Logo"}
+        label={words["Organization Logo"]}
         onChange={handleLogoChange}
         className="mt-4"
       />
@@ -199,16 +191,14 @@ const AddOrgForm = ({ onSubmit, onCancel, isLoading, errorMessage, words }) => {
           onClick={onCancel}
           className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
         >
-          {words["Cancel"] || "Cancel"}
+          {words["Cancel"]}
         </button>
         <button
           type="submit"
           disabled={isLoading}
           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors disabled:opacity-50"
         >
-          {isLoading
-            ? words["Saving..."] || "Saving..."
-            : words["Save"] || "Save"}
+          {isLoading ? words["Saving..."] : words["Save"]}
         </button>
       </div>
     </form>

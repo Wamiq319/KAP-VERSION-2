@@ -181,18 +181,15 @@ const TicketForm = ({
 
     requiredFields.forEach((field) => {
       if (!formData[field]) {
-        errors[field] =
-          words["This field is required"] || "This field is required";
+        errors[field] = words["This field is required"];
       }
     });
 
     if (formData.requestor && !formData.requestorDepartment) {
-      errors.requestorDepartment =
-        words["This field is required"] || "This field is required";
+      errors.requestorDepartment = words["This field is required"];
     }
     if (formData.operator && !formData.operatorDepartment) {
-      errors.operatorDepartment =
-        words["This field is required"] || "This field is required";
+      errors.operatorDepartment = words["This field is required"];
     }
 
     // Date validation
@@ -204,9 +201,7 @@ const TicketForm = ({
         now.setHours(0, 0, 0, 0);
 
         if (scheduledDate < now) {
-          errors.scheduledDate =
-            words["Scheduled date must be in the future"] ||
-            "Scheduled date must be in the future";
+          errors.scheduledDate = words["Scheduled date must be in the future"];
         }
       }
     }
@@ -226,9 +221,7 @@ const TicketForm = ({
       }
 
       if (finishDate <= referenceDate) {
-        errors.finishDate =
-          words["Finish date must be after start date"] ||
-          "Finish date must be after start date";
+        errors.finishDate = words["Finish date must be after start date"];
       }
     }
 
@@ -349,9 +342,9 @@ const TicketForm = ({
       {/* Left Column: Request Type and Ticket Type */}
       <div className="space-y-4">
         <InputField
-          label={words["Request Type"] || "Request Type"}
+          label={words["Request Type"]}
           name="request"
-          placeholder={words["Enter request type"] || "Enter request type"}
+          placeholder={words["Enter request type"]}
           value={formData.request}
           onChange={handleChange}
           required
@@ -362,7 +355,7 @@ const TicketForm = ({
         {/* Ticket Type Radio Buttons */}
         <div>
           <label className="block text-sm font-bold mb-2 text-gray-700">
-            {words["Ticket Type"] || "Ticket Type"}
+            {words["Ticket Type"]}
             <span className="text-red-500 ml-1">*</span>
           </label>
           {/* Ticket Type Options:
@@ -379,7 +372,7 @@ const TicketForm = ({
                 className="mr-2"
                 required
               />
-              {words["Instant"] || "Instant"}
+              {words["Instant"]}
             </label>
             <label className="flex items-center">
               <input
@@ -390,7 +383,7 @@ const TicketForm = ({
                 onChange={handleChange}
                 className="mr-2"
               />
-              {words["Scheduled"] || "Scheduled"}
+              {words["Scheduled"]}
             </label>
           </div>
           {formErrors.ticketType && (
@@ -401,7 +394,7 @@ const TicketForm = ({
         {/* Priority Selection */}
         <div>
           <label className="block text-sm font-bold mb-2 text-gray-700">
-            {words["Priority"] || "Priority"}
+            {words["Priority"]}
             <span className="text-red-500 ml-1">*</span>
           </label>
 
@@ -440,9 +433,9 @@ const TicketForm = ({
       {/* Right Column: Description */}
       <div>
         <InputField
-          label={words["Description"] || "Description"}
+          label={words["Description"]}
           name="description"
-          placeholder={words["Enter description"] || "Enter description"}
+          placeholder={words["Enter description"]}
           value={formData.description}
           onChange={handleChange}
           required={false}
@@ -455,7 +448,7 @@ const TicketForm = ({
       {/* Scheduled Date (only show if SCHEDULED type) */}
       {formData.ticketType === "SCHEDULED" && (
         <DatePicker
-          label={words["Scheduled Date"] || "Scheduled Date"}
+          label={words["Scheduled Date"]}
           name="scheduledDate"
           value={formData.scheduledDate}
           onChange={handleChange}
@@ -468,7 +461,7 @@ const TicketForm = ({
 
       {/* Finish Date Picker - Show for both INSTANT and SCHEDULED */}
       <DatePicker
-        label={words["Expected Finish Date"] || "Expected Finish Date"}
+        label={words["Expected Finish Date"]}
         name="finishDate"
         value={formData.finishDate}
         onChange={handleChange}
@@ -484,7 +477,7 @@ const TicketForm = ({
 
       {/* Requestor and Department */}
       <Dropdown
-        label={words["Requestor"] || "Requestor"}
+        label={words["Requestor"]}
         options={requestorOptions}
         selectedValue={formData.requestor}
         onChange={(value) => handleDropdownChange("requestor", value)}
@@ -497,7 +490,7 @@ const TicketForm = ({
       {/* Requestor Department Dropdown */}
       {formData.requestor && (
         <Dropdown
-          label={words["Requestor Department"] || "Requestor Department"}
+          label={words["Requestor Department"]}
           options={requestorDepartmentOptions}
           selectedValue={formData.requestorDepartment}
           onChange={(value) =>
@@ -512,7 +505,7 @@ const TicketForm = ({
 
       {/* Operator and Department */}
       <Dropdown
-        label={words["Operator"] || "Operator"}
+        label={words["Operator"]}
         options={operatorOptions}
         selectedValue={formData.operator}
         onChange={(value) => handleDropdownChange("operator", value)}
@@ -525,7 +518,7 @@ const TicketForm = ({
       {/* Operator Department Dropdown */}
       {formData.operator && (
         <Dropdown
-          label={words["Operator Department"] || "Operator Department"}
+          label={words["Operator Department"]}
           options={operatorDepartmentOptions}
           selectedValue={formData.operatorDepartment}
           onChange={(value) =>
@@ -550,17 +543,13 @@ const TicketForm = ({
       {/* Form actions */}
       <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
         <Button
-          text={words["Cancel"] || "Cancel"}
+          text={words["Cancel"]}
           type="button"
           onClick={onCancel}
           className="bg-gray-500 hover:bg-gray-700 w-full sm:w-auto"
         />
         <Button
-          text={
-            isLoading
-              ? words["Creating..."] || "Creating..."
-              : words["Create"] || "Create"
-          }
+          text={isLoading ? words["Creating..."] : words["Create"]}
           type="submit"
           isLoading={isLoading}
           className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"

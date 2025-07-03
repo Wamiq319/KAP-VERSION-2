@@ -260,6 +260,69 @@ export const eng = {
   "selected departments?": "selected departments?",
   departments: "departments",
   "Organization Type": "Organization Type",
+
+  // ========================================
+  // DEPARTMENT FORM SECTION
+  // ========================================
+
+  "Select Organization": "Select Organization",
+  "Enter department name": "Enter department name",
+  "Filter by Organization Type": "Filter by Organization Type",
+
+  // ========================================
+  // ORGANIZATION FORM SECTION
+  // ========================================
+
+  "Organization Name": "Organization Name",
+  "Enter organization name": "Enter organization name",
+  "Enter admin name": "Enter admin name",
+  "Enter username": "Enter username",
+  "Saving...": "Saving...",
+
+  // ========================================
+  // PASSWORD UPDATE FORM SECTION
+  // ========================================
+
+  "Current Password": "Current Password",
+  "Enter current password": "Enter current password",
+  "New Password": "New Password",
+  "Enter new password (min 8 characters)":
+    "Enter new password (min 8 characters)",
+  "Confirm Password": "Confirm Password",
+  "Confirm new password": "Confirm new password",
+  "Password must be at least 8 characters":
+    "Password must be at least 8 characters",
+  "Updating...": "Updating...",
+
+  // ========================================
+  // TICKET FORM SECTION
+  // ========================================
+
+  "Enter request type": "Enter request type",
+  "Ticket Type": "Ticket Type",
+  Instant: "Instant",
+  Scheduled: "Scheduled",
+  Priority: "Priority",
+  Description: "Description",
+  "Enter description": "Enter description",
+  "Scheduled Date": "Scheduled Date",
+  "Expected Finish Date": "Expected Finish Date",
+  "Requestor Department": "Requestor Department",
+  "Operator Department": "Operator Department",
+  "Scheduled date must be in the future":
+    "Scheduled date must be in the future",
+  "Finish date must be after start date":
+    "Finish date must be after start date",
+  "Creating...": "Creating...",
+
+  // ========================================
+  // USER FORM SECTION
+  // ========================================
+
+  "KAP Role": "KAP Role",
+  "Government Integration": "Government Integration",
+  "Security & Safety": "Security & Safety",
+  "Planning & Development": "Planning & Development",
 };
 
 export default eng;

@@ -21,9 +21,9 @@ const DepartmentForm = ({
 
   // Organization type options for filtering
   const orgTypeOptions = [
-    { value: "", label: words["All Types"] || "All Types" },
-    { value: "GOVERNMENT", label: words["Government"] || "Government" },
-    { value: "COMPANY", label: words["Company"] || "Company" },
+    { value: "", label: words["All Types"] },
+    { value: "GOVERNMENT", label: words["Government"] },
+    { value: "COMPANY", label: words["Company"] },
   ];
 
   // Fetch organizations when org type filter changes
@@ -71,7 +71,7 @@ const DepartmentForm = ({
 
   // Prepare organization options based on filter
   const organizationOptions = [
-    { value: "", label: words["Select Organization"] || "Select Organization" },
+    { value: "", label: words["Select Organization"] },
     ...(entities.organizations
       ?.filter((org) => !orgTypeFilter || org.type === orgTypeFilter)
       ?.map((org) => ({
@@ -85,11 +85,9 @@ const DepartmentForm = ({
       {/* Department Name Field */}
       <div className="w-full">
         <InputField
-          label={words["Department Name"] || "Department Name"}
+          label={words["Department Name"]}
           name="name"
-          placeholder={
-            words["Enter department name"] || "Enter department name"
-          }
+          placeholder={words["Enter department name"]}
           value={formData.name}
           onChange={handleChange}
           required
@@ -100,10 +98,7 @@ const DepartmentForm = ({
       {/* Organization Type Filter (not submitted) */}
       <div className="w-full">
         <Dropdown
-          label={
-            words["Filter by Organization Type"] ||
-            "Filter by Organization Type"
-          }
+          label={words["Filter by Organization Type"]}
           options={orgTypeOptions}
           selectedValue={orgTypeFilter}
           onChange={handleOrgTypeFilterChange}
@@ -114,7 +109,7 @@ const DepartmentForm = ({
       {/* Organization Selection */}
       <div className="w-full">
         <Dropdown
-          label={words["Organization"] || "Organization"}
+          label={words["Organization"]}
           options={organizationOptions}
           selectedValue={formData.organization}
           onChange={(value) =>
@@ -139,16 +134,14 @@ const DepartmentForm = ({
           onClick={onCancel}
           className="px-4 py-2 bg-gray-500 hover:bg-gray-700 text-white rounded w-full sm:w-auto"
         >
-          {words["Cancel"] || "Cancel"}
+          {words["Cancel"]}
         </button>
         <button
           type="submit"
           disabled={isLoading || localLoading}
           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50 w-full sm:w-auto"
         >
-          {isLoading || localLoading
-            ? words["Creating..."] || "Creating..."
-            : words["Create"] || "Create"}
+          {isLoading || localLoading ? words["Creating..."] : words["Create"]}
         </button>
       </div>
     </form>

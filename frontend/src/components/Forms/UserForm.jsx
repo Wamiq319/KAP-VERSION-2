@@ -42,15 +42,15 @@ const UserForm = ({
   const kapRoleOptions = [
     {
       value: "GOVERNMENT_INTEGRATION",
-      label: "Government Integration",
+      label: words["Government Integration"],
     },
     {
       value: "SECURITY_SAFETY",
-      label: "Security & Safety",
+      label: words["Security & Safety"],
     },
     {
       value: "PLANNING_DEVELOPMENT",
-      label: "Planning & Development",
+      label: words["Planning & Development"],
     },
   ];
 

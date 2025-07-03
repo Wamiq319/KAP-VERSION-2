@@ -236,6 +236,69 @@ export const ar = {
   "Request Transfer": "طلب نقل",
   "Accept Transfer Request": "قبول طلب النقل",
   "Decline Transfer Request": "رفض طلب النقل",
+
+  // ========================================
+  // DEPARTMENT FORM SECTION
+  // ========================================
+
+  "Select Organization": "اختر المنظمة",
+  "Enter department name": "أدخل اسم القسم",
+  "Filter by Organization Type": "تصفية حسب نوع المنظمة",
+
+  // ========================================
+  // ORGANIZATION FORM SECTION
+  // ========================================
+
+  "Organization Name": "اسم المنظمة",
+  "Enter organization name": "أدخل اسم المنظمة",
+  "Enter admin name": "أدخل اسم المسؤول",
+  "Enter username": "أدخل اسم المستخدم",
+  "Saving...": "جاري الحفظ...",
+
+  // ========================================
+  // PASSWORD UPDATE FORM SECTION
+  // ========================================
+
+  "Current Password": "كلمة المرور الحالية",
+  "Enter current password": "أدخل كلمة المرور الحالية",
+  "New Password": "كلمة المرور الجديدة",
+  "Enter new password (min 8 characters)":
+    "أدخل كلمة مرور جديدة (8 أحرف على الأقل)",
+  "Confirm Password": "تأكيد كلمة المرور",
+  "Confirm new password": "تأكيد كلمة المرور الجديدة",
+  "Password must be at least 8 characters":
+    "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+  "Updating...": "جاري التحديث...",
+
+  // ========================================
+  // TICKET FORM SECTION
+  // ========================================
+
+  "Enter request type": "أدخل نوع الطلب",
+  "Ticket Type": "نوع التذكرة",
+  Instant: "فوري",
+  Scheduled: "مجدول",
+  Priority: "الأولوية",
+  Description: "الوصف",
+  "Enter description": "أدخل الوصف",
+  "Scheduled Date": "تاريخ الجدولة",
+  "Expected Finish Date": "تاريخ الانتهاء المتوقع",
+  "Requestor Department": "قسم مقدم الطلب",
+  "Operator Department": "قسم المشغل",
+  "Scheduled date must be in the future":
+    "يجب أن يكون تاريخ الجدولة في المستقبل",
+  "Finish date must be after start date":
+    "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء",
+  "Creating...": "جاري الإنشاء...",
+
+  // ========================================
+  // USER FORM SECTION
+  // ========================================
+
+  "KAP Role": "دور KAP",
+  "Government Integration": "تكامل الحكومة",
+  "Security & Safety": "الأمن والسلامة",
+  "Planning & Development": "التخطيط والتطوير",
 };
 
 export default ar;
