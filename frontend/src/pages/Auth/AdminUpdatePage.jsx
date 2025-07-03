@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { updateAdmin, updatePassword } from "../../redux/slices/authSlice";
 import { Button, InputField } from "../../components";
 import { logo } from "../../assets";
+import { updateEntityPassword } from "../../redux/slices/crudSlice";
 
 const AdminUpdatePage = () => {
   const dispatch = useDispatch();
@@ -13,9 +14,6 @@ const AdminUpdatePage = () => {
 
   const [formData, setFormData] = useState({
     username: data?.username || "",
-    email: data?.email || "",
-    mobile: data?.mobile || "",
-    oldPassword: "",
     newPassword: "",
   });
   console.log(data);
@@ -33,17 +31,6 @@ const AdminUpdatePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation for admin users
-    if (data.role === "ADMIN") {
-      if (!formData.username || !formData.email || !formData.mobile) {
-        setError(words["Please fill in all required fields"]);
-        return;
-      }
-    } else if (!formData.username) {
-      setError(words["Please fill in username"]);
-      return;
-    }
-
     if (
       (formData.oldPassword || formData.newPassword) &&
       (!formData.oldPassword || !formData.newPassword)
@@ -53,42 +40,13 @@ const AdminUpdatePage = () => {
     }
 
     try {
-      let response;
-
-      if (data.role === "ADMIN") {
-        response = await dispatch(
-          updateAdmin({
-            adminId: data.id,
-            updatedData: formData,
-          })
-        ).unwrap();
-      } else if (
-        data.role === "GOV_MANAGER" ||
-        data.role === "OP_MANAGER" ||
-        data.role === "KAP_EMPLOYEE"
-      ) {
-        response = await dispatch(
-          updatePassword({
-            id: data.id,
-            data: {
-              oldPassword: formData.oldPassword,
-              newPassword: formData.newPassword,
-            },
-            resource: "user",
-          })
-        ).unwrap();
-      } else {
-        response = await dispatch(
-          updatePassword({
-            id: data.id,
-            data: {
-              oldPassword: formData.oldPassword,
-              newPassword: formData.newPassword,
-            },
-            resource: "employee",
-          })
-        ).unwrap();
-      }
+      const response = await dispatch(
+        updateEntityPassword({
+          entityType: "users",
+          id: data._id,
+          newPassword: formData.newPassword,
+        })
+      ).unwrap();
 
       if (response?.success) {
         localStorage.removeItem("user");
@@ -146,31 +104,6 @@ const AdminUpdatePage = () => {
             className="mb-4"
             required
           />
-
-          {data?.role === "ADMIN" && (
-            <>
-              <InputField
-                label={words["Email"]}
-                name="email"
-                type="email"
-                placeholder={words["Enter your email"]}
-                value={formData.email}
-                onChange={handleChange}
-                className="mb-4"
-                required
-              />
-
-              <InputField
-                label={words["Mobile Number"]}
-                name="mobile"
-                placeholder={words["Enter your mobile number"]}
-                value={formData.mobile}
-                onChange={handleChange}
-                className="mb-4"
-                required
-              />
-            </>
-          )}
 
           <InputField
             label={words["Current Password"]}

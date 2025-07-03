@@ -88,7 +88,7 @@ const OrganizationPage = ({
     image: item.logo?.url || item.logoUrl,
     name: item.name,
     type: item.type === "GOVERNMENT" ? words["Government"] : words["Company"],
-    adminName: item.adminName || "N/A",
+    adminName: item.adminName || words["N/A"],
     username: item.username,
     mobile: item.mobile,
     password: item.password,
@@ -291,7 +291,7 @@ const OrganizationPage = ({
 
       <div className="flex justify-center gap-2 mb-4">
         <Button
-          text={words[buttonText] || buttonText}
+          text={words[buttonText]}
           onClick={openCreateModal}
           icon={<FaPlus className="h-3 w-3" />}
           className={`${buttonClassName}`}
@@ -307,7 +307,7 @@ const OrganizationPage = ({
           title={
             uiState.activeModal === "password"
               ? words["Reset Password"]
-              : words[buttonText] || buttonText
+              : words[buttonText]
           }
         >
           {uiState.activeModal === "password" ? (

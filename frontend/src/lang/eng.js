@@ -186,6 +186,63 @@ export const eng = {
   "Failed to create ticket": "Failed to create ticket",
   "Ticket created successfully": "Ticket created successfully",
   "Transfer Request": "Transfer Request",
+
+  // ========================================
+  // DASHBOARD PAGE SECTION
+  // ========================================
+
+  "Kap Employee Dashboard": "Kap Employee Dashboard",
+  "Government Manager Dashboard": "Government Manager Dashboard",
+  "Operating Manager Dashboard": "Operating Manager Dashboard",
+  "Government Employee Dashboard": "Government Employee Dashboard",
+  "Operating Employee Dashboard": "Operating Employee Dashboard",
+  KAP: "KAP",
+  "KAP Department": "KAP Department",
+  Organization: "Organization",
+  Department: "Department",
+  "Manage Tickets": "Manage Tickets",
+  "Manage Employees": "Manage Employees",
+  "Transfer Requests": "Transfer Requests",
+  "My Assigned Tickets": "My Assigned Tickets",
+  "Development Data :: User Object ::": "Development Data :: User Object ::",
+  Copy: "Copy",
+
+  // ========================================
+  // ADMIN PAGE SECTION
+  // ========================================
+
+  "Admin Home Page": "Admin Home Page",
+  "Manage Organization": "Manage Organization",
+  "Manage Department": "Manage Department",
+  "Manage Users": "Manage Users",
+  "Company Logo": "Company Logo",
+
+  // ========================================
+  // ORGANIZATION PAGE SECTION
+  // ========================================
+
+  "Add Organization": "Add Organization",
+  Logo: "Logo",
+  Name: "Name",
+  Type: "Type",
+  "Admin Name": "Admin Name",
+  "N/A": "N/A",
+  "No organizations selected": "No organizations selected",
+  Organizations: "Organizations",
+  "selected organizations?": "selected organizations?",
+  organizations: "organizations",
+
+  // ========================================
+  // DEPARTMENT PAGE SECTION
+  // ========================================
+
+  "Add Department": "Add Department",
+  "Department Name": "Department Name",
+  Departments: "Departments",
+  "No departments selected": "No departments selected",
+  "selected departments?": "selected departments?",
+  departments: "departments",
+  "Organization Type": "Organization Type",
 };
 
 export default eng;

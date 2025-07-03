@@ -72,41 +72,38 @@ const DashboardHome = ({ role }) => {
   // Role-specific configurations
   const roleConfig = {
     KAP_EMPLOYEE: {
-      title: words["Kap Employee Dashboard"] || "Kap Employee Dashboard",
+      title: words["Kap Employee Dashboard"],
       logo: userData?.organization?.logo?.url || logo,
-      name: userData?.organization?.name || "KAP",
-      department: userData?.department?.name || "KAP Department",
+      name: words["KAP"],
+      department: words["KAP Department"],
       buttons: [
         {
-          text: words["Manage Tickets"] || "Manage Tickets",
+          text: words["Manage Tickets"],
           path: "/manage-kap-tickets",
           className: "w-full bg-blue-600 hover:bg-blue-700 text-lg py-3 shadow",
         },
       ],
     },
     GOV_MANAGER: {
-      title:
-        words["Government Manager Dashboard"] || "Government Manager Dashboard",
+      title: words["Government Manager Dashboard"],
       logo: userData?.organization?.logo?.url || logo,
-      name: userData?.organization?.name || "Organization",
-      department: userData?.department?.name || "Department",
+      name: words["Organization"],
+      department: words["Department"],
       buttons: [
         {
-          text: words["Manage Employees"] || "Manage Employees",
+          text: words["Manage Employees"],
           path: "/manage-org-users",
           className:
             "w-full bg-orange-600 hover:bg-orange-700 text-lg font-semibold py-3 shadow",
         },
         {
-          text: words["Manage Tickets"] || "Manage Tickets",
+          text: words["Manage Tickets"],
           path: "/manage-gov-tickets",
           className:
             "w-full bg-green-600 hover:bg-green-700 text-lg py-3 shadow",
         },
         {
-          text: `${
-            words["Transfer Requests"] || "Transfer Requests"
-          } (${transferRequestCount})`,
+          text: `${words["Transfer Requests"]} (${transferRequestCount})`,
           path: "/manage-gov-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
@@ -114,27 +111,24 @@ const DashboardHome = ({ role }) => {
       ],
     },
     OP_MANAGER: {
-      title:
-        words["Operating Manager Dashboard"] || "Operating Manager Dashboard",
+      title: words["Operating Manager Dashboard"],
       logo: userData?.organization?.logo?.url || logo,
-      name: userData?.organization?.name || "Organization",
-      department: userData?.department?.name || "Department",
+      name: words["Organization"],
+      department: words["Department"],
       buttons: [
         {
-          text: words["Manage Employees"] || "Manage Employees",
+          text: words["Manage Employees"],
           path: "/manage-org-users",
           className:
             "w-full bg-orange-600 hover:bg-orange-700 text-lg font-semibold py-3 shadow",
         },
         {
-          text: words["Manage Tickets"] || "Manage Tickets",
+          text: words["Manage Tickets"],
           path: "/manage-op-tickets",
           className: "w-full bg-blue-600 hover:bg-blue-700 text-lg py-3 shadow",
         },
         {
-          text: `${
-            words["Transfer Requests"] || "Transfer Requests"
-          } (${transferRequestCount})`,
+          text: `${words["Transfer Requests"]} (${transferRequestCount})`,
           path: "/manage-op-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
@@ -142,23 +136,19 @@ const DashboardHome = ({ role }) => {
       ],
     },
     GOV_EMPLOYEE: {
-      title:
-        words["Government Employee Dashboard"] ||
-        "Government Employee Dashboard",
+      title: words["Government Employee Dashboard"],
       logo: userData?.organization?.logo?.url || logo,
-      name: userData?.organization?.name || "Organization",
-      department: userData?.department?.name || "Department",
+      name: words["Organization"],
+      department: words["Department"],
       buttons: [
         {
-          text: `${
-            words["Transfer Requests"] || "Transfer Requests"
-          } (${transferRequestCount})`,
+          text: `${words["Transfer Requests"]} (${transferRequestCount})`,
           path: "/manage-gov-employee-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },
         {
-          text: words["My Assigned Tickets"] || "My Assigned Tickets",
+          text: words["My Assigned Tickets"],
           path: "/manage-gov-employee-tickets",
           className:
             "w-full bg-green-600 hover:bg-green-700 text-lg py-3 shadow",
@@ -166,22 +156,19 @@ const DashboardHome = ({ role }) => {
       ],
     },
     OP_EMPLOYEE: {
-      title:
-        words["Operating Employee Dashboard"] || "Operating Employee Dashboard",
+      title: words["Operating Employee Dashboard"],
       logo: userData?.organization?.logo?.url || logo,
-      name: userData?.organization?.name || "Organization",
-      department: userData?.department?.name || "Department",
+      name: words["Organization"],
+      department: words["Department"],
       buttons: [
         {
-          text: `${
-            words["Transfer Requests"] || "Transfer Requests"
-          } (${transferRequestCount})`,
+          text: `${words["Transfer Requests"]} (${transferRequestCount})`,
           path: "/manage-op-employee-tickets?transferRequestMode=true",
           className:
             "w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 shadow",
         },
         {
-          text: words["My Assigned Tickets"] || "My Assigned Tickets",
+          text: words["My Assigned Tickets"],
           path: "/manage-op-employee-tickets",
           className: "w-full bg-blue-600 hover:bg-blue-700 text-lg py-3 shadow",
         },
@@ -203,7 +190,8 @@ const DashboardHome = ({ role }) => {
           <div className="bg-white rounded-lg shadow-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-gray-500">
-                Development Data :: User Object :: {import.meta.env.VITE_MODE}
+                {words["Development Data :: User Object ::"]}{" "}
+                {import.meta.env.VITE_MODE}
               </h3>
               <button
                 onClick={() => {
@@ -212,7 +200,7 @@ const DashboardHome = ({ role }) => {
                 }}
                 className="text-xs text-blue-500 hover:text-blue-600"
               >
-                Copy
+                {words["Copy"]}
               </button>
             </div>
             <div className="border rounded p-2 overflow-auto max-h-52">

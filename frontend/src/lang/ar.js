@@ -140,6 +140,61 @@ export const ar = {
   of: "من",
   entries: "إدخالات",
   "Transfer Request": "طلب النقل",
+
+  // ========================================
+  // DASHBOARD PAGE SECTION
+  // ========================================
+
+  "Kap Employee Dashboard": "لوحة تحكم موظف KAP",
+  "Government Manager Dashboard": "لوحة تحكم مدير حكومي",
+  "Operating Manager Dashboard": "لوحة تحكم مدير التشغيل",
+  "Government Employee Dashboard": "لوحة تحكم موظف حكومي",
+  "Operating Employee Dashboard": "لوحة تحكم موظف التشغيل",
+  KAP: "KAP",
+  "KAP Department": "قسم KAP",
+  "Manage Tickets": "إدارة التذاكر",
+  "Manage Employees": "إدارة الموظفين",
+  "Transfer Requests": "طلبات النقل",
+  "My Assigned Tickets": "تذاكري المعينة",
+  "Development Data :: User Object ::": "بيانات التطوير :: كائن المستخدم ::",
+  Copy: "نسخ",
+
+  // ========================================
+  // ADMIN PAGE SECTION
+  // ========================================
+
+  "Admin Home Page": "الصفحة الرئيسية للمسؤول",
+  "Manage Organization": "إدارة المنظمة",
+  "Manage Department": "إدارة القسم",
+  "Manage Users": "إدارة المستخدمين",
+  "Company Logo": "شعار الشركة",
+
+  // ========================================
+  // ORGANIZATION PAGE SECTION
+  // ========================================
+
+  "Add Organization": "إضافة منظمة",
+  Logo: "الشعار",
+  Name: "الاسم",
+  Type: "النوع",
+  "Admin Name": "اسم المسؤول",
+  "N/A": "غير متوفر",
+  "No organizations selected": "لم يتم اختيار أي منظمات",
+  Organizations: "المنظمات",
+  "selected organizations?": "المنظمات المحددة؟",
+  organizations: "منظمات",
+
+  // ========================================
+  // DEPARTMENT PAGE SECTION
+  // ========================================
+
+  "Add Department": "إضافة قسم",
+  "Department Name": "اسم القسم",
+  Departments: "الأقسام",
+  "No departments selected": "لم يتم اختيار أي أقسام",
+  "selected departments?": "الأقسام المحددة؟",
+  departments: "أقسام",
+  "Organization Type": "نوع المنظمة",
 };
 
 export default ar;
