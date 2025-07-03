@@ -323,6 +323,110 @@ export const eng = {
   "Government Integration": "Government Integration",
   "Security & Safety": "Security & Safety",
   "Planning & Development": "Planning & Development",
+
+  // ========================================
+  // TICKET ACTIONS SECTION
+  // ========================================
+
+  Actions: "Actions",
+  "Transfer Request Actions": "Transfer Request Actions",
+  Print: "Print",
+  "Accept Request": "Accept Request",
+  "Decline Request": "Decline Request",
+  "Add Note": "Add Note",
+  "Close Ticket": "Close Ticket",
+  Accept: "Accept",
+  Progress: "Progress",
+  Transfer: "Transfer",
+  Request: "Request",
+  "Mark Complete": "Mark Complete",
+  Start: "Start",
+
+  // ========================================
+  // TICKET INFO SECTION
+  // ========================================
+
+  "Ticket Information": "Ticket Information",
+  "Ticket ID": "Ticket ID",
+  "Request Type": "Request Type",
+  Status: "Status",
+  Priority: "Priority",
+  "Created By": "Created By",
+  "Requestor Details": "Requestor Details",
+  "Operator Details": "Operator Details",
+  Organization: "Organization",
+  Department: "Department",
+  Description: "Description",
+  "No description provided.": "No description provided.",
+  Timeline: "Timeline",
+  Progress: "Progress",
+  Created: "Created",
+  Scheduled: "Scheduled",
+  Started: "Started",
+  "Expected Finish": "Expected Finish",
+  "Not started": "Not started",
+  "Not set": "Not set",
+  Completed: "Completed",
+  "Not completed": "Not completed",
+  "Last Updated": "Last Updated",
+  "Progress History": "Progress History",
+  "Transfer Requests": "Transfer Requests",
+  Assignments: "Assignments",
+  Requestor: "Requestor",
+  Operator: "Operator",
+  "Notes by KAP": "Notes by KAP",
+  "Notes by": "Notes by",
+  "No KAP notes available": "No KAP notes available",
+  "No organization notes available": "No organization notes available",
+  "No progress updates available": "No progress updates available",
+  "No transfer requests available": "No transfer requests available",
+  "Transfer Request": "Transfer Request",
+  Unknown: "Unknown",
+  "Unknown Role": "Unknown Role",
+  Date: "Date",
+  To: "To",
+  From: "From",
+  Declined: "Declined",
+  "Progress Visual": "Progress Visual",
+  "No progress visuals available": "No progress visuals available",
+  "Progress Attachment": "Progress Attachment",
+
+  // ========================================
+  // TICKET INPUT SECTION
+  // ========================================
+
+  "Note Text": "Note Text",
+  "Target Organization": "Target Organization",
+  "Requestor Organization": "Requestor Organization",
+  "Operator Organization": "Operator Organization",
+  "Progress Percentage": "Progress Percentage",
+  Observation: "Observation",
+  "Progress Image (optional)": "Progress Image (optional)",
+  "Select Employee to Transfer": "Select Employee to Transfer",
+  "Select Transfer Target": "Select Transfer Target",
+  "Target 1": "Target 1",
+  "Target 2": "Target 2",
+  "Select Department for Transfer Request":
+    "Select Department for Transfer Request",
+  "Select Employee for Transfer Request":
+    "Select Employee for Transfer Request",
+  "Reason for Transfer Request": "Reason for Transfer Request",
+  "Accept Note (Optional)": "Accept Note (Optional)",
+  "Optional note for accepting this transfer request...":
+    "Optional note for accepting this transfer request...",
+  "Confirm Decline": "Confirm Decline",
+  "Are you sure you want to decline this transfer request? This action cannot be undone.":
+    "Are you sure you want to decline this transfer request? This action cannot be undone.",
+  "Add Note": "Add Note",
+  "Update Progress": "Update Progress",
+  Transfer: "Transfer",
+  "Request Transfer": "Request Transfer",
+  "Accept Request": "Accept Request",
+  "Decline Request": "Decline Request",
+  Submit: "Submit",
+  "Progress percentage must be between 20% and 100%":
+    "Progress percentage must be between 20% and 100%",
+  "Development Data :: Ticket Input": "Development Data :: Ticket Input",
 };
 
 export default eng;

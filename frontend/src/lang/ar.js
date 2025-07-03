@@ -299,6 +299,108 @@ export const ar = {
   "Government Integration": "تكامل الحكومة",
   "Security & Safety": "الأمن والسلامة",
   "Planning & Development": "التخطيط والتطوير",
+
+  // ========================================
+  // TICKET ACTIONS SECTION
+  // ========================================
+
+  Actions: "الإجراءات",
+  "Transfer Request Actions": "إجراءات طلب النقل",
+  Print: "طباعة",
+  "Accept Request": "قبول الطلب",
+  "Decline Request": "رفض الطلب",
+  "Add Note": "إضافة ملاحظة",
+  "Close Ticket": "إغلاق التذكرة",
+  Accept: "قبول",
+  Progress: "التقدم",
+  Transfer: "نقل",
+  Request: "طلب",
+  "Mark Complete": "تحديد كمكتمل",
+  Start: "بدء",
+
+  // ========================================
+  // TICKET INFO SECTION
+  // ========================================
+
+  "Ticket Information": "معلومات التذكرة",
+  "Ticket ID": "رقم التذكرة",
+  "Request Type": "نوع الطلب",
+  Status: "الحالة",
+  Priority: "الأولوية",
+  "Created By": "أنشئ بواسطة",
+  "Requestor Details": "تفاصيل مقدم الطلب",
+  "Operator Details": "تفاصيل المشغل",
+  Organization: "المنظمة",
+  Department: "القسم",
+  Description: "الوصف",
+  "No description provided.": "لم يتم تقديم وصف.",
+  Timeline: "الجدول الزمني",
+  Progress: "التقدم",
+  Created: "تم الإنشاء",
+  Scheduled: "مجدول",
+  Started: "تم البدء",
+  "Expected Finish": "الانتهاء المتوقع",
+  "Not started": "لم يبدأ",
+  "Not set": "غير محدد",
+  Completed: "مكتمل",
+  "Not completed": "غير مكتمل",
+  "Last Updated": "آخر تحديث",
+  "Progress History": "تاريخ التقدم",
+  "Transfer Requests": "طلبات النقل",
+  Assignments: "التكليفات",
+  Requestor: "مقدم الطلب",
+  Operator: "المشغل",
+  "Notes by KAP": "ملاحظات من KAP",
+  "Notes by": "ملاحظات من",
+  "No KAP notes available": "لا توجد ملاحظات KAP متاحة",
+  "No organization notes available": "لا توجد ملاحظات منظمة متاحة",
+  "No progress updates available": "لا توجد تحديثات تقدم متاحة",
+  "No transfer requests available": "لا توجد طلبات نقل متاحة",
+  "Transfer Request": "طلب نقل",
+  Unknown: "غير معروف",
+  "Unknown Role": "دور غير معروف",
+  Date: "التاريخ",
+  To: "إلى",
+  From: "من",
+  Declined: "مرفوض",
+  "Progress Visual": "صورة التقدم",
+  "No progress visuals available": "لا توجد صور تقدم متاحة",
+  "Progress Attachment": "مرفق التقدم",
+
+  // ========================================
+  // TICKET INPUT SECTION
+  // ========================================
+
+  "Note Text": "نص الملاحظة",
+  "Target Organization": "المنظمة المستهدفة",
+  "Requestor Organization": "منظمة مقدم الطلب",
+  "Operator Organization": "منظمة المشغل",
+  "Progress Percentage": "نسبة التقدم",
+  Observation: "الملاحظة",
+  "Progress Image (optional)": "صورة التقدم (اختياري)",
+  "Select Employee to Transfer": "اختر الموظف للنقل",
+  "Select Transfer Target": "اختر هدف النقل",
+  "Target 1": "الهدف 1",
+  "Target 2": "الهدف 2",
+  "Select Department for Transfer Request": "اختر القسم لطلب النقل",
+  "Select Employee for Transfer Request": "اختر الموظف لطلب النقل",
+  "Reason for Transfer Request": "سبب طلب النقل",
+  "Accept Note (Optional)": "ملاحظة القبول (اختياري)",
+  "Optional note for accepting this transfer request...":
+    "ملاحظة اختيارية لقبول طلب النقل هذا...",
+  "Confirm Decline": "تأكيد الرفض",
+  "Are you sure you want to decline this transfer request? This action cannot be undone.":
+    "هل أنت متأكد من رفض طلب النقل هذا؟ لا يمكن التراجع عن هذا الإجراء.",
+  "Add Note": "إضافة ملاحظة",
+  "Update Progress": "تحديث التقدم",
+  Transfer: "نقل",
+  "Request Transfer": "طلب نقل",
+  "Accept Request": "قبول الطلب",
+  "Decline Request": "رفض الطلب",
+  Submit: "إرسال",
+  "Progress percentage must be between 20% and 100%":
+    "يجب أن تكون نسبة التقدم بين 20% و 100%",
+  "Development Data :: Ticket Input": "بيانات التطوير :: إدخال التذكرة",
 };
 
 export default ar;

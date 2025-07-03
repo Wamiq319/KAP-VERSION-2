@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, InputField, Dropdown, ImageInput } from "../FormComponents";
+import { useSelector } from "react-redux";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -14,6 +15,7 @@ const TicketInput = ({
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user._id;
   const orgId = user.organization?._id;
+  const { words } = useSelector((state) => state.language);
 
   const progressOptions = [
     { value: 20, label: "20%" },
@@ -86,7 +88,7 @@ const TicketInput = ({
     // Update validation to check for 20-100 range
     if (type === "PROGRESS") {
       if (inputData.percentage < 20 || inputData.percentage > 100) {
-        alert("Progress percentage must be between 20% and 100%");
+        alert(words["Progress percentage must be between 20% and 100%"]);
         return;
       }
     }
@@ -143,7 +145,7 @@ const TicketInput = ({
         <div className="p-2 bg-gray-100 rounded mb-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-500">
-              Development Data :: Ticket Input
+              {words["Development Data :: Ticket Input"]}
             </h3>
             <button
               onClick={() => {
@@ -153,7 +155,7 @@ const TicketInput = ({
               }}
               className="text-xs text-blue-500 hover:text-blue-600"
             >
-              Copy
+              {words["Copy"]}
             </button>
           </div>
           <div className="space-y-2">
@@ -190,7 +192,7 @@ const TicketInput = ({
         {type === "NOTE" && (
           <>
             <InputField
-              label="Note Text"
+              label={words["Note Text"]}
               value={inputData.text}
               onChange={(e) =>
                 setInputData((prev) => ({ ...prev, text: e.target.value }))
@@ -201,10 +203,13 @@ const TicketInput = ({
             />
             {Role === "KAP" && (
               <Dropdown
-                label="Target Organization"
+                label={words["Target Organization"]}
                 options={[
-                  { value: "requestor", label: "Requestor Organization" },
-                  { value: "operator", label: "Operator Organization" },
+                  {
+                    value: "requestor",
+                    label: words["Requestor Organization"],
+                  },
+                  { value: "operator", label: words["Operator Organization"] },
                 ]}
                 selectedValue={inputData.targetOrg}
                 onChange={(value) =>
@@ -223,7 +228,7 @@ const TicketInput = ({
         {type === "PROGRESS" && (
           <>
             <Dropdown
-              label="Progress Percentage"
+              label={words["Progress Percentage"]}
               options={progressOptions}
               selectedValue={inputData.percentage}
               onChange={(value) =>
@@ -235,7 +240,7 @@ const TicketInput = ({
               required={true}
             />
             <InputField
-              label="Observation"
+              label={words["Observation"]}
               value={inputData.observation}
               onChange={(e) =>
                 setInputData((prev) => ({
@@ -249,7 +254,7 @@ const TicketInput = ({
             />
             {/* Optional image upload for progress */}
             <ImageInput
-              label="Progress Image (optional)"
+              label={words["Progress Image (optional)"]}
               onChange={setProgressImage}
               className="mt-2"
               required={false}
@@ -260,7 +265,7 @@ const TicketInput = ({
         {/* TRANSFER */}
         {type === "TRANSFER" && Role === "MANAGER" && (
           <Dropdown
-            label="Select Employee to Transfer"
+            label={words["Select Employee to Transfer"]}
             options={mappedEmployeeOptions}
             selectedValue={inputData.transferTarget}
             onChange={(value) =>
@@ -274,10 +279,10 @@ const TicketInput = ({
         )}
         {type === "TRANSFER" && Role !== "MANAGER" && (
           <Dropdown
-            label="Select Transfer Target"
+            label={words["Select Transfer Target"]}
             options={[
-              { value: "target1", label: "Target 1" },
-              { value: "target2", label: "Target 2" },
+              { value: "target1", label: words["Target 1"] },
+              { value: "target2", label: words["Target 2"] },
             ]}
             selectedValue={inputData.transferTarget}
             onChange={(value) =>
@@ -295,7 +300,7 @@ const TicketInput = ({
           <>
             {Role === "MANAGER" && (
               <Dropdown
-                label="Select Department for Transfer Request"
+                label={words["Select Department for Transfer Request"]}
                 options={transferOptions.map((dept) => ({
                   value: dept._id,
                   label: dept.name,
@@ -312,7 +317,7 @@ const TicketInput = ({
             )}
             {Role === "EMPLOYEE" && (
               <Dropdown
-                label="Select Employee for Transfer Request"
+                label={words["Select Employee for Transfer Request"]}
                 options={transferOptions.map((emp) => ({
                   value: emp._id,
                   label: emp.name,
@@ -328,7 +333,7 @@ const TicketInput = ({
               />
             )}
             <InputField
-              label="Reason for Transfer Request"
+              label={words["Reason for Transfer Request"]}
               value={inputData.reason}
               onChange={(e) =>
                 setInputData((prev) => ({
@@ -346,7 +351,7 @@ const TicketInput = ({
         {/* ACCEPT */}
         {type === "ACCEPT" && (
           <InputField
-            label="Accept Note (Optional)"
+            label={words["Accept Note (Optional)"]}
             value={inputData.acceptNote}
             onChange={(e) =>
               setInputData((prev) => ({
@@ -357,7 +362,9 @@ const TicketInput = ({
             type="textarea"
             rows={3}
             required={false}
-            placeholder="Optional note for accepting this transfer request..."
+            placeholder={
+              words["Optional note for accepting this transfer request..."]
+            }
           />
         )}
 
@@ -380,12 +387,15 @@ const TicketInput = ({
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-yellow-800">
-                  Confirm Decline
+                  {words["Confirm Decline"]}
                 </h3>
                 <div className="mt-2 text-sm text-yellow-700">
                   <p>
-                    Are you sure you want to decline this transfer request? This
-                    action cannot be undone.
+                    {
+                      words[
+                        "Are you sure you want to decline this transfer request? This action cannot be undone."
+                      ]
+                    }
                   </p>
                 </div>
               </div>
@@ -395,25 +405,25 @@ const TicketInput = ({
 
         <div className="flex justify-end gap-2 mt-6">
           <Button
-            text="Cancel"
+            text={words["Cancel"]}
             onClick={onClose}
             className="bg-gray-500 hover:bg-gray-600 text-white"
           />
           <Button
             text={
               type === "NOTE"
-                ? "Add Note"
+                ? words["Add Note"]
                 : type === "PROGRESS"
-                ? "Update Progress"
+                ? words["Update Progress"]
                 : type === "TRANSFER"
-                ? "Transfer"
+                ? words["Transfer"]
                 : type === "OPEN_TRANSFER_REQUEST"
-                ? "Request Transfer"
+                ? words["Request Transfer"]
                 : type === "ACCEPT"
-                ? "Accept Request"
+                ? words["Accept Request"]
                 : type === "DECLINE"
-                ? "Decline Request"
-                : "Submit"
+                ? words["Decline Request"]
+                : words["Submit"]
             }
             type="submit"
             className={

@@ -11,10 +11,12 @@ import {
   BsBarChartSteps,
 } from "react-icons/bs";
 import Modal from "../Modal";
+import { useSelector } from "react-redux";
 
 const TicketInfo = ({ ticket, mode }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState(null);
+  const { words } = useSelector((state) => state.language);
 
   console.log("Current Ticket In Ticket View:", ticket);
 
@@ -30,16 +32,18 @@ const TicketInfo = ({ ticket, mode }) => {
       >
         <div>
           <span className="font-semibold text-gray-700 text-sm">
-            {note.addedBy.name || "Unknown"}
+            {note.addedBy.name || words["Unknown"]}
           </span>
           <span className={`${roleColor} text-xs ml-2`}>
-            ({note.addedBy?.role || "Unknown Role"})
+            ({note.addedBy?.role || words["Unknown Role"]})
           </span>
         </div>
         <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
-          <span className="text-blue-600 font-medium">Date:</span>
+          <span className="text-blue-600 font-medium">{words["Date"]}:</span>
           {formatDate(note.createdAt)}
-          <span className={`${toLabelColor} font-medium ml-4`}>To:</span>
+          <span className={`${toLabelColor} font-medium ml-4`}>
+            {words["To"]}:
+          </span>
           <span className="text-gray-700">
             {note.targetOrg?.name || "OPERATOR"}
           </span>
@@ -51,7 +55,11 @@ const TicketInfo = ({ ticket, mode }) => {
 
   const renderKapNotes = () => {
     if (!ticket.kapNotes || ticket.kapNotes.length === 0) {
-      return <div className="text-gray-500 italic">No KAP notes available</div>;
+      return (
+        <div className="text-gray-500 italic">
+          {words["No KAP notes available"]}
+        </div>
+      );
     }
     return (
       <div className="space-y-3">
@@ -64,7 +72,7 @@ const TicketInfo = ({ ticket, mode }) => {
     if (!ticket.orgNotes || ticket.orgNotes.length === 0) {
       return (
         <div className="text-gray-500 italic">
-          No organization notes available
+          {words["No organization notes available"]}
         </div>
       );
     }
@@ -79,7 +87,7 @@ const TicketInfo = ({ ticket, mode }) => {
     if (!ticket.progress || ticket.progress.length === 0) {
       return (
         <div className="text-gray-500 italic">
-          No progress updates available
+          {words["No progress updates available"]}
         </div>
       );
     }
@@ -110,7 +118,7 @@ const TicketInfo = ({ ticket, mode }) => {
                 {update.imageUrl ? (
                   <img
                     src={update.imageUrl}
-                    alt="Progress Attachment"
+                    alt={words["Progress Attachment"]}
                     className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded border shadow"
                   />
                 ) : (
@@ -124,13 +132,13 @@ const TicketInfo = ({ ticket, mode }) => {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col space-y-0.5">
                   <span className="font-semibold text-gray-700 text-sm">
-                    {update.updatedBy?.name || "Unknown"}
+                    {update.updatedBy?.name || words["Unknown"]}
                   </span>
                   <span className="text-green-400 text-xs">
-                    ({update.updatedBy?.role || "Unknown Role"})
+                    ({update.updatedBy?.role || words["Unknown Role"]})
                   </span>
                   <span className="text-green-700 text-xs font-bold">
-                    {update.percentage}% Progress
+                    {update.percentage}% {words["Progress"]}
                   </span>
                 </div>
               </div>
@@ -156,7 +164,7 @@ const TicketInfo = ({ ticket, mode }) => {
     if (!ticket.transferRequests || ticket.transferRequests.length === 0) {
       return (
         <div className="text-gray-500 italic">
-          No transfer requests available
+          {words["No transfer requests available"]}
         </div>
       );
     }
@@ -176,7 +184,7 @@ const TicketInfo = ({ ticket, mode }) => {
           >
             <div>
               <span className="font-semibold text-gray-700 text-sm">
-                {request.type} Transfer Request
+                {request.type} {words["Transfer Request"]}
               </span>
               <span
                 className={`text-xs ml-2 px-2 py-1 rounded-full ${
@@ -191,20 +199,26 @@ const TicketInfo = ({ ticket, mode }) => {
               </span>
             </div>
             <div className="text-xs text-gray-500 mb-1">
-              <span className="text-blue-600 font-medium">Date:</span>
+              <span className="text-blue-600 font-medium">
+                {words["Date"]}:
+              </span>
               {formatDate(request.createdAt)}
             </div>
             <div className="text-xs text-gray-500 mb-1">
-              <span className="text-green-600 font-medium">From:</span>
+              <span className="text-green-600 font-medium">
+                {words["From"]}:
+              </span>
               <span className="text-gray-700 ml-1">{request.from.name}</span>
-              <span className="text-green-600 font-medium ml-4">To:</span>
+              <span className="text-green-600 font-medium ml-4">
+                {words["To"]}:
+              </span>
               <span className="text-gray-700 ml-1">{request.to.name}</span>
             </div>
             <p className="text-gray-700 text-sm">{request.reason}</p>
             {request.declineReason && (
               <div className="mt-2 pt-2 border-t border-gray-200">
                 <span className="text-red-500 text-xs font-medium">
-                  Declined:{" "}
+                  {words["Declined"]}:{" "}
                 </span>
                 <span className="text-red-700 text-xs">
                   {request.declineReason}
@@ -227,7 +241,7 @@ const TicketInfo = ({ ticket, mode }) => {
         {/* Basic Information */}
         <div className="bg-gray-200 rounded-lg shadow p-3 sm:p-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">
-            Ticket Information
+            {words["Ticket Information"]}
           </h2>
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
             {/* Ticket Information */}
@@ -236,7 +250,7 @@ const TicketInfo = ({ ticket, mode }) => {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      Ticket ID
+                      {words["Ticket ID"]}
                     </p>
                     <p className="font-medium text-sm sm:text-base">
                       {ticket.ticketNumber}
@@ -256,7 +270,7 @@ const TicketInfo = ({ ticket, mode }) => {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      Request Type:
+                      {words["Request Type"]}:
                     </p>
                     <p className="font-medium text-sm sm:text-base">
                       {ticket.request}
@@ -266,7 +280,9 @@ const TicketInfo = ({ ticket, mode }) => {
 
                 <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-2 sm:space-y-0">
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-500">Status</p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {words["Status"]}
+                    </p>
                     <span className={statusStyle.style}>
                       {statusStyle.icon}
                       {ticket.status}
@@ -274,7 +290,9 @@ const TicketInfo = ({ ticket, mode }) => {
                   </div>
 
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-500">Priority</p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {words["Priority"]}
+                    </p>
                     <div className={priorityStyle.style}>
                       {priorityStyle.icon}
                       {ticket.priority}
@@ -283,7 +301,9 @@ const TicketInfo = ({ ticket, mode }) => {
                 </div>
 
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Created By</p>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    {words["Created By"]}
+                  </p>
                   <div className="flex items-center space-x-2">
                     <BsPerson className="w-4 h-4 text-green-500" />
                     <div>
@@ -303,12 +323,12 @@ const TicketInfo = ({ ticket, mode }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 <div className="bg-gray-50 p-3 sm:p-4 rounded-lg flex flex-col w-full">
                   <h3 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
-                    Requestor Details
+                    {words["Requestor Details"]}
                   </h3>
                   <div className="space-y-2 sm:space-y-3">
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">
-                        Organization
+                        {words["Organization"]}
                       </p>
                       <p className="font-medium text-sm sm:text-base">
                         {ticket.requestor?.org?.name || "N/A"}
@@ -316,7 +336,7 @@ const TicketInfo = ({ ticket, mode }) => {
                     </div>
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">
-                        Department
+                        {words["Department"]}
                       </p>
                       <p className="font-medium text-sm sm:text-base">
                         {ticket.requestor?.department?.name || "N/A"}
@@ -327,12 +347,12 @@ const TicketInfo = ({ ticket, mode }) => {
 
                 <div className="bg-gray-50 p-3 sm:p-4 rounded-lg flex flex-col w-full">
                   <h3 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
-                    Operator Details
+                    {words["Operator Details"]}
                   </h3>
                   <div className="space-y-2 sm:space-y-3">
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">
-                        Organization
+                        {words["Organization"]}
                       </p>
                       <p className="font-medium text-sm sm:text-base">
                         {ticket.operator?.org?.name || "N/A"}
@@ -340,7 +360,7 @@ const TicketInfo = ({ ticket, mode }) => {
                     </div>
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">
-                        Department
+                        {words["Department"]}
                       </p>
                       <p className="font-medium text-sm sm:text-base">
                         {ticket.operator?.department?.name || "N/A"}
@@ -352,10 +372,10 @@ const TicketInfo = ({ ticket, mode }) => {
 
               <div className="bg-gray-50 p-3 sm:p-4 rounded-lg flex flex-col w-full">
                 <h3 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
-                  Description
+                  {words["Description"]}
                 </h3>
                 <div className="text-xs sm:text-sm text-gray-700 flex-1 overflow-y-auto">
-                  {ticket.description || "No description provided."}
+                  {ticket.description || words["No description provided."]}
                 </div>
               </div>
             </div>
@@ -365,14 +385,14 @@ const TicketInfo = ({ ticket, mode }) => {
         {/* Timeline */}
         <div className="bg-white rounded-lg shadow p-3 sm:p-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">
-            Timeline
+            {words["Timeline"]}
           </h2>
           <div className="space-y-4 sm:space-y-6">
             {/* Progress Bar */}
             <div className="mb-4 sm:mb-6">
               <div className="flex justify-between items-center mb-1 sm:mb-2">
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
-                  Progress
+                  {words["Progress"]}
                 </span>
                 <span className="text-xs sm:text-sm text-gray-500">70%</span>
               </div>
@@ -393,7 +413,7 @@ const TicketInfo = ({ ticket, mode }) => {
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-800">
-                    Created
+                    {words["Created"]}
                   </p>
                   <p className="text-xs text-gray-500">
                     {formatDate(ticket.createdAt)}
@@ -409,7 +429,7 @@ const TicketInfo = ({ ticket, mode }) => {
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-gray-800">
-                      Scheduled
+                      {words["Scheduled"]}
                     </p>
                     <p className="text-xs text-gray-500">
                       {formatDate(ticket.scheduledDate)}
@@ -425,12 +445,12 @@ const TicketInfo = ({ ticket, mode }) => {
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-800">
-                    Started
+                    {words["Started"]}
                   </p>
                   <p className="text-xs text-gray-500">
                     {ticket.startDate
                       ? formatDate(ticket.startDate)
-                      : "Not started"}
+                      : words["Not started"]}
                   </p>
                 </div>
               </div>
@@ -442,12 +462,12 @@ const TicketInfo = ({ ticket, mode }) => {
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-800">
-                    Expected Finish
+                    {words["Expected Finish"]}
                   </p>
                   <p className="text-xs text-gray-500">
                     {ticket.finishDate
                       ? formatDate(ticket.finishDate)
-                      : "Not set"}
+                      : words["Not set"]}
                   </p>
                 </div>
               </div>
@@ -459,12 +479,12 @@ const TicketInfo = ({ ticket, mode }) => {
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-800">
-                    Completed
+                    {words["Completed"]}
                   </p>
                   <p className="text-xs text-gray-500">
                     {ticket.endDate
                       ? formatDate(ticket.endDate)
-                      : "Not completed"}
+                      : words["Not completed"]}
                   </p>
                 </div>
               </div>
@@ -476,7 +496,7 @@ const TicketInfo = ({ ticket, mode }) => {
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-800">
-                    Last Updated
+                    {words["Last Updated"]}
                   </p>
                   <p className="text-xs text-gray-500">
                     {formatDate(ticket.updatedAt)}
@@ -493,7 +513,7 @@ const TicketInfo = ({ ticket, mode }) => {
           <div className="bg-white rounded-lg shadow p-3 sm:p-6 flex flex-col">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
               <BsClock className="w-5 h-5 text-blue-500 mr-2" />
-              Progress History
+              {words["Progress History"]}
             </h2>
             <div className="max-h-60 sm:max-h-80 overflow-y-auto flex-1">
               {renderProgress()}
@@ -504,7 +524,7 @@ const TicketInfo = ({ ticket, mode }) => {
           <div className="bg-white rounded-lg shadow p-3 sm:p-6 flex flex-col">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
               <BsClock className="w-5 h-5 text-blue-500 mr-2" />
-              Transfer Requests
+              {words["Transfer Requests"]}
             </h2>
             <div className="max-h-60 sm:max-h-80 overflow-y-auto flex-1">
               {renderTransferRequests()}
@@ -520,13 +540,13 @@ const TicketInfo = ({ ticket, mode }) => {
           <div className="border-b border-gray-200 flex items-center pb-2 mb-2">
             <BsPerson className="w-5 h-5 text-indigo-500 mr-2" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-800">
-              Assignments
+              {words["Assignments"]}
             </h3>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:gap-4">
             <div className="flex flex-col items-center">
               <BsPerson className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mb-1" />
-              <p className="text-xs text-gray-500">Requestor</p>
+              <p className="text-xs text-gray-500">{words["Requestor"]}</p>
               <p className="font-medium text-xs sm:text-sm">
                 {ticket.assignments?.requestor?.user?.name || "N/A"}
               </p>
@@ -536,7 +556,7 @@ const TicketInfo = ({ ticket, mode }) => {
             </div>
             <div className="flex flex-col items-center">
               <BsPerson className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mb-1" />
-              <p className="text-xs text-gray-500">Operator</p>
+              <p className="text-xs text-gray-500">{words["Operator"]}</p>
               <p className="font-medium text-xs sm:text-sm">
                 {ticket.assignments?.operator?.user?.name || "N/A"}
               </p>
@@ -552,7 +572,7 @@ const TicketInfo = ({ ticket, mode }) => {
           <div className="p-3 sm:p-4 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
               <BsClipboardData className="w-5 h-5 text-blue-500 mr-2" />
-              Notes by KAP
+              {words["Notes by KAP"]}
             </h3>
           </div>
           <div className="p-3 sm:p-4 flex-1 overflow-y-auto">
@@ -565,7 +585,8 @@ const TicketInfo = ({ ticket, mode }) => {
           <div className="p-3 sm:p-4 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
               <BsPerson className="w-5 h-5 text-green-500 mr-2" />
-              Notes by {ticket.requestor?.org?.name || "Organization"}
+              {words["Notes by"]}{" "}
+              {ticket.requestor?.org?.name || words["Organization"]}
             </h3>
           </div>
           <div className="p-3 sm:p-4 flex-1 overflow-y-auto">
@@ -576,14 +597,14 @@ const TicketInfo = ({ ticket, mode }) => {
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={"Progress Visual"}
+        title={words["Progress Visual"]}
         size="sm"
       >
         {modalImageUrl ? (
           <div className="flex flex-col items-center justify-center">
             <img
               src={modalImageUrl}
-              alt="Progress Attachment"
+              alt={words["Progress Attachment"]}
               className="max-h-[80vh] object-contain rounded-lg shadow-lg"
             />
           </div>
@@ -591,7 +612,7 @@ const TicketInfo = ({ ticket, mode }) => {
           <div className="flex flex-col items-center justify-center w-full h-64">
             <BsBarChartSteps className="w-20 h-20 text-green-400 mb-4" />
             <div className="text-gray-500 text-lg">
-              No progress visuals available
+              {words["No progress visuals available"]}
             </div>
           </div>
         )}
