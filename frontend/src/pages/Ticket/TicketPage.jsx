@@ -28,13 +28,15 @@ const TicketPage = ({ mode }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Check if we're in transfer request mode
+  // Check if we're in transfer request mode or archived mode
   const transferRequestMode =
     searchParams.get("transferRequestMode") === "true";
+  const archivedMode = searchParams.get("archivedMode") === "true";
 
   console.log("TicketPage Debug:", {
     mode,
     transferRequestMode,
+    archivedMode,
     user,
     entities: entities?.tickets?.length || 0,
   });
@@ -88,7 +90,8 @@ const TicketPage = ({ mode }) => {
 
       let queryParams = {
         role: mode,
-        transferRequestMode: transferRequestMode, // Add this parameter
+        transferRequestMode: transferRequestMode,
+        archivedMode: archivedMode,
       };
 
       switch (mode) {
@@ -161,7 +164,7 @@ const TicketPage = ({ mode }) => {
 
   useEffect(() => {
     fetchData();
-  }, [dispatch, mode, transferRequestMode]); // Add transferRequestMode to dependencies
+  }, [dispatch, mode, transferRequestMode, archivedMode]);
 
   const tableData =
     entities?.tickets?.map((item, index) => ({
@@ -243,11 +246,16 @@ const TicketPage = ({ mode }) => {
       OP_EMPLOYEE: `/manage-op-employee-tickets/view/${ticket.id}`,
     };
 
-    // Add transfer request mode to URL if needed
+    // Add archived mode to URL if needed
     const baseUrl = roleUrls[mode] || `/tickets/${ticket.id}`;
-    const url = transferRequestMode
-      ? `${baseUrl}?transferRequestMode=true`
-      : baseUrl;
+    let url = baseUrl;
+
+    if (transferRequestMode) {
+      url = `${baseUrl}?transferRequestMode=true`;
+    } else if (archivedMode) {
+      url = `${baseUrl}?archivedMode=true`;
+    }
+
     navigate(url);
   };
 
@@ -350,7 +358,11 @@ const TicketPage = ({ mode }) => {
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs sm:text-sm font-medium text-gray-500">
               Development Data :: Ticket Page ::{" "}
-              {transferRequestMode ? "Transfer Request Mode" : "Normal Mode"}
+              {transferRequestMode
+                ? "Transfer Request Mode"
+                : archivedMode
+                ? "Archived Mode"
+                : "Normal Mode"}
             </h3>
             <button
               onClick={() => {
@@ -359,12 +371,14 @@ const TicketPage = ({ mode }) => {
                     {
                       mode,
                       transferRequestMode,
+                      archivedMode,
                       user,
                       entities: entities?.tickets?.length || 0,
                       tableData: tableData.length,
                       queryParams: {
                         role: mode,
                         transferRequestMode,
+                        archivedMode,
                         userId: user._id,
                         departmentId: user.department?._id,
                         orgId: user.organization?._id,
@@ -386,6 +400,7 @@ const TicketPage = ({ mode }) => {
                 {
                   mode,
                   transferRequestMode,
+                  archivedMode,
                   user: {
                     _id: user._id,
                     role: user.role,
@@ -431,7 +446,7 @@ const TicketPage = ({ mode }) => {
       )}
 
       <div className="w-full justify-center align-center">
-        {mode === "KAP_EMPLOYEE" && !transferRequestMode && (
+        {mode === "KAP_EMPLOYEE" && !transferRequestMode && !archivedMode && (
           <Button
             text={words["Create Ticket"]}
             onClick={openCreateModal}
@@ -469,6 +484,8 @@ const TicketPage = ({ mode }) => {
           heading={
             transferRequestMode
               ? words["Transfer Requests"] || "Transfer Requests"
+              : archivedMode
+              ? words["Archived Tickets"] || "Archived Tickets"
               : words["Tickets"]
           }
           tableHeader={tableHeaders}

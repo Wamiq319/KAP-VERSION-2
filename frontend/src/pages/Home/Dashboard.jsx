@@ -82,6 +82,11 @@ const DashboardHome = ({ role }) => {
           path: "/manage-kap-tickets",
           className: "w-full bg-blue-600 hover:bg-blue-700 text-lg py-3 shadow",
         },
+        {
+          text: words["Archived Tickets"] || "Archived Tickets",
+          path: "/manage-kap-tickets?archivedMode=true",
+          className: "w-full bg-gray-600 hover:bg-gray-700 text-lg py-3 shadow",
+        },
       ],
     },
     GOV_MANAGER: {

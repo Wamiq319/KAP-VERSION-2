@@ -138,8 +138,14 @@ export const getTicketById = async (req, res) => {
 
 export const getTickets = async (req, res) => {
   try {
-    const { userId, role, orgId, departmentId, transferRequestMode } =
-      req.query;
+    const {
+      userId,
+      role,
+      orgId,
+      departmentId,
+      transferRequestMode,
+      archivedMode,
+    } = req.query;
 
     if (!userId || !role) {
       return res.status(400).json({
@@ -155,6 +161,7 @@ export const getTickets = async (req, res) => {
       orgId,
       departmentId,
       transferRequestMode: transferRequestMode === "true",
+      archivedMode: archivedMode === "true",
     });
 
     return res.status(response.success ? 200 : 400).json(response);

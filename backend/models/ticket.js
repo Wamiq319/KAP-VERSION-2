@@ -943,7 +943,8 @@ ticketSchema.statics.getTickets = async function ({
   userId,
   orgId,
   departmentId,
-  transferRequestMode = false, // New parameter
+  transferRequestMode = false,
+  archivedMode = false, // New parameter for archived tickets
 }) {
   try {
     const filter = {};
@@ -956,14 +957,12 @@ ticketSchema.statics.getTickets = async function ({
       switch (role) {
         case "GOV_MANAGER":
         case "OP_MANAGER":
-          // Managers see department transfer requests TO their department
           filter["transferRequests.type"] = "DEPARTMENT";
           filter["transferRequests.to"] = departmentId;
           break;
 
         case "GOV_EMPLOYEE":
         case "OP_EMPLOYEE":
-          // Employees see employee transfer requests TO them
           filter["transferRequests.type"] = "EMPLOYEE";
           filter["transferRequests.to"] = userId;
           break;
@@ -976,29 +975,43 @@ ticketSchema.statics.getTickets = async function ({
           };
       }
     } else {
-      // Existing regular ticket filtering logic
+      // Regular ticket filtering logic
       switch (role) {
         case "KAP_EMPLOYEE":
           filter["createdBy"] = userId;
+          // For KAP: if archivedMode is true, show only CLOSED tickets
+          // if archivedMode is false, show all tickets except CLOSED
+          if (archivedMode) {
+            filter["status"] = "CLOSED";
+          } else {
+            filter["status"] = { $ne: "CLOSED" };
+          }
           break;
 
         case "GOV_EMPLOYEE":
           filter.$or = [{ "assignments.requestor.user": userId }];
+          // Non-KAP users never see CLOSED tickets
+          filter["status"] = { $ne: "CLOSED" };
           break;
 
         case "OP_EMPLOYEE":
-          console.log(userId);
           filter.$or = [{ "assignments.operator.user": userId }];
+          // Non-KAP users never see CLOSED tickets
+          filter["status"] = { $ne: "CLOSED" };
           break;
 
         case "GOV_MANAGER":
           if (orgId) filter["requestor.org"] = orgId;
           if (departmentId) filter["requestor.department"] = departmentId;
+          // Non-KAP users never see CLOSED tickets
+          filter["status"] = { $ne: "CLOSED" };
           break;
 
         case "OP_MANAGER":
           if (orgId) filter["operator.org"] = orgId;
           if (departmentId) filter["operator.department"] = departmentId;
+          // Non-KAP users never see CLOSED tickets
+          filter["status"] = { $ne: "CLOSED" };
           break;
 
         default:
