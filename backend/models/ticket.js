@@ -193,6 +193,11 @@ const ticketSchema = new mongoose.Schema({
   endDate: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+
+  currentDepartmentProgress: {
+    type: Number,
+    default: 0,
+  },
 });
 
 // UTILITY FUNCTION FOR GETTING FORMATTED TICKET #####
@@ -394,6 +399,8 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
           };
         }) || []
       ),
+
+      currentDepartmentProgress: ticket.currentDepartmentProgress,
     };
     return formattedTicket;
   } catch (error) {
@@ -535,6 +542,11 @@ ticketSchema.statics.updateProgress = async function (data) {
     };
 
     ticket.progress = [...(ticket.progress || []), progress];
+
+    if (progress.percentage > ticket.currentDepartmentProgress) {
+      ticket.currentDepartmentProgress = progress.percentage;
+    }
+
     ticket.updatedAt = new Date();
     await ticket.save();
 

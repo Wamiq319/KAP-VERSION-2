@@ -394,12 +394,14 @@ const TicketInfo = ({ ticket, mode }) => {
                 <span className="text-xs sm:text-sm font-medium text-gray-700">
                   {words["Progress"]}
                 </span>
-                <span className="text-xs sm:text-sm text-gray-500">70%</span>
+                <span className="text-xs sm:text-sm text-gray-500">
+                  {ticket.currentDepartmentProgress || 0}%
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: "70%" }}
+                  style={{ width: `${ticket.currentDepartmentProgress || 0}%` }}
                 ></div>
               </div>
             </div>
