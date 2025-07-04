@@ -204,17 +204,17 @@ const TicketActions = ({
                 )}
 
                 {/* Employee Common Actions */}
-                {(mode === "GOV_EMPLOYEE" || mode === "OP_EMPLOYEE") && (
+                {mode === "GOV_EMPLOYEE" && (
+                  <Button
+                    text={words["Add Note"]}
+                    onClick={() => onAddNote("ORG_NOTE")}
+                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                    icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    size="small"
+                  />
+                )}
+                {mode === "OP_EMPLOYEE" && (
                   <>
-                    {mode === "GOV_EMPLOYEE" && (
-                      <Button
-                        text={words["Add Note"]}
-                        onClick={() => onAddNote("ORG_NOTE")}
-                        className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
-                        icon={<FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />}
-                        size="small"
-                      />
-                    )}
                     {isInProgress && (
                       <Button
                         text={words["Progress"]}
@@ -224,7 +224,7 @@ const TicketActions = ({
                         size="small"
                       />
                     )}
-                    {mode === "OP_EMPLOYEE" && ticket.status === "ACCEPTED" && (
+                    {ticket.status === "ACCEPTED" && (
                       <Button
                         text={words["Start"]}
                         onClick={onStartWork}
@@ -234,7 +234,7 @@ const TicketActions = ({
                       />
                     )}
                     {/* Mark Complete Button - Only for OP_EMPLOYEE when ticket is IN_PROGRESS */}
-                    {mode === "OP_EMPLOYEE" && isInProgress && (
+                    {isInProgress && (
                       <Button
                         text={words["Mark Complete"]}
                         onClick={onMarkComplete}
