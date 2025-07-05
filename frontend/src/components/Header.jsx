@@ -42,7 +42,7 @@ const Header = () => {
         <button
           onClick={handleHomeClick}
           className="p-2 rounded-full bg-white hover:bg-gray-100 transition-colors shadow-sm"
-          aria-label="Home"
+          aria-label={words["Home"] || "Home"}
         >
           <FiHome size={18} className="text-green-700" />
         </button>
@@ -56,7 +56,7 @@ const Header = () => {
                 <div className="flex flex-col items-center">
                   <img
                     src={user.organization.logo.url}
-                    alt="Company Logo"
+                    alt={words["Company Logo"] || "Company Logo"}
                     className="h-8 w-8 rounded-full object-cover border-2 border-white shadow-sm"
                   />
                 </div>
@@ -65,7 +65,9 @@ const Header = () => {
               {/* User Info Sections */}
               <div className="flex items-center gap-6">
                 <div className="flex flex-col items-start min-w-[60px]">
-                  <span className="text-xs text-green-200">Name:</span>
+                  <span className="text-xs text-green-200">
+                    {words["Full Name"] || "Name"}:
+                  </span>
                   <span className="text-sm font-medium whitespace-nowrap">
                     {user.name}
                   </span>
@@ -74,14 +76,18 @@ const Header = () => {
                 <div className="h-8 w-px bg-green-200/30"></div>
 
                 <div className="flex flex-col items-start min-w-[60px]">
-                  <span className="text-xs text-green-200">Role:</span>
+                  <span className="text-xs text-green-200">
+                    {words["Role"] || "Role"}:
+                  </span>
                   <span className="text-sm whitespace-nowrap">{user.role}</span>
                 </div>
 
                 <div className="h-8 w-px bg-green-200/30"></div>
 
                 <div className="flex flex-col items-start min-w-[70px]">
-                  <span className="text-xs text-green-200">Mobile:</span>
+                  <span className="text-xs text-green-200">
+                    {words["Mobile Number"] || "Mobile"}:
+                  </span>
                   <span className="text-sm whitespace-nowrap">
                     {user.mobile}
                   </span>
@@ -90,7 +96,9 @@ const Header = () => {
                 <div className="h-8 w-px bg-green-200/30"></div>
 
                 <div className="flex flex-col items-start min-w-[80px]">
-                  <span className="text-xs text-green-200">Organization:</span>
+                  <span className="text-xs text-green-200">
+                    {words["Organization"]}
+                  </span>
                   <span className="text-sm whitespace-nowrap">
                     {user.organization?.name || "KAP"}
                   </span>
@@ -99,7 +107,9 @@ const Header = () => {
                 <div className="h-8 w-px bg-green-200/30"></div>
 
                 <div className="flex flex-col items-start min-w-[80px]">
-                  <span className="text-xs text-green-200">Department:</span>
+                  <span className="text-xs text-green-200">
+                    {words["Department"] || "Department"}:
+                  </span>
                   <span className="text-sm whitespace-nowrap">
                     {user.department?.name || user.kapRole}
                   </span>
@@ -117,7 +127,9 @@ const Header = () => {
             className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-full text-sm transition-colors shadow-sm"
           >
             <FiLogOut size={14} />
-            <span className="hidden sm:inline">{words["Logout"]}</span>
+            <span className="hidden sm:inline">
+              {words["Logout"] || "Logout"}
+            </span>
           </button>
         </div>
       </div>

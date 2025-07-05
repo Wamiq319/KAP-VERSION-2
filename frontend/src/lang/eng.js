@@ -45,6 +45,8 @@ export const eng = {
   "Enter your password": "Enter your password",
   Login: "Login",
   "Forgot Password?": "Forgot Password?",
+  Home: "Home",
+  Logout: "Logout",
 
   // ========================================
   // USER PAGE SECTION
@@ -188,6 +190,7 @@ export const eng = {
   "Transfer Request": "Transfer Request",
   "Transfer Requests": "Transfer Requests",
   "View Details": "View Details",
+  "Archived Tickets": "Archived Tickets",
 
   // ========================================
   // VIEW TICKET PAGE SECTION
@@ -248,6 +251,7 @@ export const eng = {
   Organizations: "Organizations",
   "selected organizations?": "selected organizations?",
   organizations: "organizations",
+  "Organzation Name": "Organzation Name",
 
   // ========================================
   // DEPARTMENT PAGE SECTION

@@ -61,7 +61,7 @@ const OrganizationPage = ({
   const tableHeader = [
     { key: "index", label: words["#"] },
     { key: "image", label: words["Logo"] },
-    { key: "name", label: words["Name"] },
+    { key: "name", label: words["Organzation Name"] },
     { key: "type", label: words["Type"] },
     { key: "adminName", label: words["Admin Name"] },
     { key: "username", label: words["Username"] },

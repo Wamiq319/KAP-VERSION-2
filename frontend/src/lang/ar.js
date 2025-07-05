@@ -16,7 +16,7 @@ export const ar = {
   Role: "الدور",
   "User Role": "دور المستخدم",
   "User Type": "نوع المستخدم",
-  Organization: "المنظمة",
+  Organization: "القطاع",
   Department: "القسم",
   Actions: "الإجراءات",
 
@@ -25,11 +25,11 @@ export const ar = {
   "All Types": "جميع الأنواع",
   "All Organizations": "جميع المنظمات",
   "All Departments": "جميع الأقسام",
-  "Organization Type": "نوع المنظمة",
+  "Organization Type": "نوع القطاع",
 
   // UserPage - User Types and Roles
   "KAP Employee": "موظف KAP",
-  "Organization Employee": "موظف المنظمة",
+  "Organization Employee": "موظف قطاع",
   "Government Employee": "موظف حكومي",
   "Company Employee": "موظف شركة",
   "GOV Manager": "مدير حكومي",
@@ -164,8 +164,8 @@ export const ar = {
   // ========================================
 
   "Admin Home Page": "الصفحة الرئيسية للمسؤول",
-  "Manage Organization": "إدارة المنظمة",
-  "Manage Department": "إدارة القسم",
+  "Manage Organization": "أضافة المدراء والقطاعات",
+  "Manage Department": "إدارة الأقسام",
   "Manage Users": "إدارة المستخدمين",
   "Company Logo": "شعار الشركة",
 
@@ -173,16 +173,16 @@ export const ar = {
   // ORGANIZATION PAGE SECTION
   // ========================================
 
-  "Add Organization": "إضافة منظمة",
+  "Add Organization": "إضافة قطاع",
   Logo: "الشعار",
   Name: "الاسم",
   Type: "النوع",
   "Admin Name": "اسم المسؤول",
-  "N/A": "غير متوفر",
   "No organizations selected": "لم يتم اختيار أي منظمات",
   Organizations: "المنظمات",
   "selected organizations?": "المنظمات المحددة؟",
   organizations: "منظمات",
+  "Organzation Name": "اسم القطاع",
 
   // ========================================
   // DEPARTMENT PAGE SECTION
@@ -194,7 +194,6 @@ export const ar = {
   "No departments selected": "لم يتم اختيار أي أقسام",
   "selected departments?": "الأقسام المحددة؟",
   departments: "أقسام",
-  "Organization Type": "نوع المنظمة",
 
   // ========================================
   // TICKET PAGE SECTION
@@ -221,6 +220,7 @@ export const ar = {
   "Transfer Request": "طلب نقل",
   "Transfer Requests": "طلبات النقل",
   "View Details": "عرض التفاصيل",
+  "Archived Tickets": "التذاكر المؤرشفة",
 
   // ========================================
   // VIEW TICKET PAGE SECTION
@@ -243,13 +243,13 @@ export const ar = {
 
   "Select Organization": "اختر المنظمة",
   "Enter department name": "أدخل اسم القسم",
-  "Filter by Organization Type": "تصفية حسب نوع المنظمة",
+  "Filter by Organization Type": "تصفية حسب نوع القطاع",
 
   // ========================================
   // ORGANIZATION FORM SECTION
   // ========================================
 
-  "Organization Name": "اسم المنظمة",
+  "Organization Name": "اسم القطاع",
   "Enter organization name": "أدخل اسم المنظمة",
   "Enter admin name": "أدخل اسم المسؤول",
   "Enter username": "أدخل اسم المستخدم",
@@ -330,7 +330,7 @@ export const ar = {
   "Created By": "أنشئ بواسطة",
   "Requestor Details": "تفاصيل مقدم الطلب",
   "Operator Details": "تفاصيل المشغل",
-  Organization: "المنظمة",
+  Organization: "القطاع",
   Department: "القسم",
   Description: "الوصف",
   "No description provided.": "لم يتم تقديم وصف.",
@@ -401,6 +401,12 @@ export const ar = {
   "Progress percentage must be between 20% and 100%":
     "يجب أن تكون نسبة التقدم بين 20% و 100%",
   "Development Data :: Ticket Input": "بيانات التطوير :: إدخال التذكرة",
+
+  // ========================================
+  // HEADER SECTION
+  // ========================================
+  Home: "الرئيسية",
+  Logout: "تسجيل الخروج",
 };
 
 export default ar;
