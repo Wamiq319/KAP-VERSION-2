@@ -47,16 +47,27 @@ const DataTable = ({
   const renderCellContent = (row, col) => {
     // Handle image display
     if (col.key === "image") {
+      if (!row[col.key]) {
+        // Return a simple gray background when no image
+        return <div className="h-10 w-10 bg-gray-200 rounded-full"></div>;
+      }
+
       return (
-        <img
-          src={row[col.key] || "https://via.placeholder.com/50"}
-          alt="Logo"
-          className="h-10 w-10 object-contain rounded-full"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "https://via.placeholder.com/50";
-          }}
-        />
+        <div className="relative">
+          <img
+            src={row[col.key]}
+            alt="Logo"
+            className="h-10 w-10 object-contain rounded-full"
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "block";
+            }}
+          />
+          <div
+            className="h-10 w-10 bg-gray-200 rounded-full absolute top-0 left-0"
+            style={{ display: "none" }}
+          ></div>
+        </div>
       );
     }
 

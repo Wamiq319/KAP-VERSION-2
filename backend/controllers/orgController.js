@@ -1,6 +1,7 @@
 import Organization from "../models/organization.js";
 import { uploadImage } from "../utils/uploadCloudinary.js";
 import Department from "../models/department.js";
+import { sendSms } from "../utils/sendMessage.js";
 
 export const createOrganization = async (req, res) => {
   try {
@@ -45,6 +46,31 @@ export const createOrganization = async (req, res) => {
       password,
       logo,
     });
+
+    // Send SMS notification if organization was created successfully
+    if (response.success) {
+      try {
+        const message = `${name} has been added for you in KAP.`;
+        const smsResult = await sendSms({
+          to: mobile,
+          message: message,
+        });
+
+        if (smsResult.success) {
+          console.log(
+            `✅ SMS sent successfully to ${mobile} for organization ${name}`
+          );
+        } else {
+          console.error(
+            `❌ Failed to send SMS to ${mobile} for organization ${name}:`,
+            smsResult.error
+          );
+        }
+      } catch (smsError) {
+        console.error("❌ Error sending SMS notification:", smsError);
+        // Don't fail the request if SMS fails, just log the error
+      }
+    }
 
     res.status(response.success ? 201 : 400).json(response);
   } catch (error) {
