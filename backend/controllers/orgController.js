@@ -2,6 +2,7 @@ import Organization from "../models/organization.js";
 import { uploadImage } from "../utils/uploadCloudinary.js";
 import Department from "../models/department.js";
 import { sendSms } from "../utils/sendMessage.js";
+const WEB_URL = process.env.WEB_URL;
 
 export const createOrganization = async (req, res) => {
   try {
@@ -50,7 +51,7 @@ export const createOrganization = async (req, res) => {
     // Send SMS notification if organization was created successfully
     if (response.success) {
       try {
-        const message = `${name} has been added for you in KAP.`;
+        const message = `مرحبًا ${adminName}،\nتم إنشاء حسابك بنجاح في نظام KAP.\nاسم المستخدم: ${username}\nكلمة المرور: ${password}\nسجل الدخول من هنا: ${WEB_URL}`;
         const smsResult = await sendSms({
           to: mobile,
           message: message,

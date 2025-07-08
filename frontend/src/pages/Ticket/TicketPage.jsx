@@ -67,23 +67,6 @@ const TicketPage = ({ mode }) => {
     { key: "optDepartment", label: words["OperatorDept"] },
   ];
 
-  switch (mode) {
-    case "KAP_EMPLOYEE":
-      tableHeaders.push(
-        { key: "operator", label: words["Operator"] },
-        { key: "requestor", label: words["Requestor"] }
-      );
-      break;
-    case "OP_MANAGER ":
-    case "OP_EMPLOYEE":
-      tableHeaders.push({ key: "requestor", label: words["Requestor"] });
-      break;
-    case "GOV MANAGER":
-    case "GOV_EMPLOYEE":
-      tableHeaders.push({ key: "operator", label: words["Operator"] });
-      break;
-  }
-
   const fetchData = async () => {
     try {
       setUiState((prev) => ({ ...prev, isLoading: true }));

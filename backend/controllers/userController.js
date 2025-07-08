@@ -52,7 +52,8 @@ export const createUser = async (req, res) => {
     });
 
     if (response.success) {
-      const message = `Your account has been created successfully. Your username is ${username} and password is ${password}. Please login here ${WEB_URL}`;
+      const message = `مرحبًا ${name}،\nتم إنشاء حسابك بنجاح في نظام KAP.\nاسم المستخدم: ${username}\nكلمة المرور: ${password}\nسجل الدخول من هنا: ${WEB_URL}`;
+
       try {
         await sendSms({ to: mobile, message: message });
       } catch (smsError) {

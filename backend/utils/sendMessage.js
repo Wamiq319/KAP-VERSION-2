@@ -4,7 +4,7 @@ const SMS_USER = "khalid2u";
 const SMS_SECRET =
   "c121137bbf059125e59c12542d3e3fdedf62a1edd82cbbb9bfc3e02dbd99f6d4";
 const SMS_SENDER = "kas.pub.sa";
-const SERVER_BASE_URL = "http://13.49.64.191:3000";
+const SERVER_BASE_URL = "http://13.61.196.216:3000";
 
 // Uncomment this block later to use direct DreamSMS API call after testing.
 /*
