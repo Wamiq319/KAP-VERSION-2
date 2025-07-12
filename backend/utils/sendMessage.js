@@ -36,23 +36,30 @@ export async function sendSms(messageData) {
   const { to, message } = messageData;
   const time = new Date().toLocaleString();
 
+  // Extract mobile number and user details
+  const mobile = to.mobile || to;
+  const userName = to.name || "Unknown";
+  const userRole = to.role || "Unknown";
+
   console.log("\n============================");
   console.log("📤 SENDING SMS");
   console.log("----------------------------");
   console.log(`🕒 Time   : ${time}`);
-  console.log(`📱 To     : ${to}`);
+  console.log(`📱 To     : ${mobile}`);
+  console.log(`👤 Name   : ${userName}`);
+  console.log(`🎭 Role   : ${userRole}`);
   console.log(`💬 Message: ${message}`);
   console.log("============================\n");
 
   try {
     const res = await axios.post(
       `${SERVER_BASE_URL}/send-sms`,
-      { to, message },
+      { to: mobile, message },
       { headers: { "Content-Type": "application/json" } }
     );
 
     console.log("Server SMS response:", res.data);
-    return { success: true, to, message };
+    return { success: true, to: mobile, message };
   } catch (error) {
     console.error(
       "Error sending SMS via server:",
@@ -60,7 +67,7 @@ export async function sendSms(messageData) {
     );
     return {
       success: false,
-      to,
+      to: mobile,
       message,
       error: error.response?.data || error.message,
     };

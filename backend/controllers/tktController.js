@@ -335,36 +335,14 @@ export const updateTicket = async (req, res) => {
         });
     }
 
+    // Send SMS notifications based on action type
     if (response.success && response.data) {
-      const ticket = response.data;
-      const ticketId = ticket._id;
-      const ticketNumber = ticket.ticketNumber || "N/A";
-
-      const statusMessages = {
-        ACCEPTED: "✅ Ticket Accepted By Operator",
-        IN_PROGRESS: "🔧 Ticket Work has been Started",
-        COMPLETED: "🎉 Work had been completed",
-        CLOSED: "🔒 Ticket closed",
-        TRANSFER_REQUESTED: "📦 Ticket transfer requested",
-      };
-
-      const getPathByRole = (role) => {
-        switch (role) {
-          case "KAP_EMPLOYEE":
-            return "/manage-kap-tickets/view";
-          case "GOV_MANAGER":
-            return "/manage-gov-tickets/view";
-          case "OP_MANAGER":
-            return "/manage-op-tickets/view";
-          case "OP_EMPLOYEE":
-            return "/manage-op-employee-tickets/view";
-          case "GOV_EMPLOYEE":
-            return "/manage-gov-employee-tickets/view";
-          default:
-            return "/manage-kap-tickets/view";
-        }
-      };
-      console.log("updateTicket - Processing ticket:", ticket);
+      await handleTicketSMS({
+        actionType,
+        ticketData: response.data,
+        userId,
+        data: req.body.data,
+      });
     }
 
     return res.status(200).json(response);
@@ -388,3 +366,162 @@ export const updateTicket = async (req, res) => {
     });
   }
 };
+
+// Helper function to get role-based URL
+function getRoleBasedUrl(role, ticketId) {
+  const baseUrl = BASE_URL;
+
+  switch (role) {
+    case "KAP_EMPLOYEE":
+      return `${baseUrl}/manage-kap-tickets/view/${ticketId}`;
+    case "GOV_MANAGER":
+      return `${baseUrl}/manage-gov-tickets/view/${ticketId}`;
+    case "OP_MANAGER":
+      return `${baseUrl}/manage-op-tickets/view/${ticketId}`;
+    case "OP_EMPLOYEE":
+      return `${baseUrl}/manage-op-employee-tickets/view/${ticketId}`;
+    case "GOV_EMPLOYEE":
+      return `${baseUrl}/manage-gov-employee-tickets/view/${ticketId}`;
+    default:
+      return `${baseUrl}/manage-kap-tickets/view/${ticketId}`;
+  }
+}
+
+// SMS notification handler
+async function handleTicketSMS({ actionType, ticketData, userId, data }) {
+  const ticketId = ticketData._id;
+  const ticketNumber = ticketData.ticketNumber || "N/A";
+
+  const requestorManager = ticketData.requestor?.department?.manager || null;
+  const operatorManager = ticketData.operator?.department?.manager || null;
+
+  const requestorAssignment = ticketData.assignments?.requestor?.user || null;
+  const operatorAssignment = ticketData.assignments?.operator?.user || null;
+
+  const createdBy = ticketData.createdBy || null;
+
+  const requestorOrg = ticketData.requestor?.org || null;
+  const operatorOrg = ticketData.operator?.org || null;
+
+  // Example log
+  console.log({
+    ticketId,
+    requestorManager,
+    operatorManager,
+    requestorAssignment,
+    operatorAssignment,
+    createdBy,
+    requestorOrg,
+    operatorOrg,
+  });
+
+  try {
+    let baseMessage;
+
+    switch (actionType) {
+      case "ADD_NOTE":
+        baseMessage = `📩 Ticket #${ticketNumber} - Note added. View: `;
+        // TODO: Implement SMS for ADD_NOTE
+        console.log("SMS: ADD_NOTE action");
+        break;
+
+      case "ADD_PROGRESS":
+        baseMessage = `📩 Ticket #${ticketNumber} - Progress updated. View: `;
+        // TODO: Implement SMS for ADD_PROGRESS
+        console.log("SMS: ADD_PROGRESS action");
+        break;
+
+      case "UPDATE_STATUS":
+        const newStatus = data.newStatus;
+        switch (newStatus) {
+          case "ACCEPTED":
+            baseMessage = `📩 Ticket #${ticketNumber} has been accepted. View: `;
+            // Send SMS to requestor manager if exists
+            if (requestorManager && requestorManager.mobile) {
+              const requestorUrl = getRoleBasedUrl("GOV_MANAGER", ticketId);
+              const message = baseMessage + requestorUrl;
+
+              await sendSms({
+                to: requestorManager,
+                message: message,
+              });
+            }
+
+            // Send SMS to requestor assignment (employee) if exists
+            if (requestorAssignment && requestorAssignment.mobile) {
+              const requestorEmployeeUrl = getRoleBasedUrl(
+                "GOV_EMPLOYEE",
+                ticketId
+              );
+              const message = baseMessage + requestorEmployeeUrl;
+
+              await sendSms({
+                to: requestorAssignment,
+                message: message,
+              });
+            }
+
+            // Send SMS to requestor organization if exists
+            if (requestorOrg && requestorOrg.mobile) {
+              const requestorOrgUrl = getRoleBasedUrl("GOV_MANAGER", ticketId);
+              const message = baseMessage + requestorOrgUrl;
+
+              await sendSms({
+                to: requestorOrg,
+                message: message,
+              });
+            }
+            break;
+
+          default:
+            baseMessage = `📩 Ticket #${ticketNumber} - Status updated to ${newStatus}. View: `;
+            console.log("SMS: UPDATE_STATUS - Other status:", newStatus);
+            break;
+        }
+        console.log("SMS: UPDATE_STATUS action");
+        break;
+
+      case "TRANSFER_TICKET":
+        baseMessage = `📩 Ticket #${ticketNumber} - Ticket transferred. View: `;
+        // TODO: Implement SMS for TRANSFER_TICKET
+        console.log("SMS: TRANSFER_TICKET action");
+        break;
+
+      case "OPEN_TRANSFER_REQUEST":
+        baseMessage = `📩 Ticket #${ticketNumber} - Transfer request opened. View: `;
+        // TODO: Implement SMS for OPEN_TRANSFER_REQUEST
+        console.log("SMS: OPEN_TRANSFER_REQUEST action");
+        break;
+
+      case "ACCEPT_TRANSFER_REQUEST":
+        baseMessage = `📩 Ticket #${ticketNumber} - Transfer request accepted. View: `;
+        // TODO: Implement SMS for ACCEPT_TRANSFER_REQUEST
+        console.log("SMS: ACCEPT_TRANSFER_REQUEST action");
+        break;
+
+      case "DECLINE_TRANSFER_REQUEST":
+        baseMessage = `📩 Ticket #${ticketNumber} - Transfer request declined. View: `;
+        // TODO: Implement SMS for DECLINE_TRANSFER_REQUEST
+        console.log("SMS: DECLINE_TRANSFER_REQUEST action");
+        break;
+
+      default:
+        baseMessage = `📩 Ticket #${ticketNumber} - ${actionType} action completed. View: `;
+        console.log("SMS: No action type matched for SMS");
+        break;
+    }
+
+    // Send SMS to creator (KAP_EMPLOYEE) for all actions
+    if (createdBy && createdBy.mobile) {
+      const creatorUrl = getRoleBasedUrl("KAP_EMPLOYEE", ticketId);
+      const creatorMessage = baseMessage + creatorUrl;
+
+      await sendSms({
+        to: createdBy,
+        message: creatorMessage,
+      });
+    }
+  } catch (error) {
+    console.error("Error in handleTicketSMS:", error);
+  }
+}
