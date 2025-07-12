@@ -43,28 +43,34 @@ const userSchema = new mongoose.Schema({
 });
 
 // In userSchema.statics
-userSchema.statics.getUsersRelatedToTicket = async function ({
-  userId,
-  departmentId,
-  organizationId,
-  roles,
-}) {
-  const query = { $or: [] };
+// userSchema.statics.getUsersRelatedToTicket = async function ({
+//   userIds,
+//   departmentIds,
+// }) {
+//   console.log("getUsersRelatedToTicket - userIds:", userIds);
+//   console.log("getUsersRelatedToTicket - departmentIds:", departmentIds);
+//   const query = { $or: [] };
 
-  if (userId) query.$or.push({ _id: userId });
-  if (departmentId) query.$or.push({ department: departmentId });
-  if (organizationId) query.$or.push({ organization: organizationId });
+//   // Handle array of user IDs
+//   if (userIds && Array.isArray(userIds) && userIds.length > 0) {
+//     query.$or.push({ _id: { $in: userIds } });
+//   }
 
-  if (!query.$or.length) return [];
+//   // Handle array of department IDs
+//   if (
+//     departmentIds &&
+//     Array.isArray(departmentIds) &&
+//     departmentIds.length > 0
+//   ) {
+//     query.$or.push({ department: { $in: departmentIds } });
+//   }
 
-  if (roles?.length) {
-    query.role = { $in: roles };
-  }
+//   if (!query.$or.length) return [];
 
-  const users = await this.find(query).select("name mobile role");
+//   const users = await this.find(query).select("name mobile role");
 
-  return users;
-};
+//   return users;
+// };
 
 // Get users with filtering options
 userSchema.statics.getUsers = async function (options = {}) {

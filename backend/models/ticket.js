@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-} from "../utils/responseHandler.js";
+import { createErrorResponse } from "../utils/responseHandler.js";
 
 import User from "./user.js";
 
@@ -205,25 +202,65 @@ const ticketSchema = new mongoose.Schema({
 ticketSchema.statics.getFormattedTicket = async function (ticketId) {
   try {
     const ticket = await this.findById(ticketId)
-      .populate("requestor.org", "name _id")
+      .populate("requestor.org", "name _id mobile")
       .populate("requestor.department", "name _id")
-      .populate("operator.org", "name _id")
+      .populate("operator.org", "name _id mobile")
       .populate("operator.department", "name _id")
-      .populate("createdBy", "name _id role kapRole")
-      .populate("assignments.requestor.user", "name _id role department")
-      .populate("assignments.operator.user", "name _id role department")
+      .populate("createdBy", "name _id role kapRole mobile")
       .populate({
-        path: "progress.updatedBy",
-        select: "name role department",
+        path: "assignments.requestor.user",
+        select: "name _id role department mobile",
         populate: {
           path: "department",
           select: "name",
         },
       })
-      .populate("kapNotes.addedBy", "name kapRole")
-      .populate("orgNotes.addedBy", "name role")
-      .populate("kapNotes.targetOrg", "name _id")
+      .populate({
+        path: "assignments.operator.user",
+        select: "name _id role department mobile",
+        populate: {
+          path: "department",
+          select: "name",
+        },
+      })
+      .populate({
+        path: "progress.updatedBy",
+        select: "name role department mobile",
+        populate: {
+          path: "department",
+          select: "name",
+        },
+      })
+      .populate("kapNotes.addedBy", "name kapRole mobile")
+      .populate("orgNotes.addedBy", "name role mobile")
+      .populate("kapNotes.targetOrg", "name _id mobile")
       .lean();
+
+    // Fetch GOV_MANAGER for requestor department and OP_MANAGER for operator department
+    let requestorGovManager = null;
+    let operatorOpManager = null;
+
+    if (ticket.requestor?.department?._id) {
+      requestorGovManager = await mongoose
+        .model("User")
+        .findOne({
+          role: "GOV_MANAGER",
+          department: ticket.requestor.department._id,
+        })
+        .select("name mobile role")
+        .lean();
+    }
+
+    if (ticket.operator?.department?._id) {
+      operatorOpManager = await mongoose
+        .model("User")
+        .findOne({
+          role: "OP_MANAGER",
+          department: ticket.operator.department._id,
+        })
+        .select("name mobile role")
+        .lean();
+    }
 
     const formattedTicket = {
       _id: ticket._id,
@@ -244,41 +281,60 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
 
       requestor: {
         org: {
-          id: ticket.requestor.org?._id,
+          _id: ticket.requestor.org?._id,
           name: ticket.requestor.org?.name,
+          mobile: ticket.requestor.org?.mobile,
         },
         department: {
-          id: ticket.requestor.department?._id,
+          _id: ticket.requestor.department?._id,
           name: ticket.requestor.department?.name,
+          manager: requestorGovManager
+            ? {
+                name: requestorGovManager.name,
+                mobile: requestorGovManager.mobile,
+                role: requestorGovManager.role,
+              }
+            : null,
         },
       },
 
       operator: {
         org: {
-          id: ticket.operator.org?._id,
+          _id: ticket.operator.org?._id,
           name: ticket.operator.org?.name,
+          mobile: ticket.operator.org?.mobile,
         },
         department: {
-          id: ticket.operator.department?._id,
+          _id: ticket.operator.department?._id,
           name: ticket.operator.department?.name,
+          manager: operatorOpManager
+            ? {
+                name: operatorOpManager.name,
+                mobile: operatorOpManager.mobile,
+                role: operatorOpManager.role,
+              }
+            : null,
         },
       },
 
       createdBy: {
-        id: ticket.createdBy?._id,
+        _id: ticket.createdBy?._id,
         name: ticket.createdBy?.name,
         role: ticket.createdBy?.role,
         kapRole: ticket.createdBy?.kapRole,
+        mobile: ticket.createdBy?.mobile,
       },
 
       assignments: {
         requestor: {
           user: ticket.assignments?.requestor?.user
             ? {
-                id: ticket.assignments.requestor.user._id,
+                _id: ticket.assignments.requestor.user._id,
                 name: ticket.assignments.requestor.user.name,
                 role: ticket.assignments.requestor.user.role,
-                department: ticket.assignments.requestor.user.department,
+                department:
+                  ticket.assignments.requestor.user.department?.name || null,
+                mobile: ticket.assignments.requestor.user.mobile,
               }
             : null,
           status: ticket.assignments?.requestor?.status,
@@ -287,10 +343,12 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
         operator: {
           user: ticket.assignments?.operator?.user
             ? {
-                id: ticket.assignments.operator.user._id,
+                _id: ticket.assignments.operator.user._id,
                 name: ticket.assignments.operator.user.name,
                 role: ticket.assignments.operator.user.role,
-                department: ticket.assignments.operator.user.department,
+                department:
+                  ticket.assignments.operator.user.department?.name || null,
+                mobile: ticket.assignments.operator.user.mobile,
               }
             : null,
           status: ticket.assignments?.operator?.status,
@@ -307,6 +365,7 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
             name: p.updatedBy?.name,
             role: p.updatedBy?.role,
             department: p.updatedBy?.department?.name || null,
+            mobile: p.updatedBy?.mobile,
           },
           updatedAt: p.updatedAt,
         })) || [],
@@ -317,21 +376,24 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
           addedBy: {
             name: note.addedBy?.name,
             role: note.addedBy?.kapRole,
+            mobile: note.addedBy?.mobile,
           },
           targetOrg: {
             name: note.targetOrg?.name,
+            mobile: note.targetOrg?.mobile,
           },
           createdAt: note.createdAt,
         })) || [],
 
       orgNotes:
         ticket.orgNotes?.map((note) => ({
-          id: note._id,
+          _id: note._id,
           text: note.text,
           addedBy: {
-            id: note.addedBy?._id,
+            _id: note.addedBy?._id,
             name: note.addedBy?.name,
             role: note.addedBy?.role,
+            mobile: note.addedBy?.mobile,
           },
           createdAt: note.createdAt,
         })) || [],
@@ -341,6 +403,8 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
           // Populate from and to fields based on type
           let fromName = "Unknown";
           let toName = "Unknown";
+          let fromMobile = null;
+          let toMobile = null;
 
           try {
             if (request.type === "DEPARTMENT") {
@@ -360,20 +424,22 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
                 toName = toDept?.name || "Unknown";
               }
             } else if (request.type === "EMPLOYEE") {
-              // For user transfers, populate user names
+              // For user transfers, populate user names and mobile
               if (request.from) {
                 const fromUser = await mongoose
                   .model("User")
                   .findById(request.from)
-                  .select("name");
+                  .select("name mobile");
                 fromName = fromUser?.name || "Unknown";
+                fromMobile = fromUser?.mobile || null;
               }
               if (request.to) {
                 const toUser = await mongoose
                   .model("User")
                   .findById(request.to)
-                  .select("name");
+                  .select("name mobile");
                 toName = toUser?.name || "Unknown";
+                toMobile = toUser?.mobile || null;
               }
             }
           } catch (populateError) {
@@ -384,12 +450,14 @@ ticketSchema.statics.getFormattedTicket = async function (ticketId) {
             id: request.id,
             type: request.type,
             from: {
-              id: request.from,
+              _id: request.from,
               name: fromName,
+              mobile: fromMobile,
             },
             to: {
-              id: request.to,
+              _id: request.to,
               name: toName,
+              mobile: toMobile,
             },
             status: request.status,
             reason: request.reason,
@@ -429,9 +497,9 @@ ticketSchema.statics.createTicket = async function (ticketData) {
     // ✅ Re-fetch the ticket with all relevant info populated
     const detailedTicket = await this.findById(createdTicket._id)
       .populate("createdBy", "name mobile role")
-      .populate("requestor.org", "name")
+      .populate("requestor.org", "name mobile")
       .populate("requestor.department", "name")
-      .populate("operator.org", "name")
+      .populate("operator.org", "name mobile")
       .populate("operator.department", "name");
 
     return {
@@ -500,22 +568,11 @@ ticketSchema.statics.addNote = async function (data) {
     ticket.updatedAt = new Date();
     await ticket.save();
 
-    const updatedTicket = await this.findById(Id)
-      .populate("requestor.org", "name _id")
-      .populate("requestor.department", "name _id")
-      .populate("operator.org", "name _id")
-      .populate("operator.department", "name _id")
-      .populate("createdBy", "name _id role")
-      .populate("assignments.requestor.user", "name _id role department")
-      .populate("assignments.operator.user", "name _id role department")
-      .populate("progress.updatedBy", "name role department")
-      .populate("kapNotes.addedBy", "name role")
-      .populate("orgNotes.addedBy", "name role")
-      .lean();
+    const updatedTicket = await this.getFormattedTicket(Id);
 
     return {
       success: true,
-      messgae: "Added Succesfully",
+      message: "Added Successfully",
       data: updatedTicket,
     };
   } catch (error) {

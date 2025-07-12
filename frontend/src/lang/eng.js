@@ -245,7 +245,7 @@ export const eng = {
   Logo: "Logo",
   Name: "Name",
   Type: "Type",
-  "Admin Name": "Admin Name",
+  "Admin Name": "Head Manager",
   "N/A": "N/A",
   "No organizations selected": "No organizations selected",
   Organizations: "Organizations",
@@ -279,7 +279,7 @@ export const eng = {
 
   "Organization Name": "Organization Name",
   "Enter organization name": "Enter organization name",
-  "Enter admin name": "Enter admin name",
+  "Enter admin name": "Enter head manager name",
   "Enter username": "Enter username",
   "Saving...": "Saving...",
 

@@ -1,0 +1,215 @@
+{
+  "success": true,
+  "data": {
+    "_id": "68715daf8952af9529489a4a",
+    "ticketNumber": "250711-0002",
+    "request": "تركيب مصدات",
+    "description": "تركيب مصدات للبواب الغربيه والجنوبية",
+    "status": "IN_PROGRESS",
+    "priority": "HIGH",
+    "ticketType": "INSTANT",
+    "scheduledDate": null,
+    "finishDate": null,
+    "startDate": "2025-07-11T19:29:35.332Z",
+    "createdAt": "2025-07-11T18:53:35.271Z",
+    "updatedAt": "2025-07-12T21:01:23.355Z",
+    "requestor": {
+      "org": {
+        "id": "6871513a84ab3229b59e0377",
+        "name": "حرس الحدود ",
+        "mobile": "966575299775"
+      },
+      "department": {
+        "id": "687153d684ab3229b59e03d9",
+        "name": "مكتب القايد ",
+        "manager": {
+          "name": "Wami",
+          "mobile": "966550727098",
+          "role": "GOV_MANAGER"
+        }
+      }
+    },
+    "operator": {
+      "org": {
+        "id": "6871516c84ab3229b59e037e",
+        "name": "شرة تطوير الموانئ ",
+        "mobile": "966557530028"
+      },
+      "department": {
+        "id": "6871526f84ab3229b59e03a7",
+        "name": "المشاريع ",
+        "manager": {
+          "name": "يوسف / فهد 2 ",
+          "mobile": "966547838180",
+          "role": "OP_MANAGER"
+        }
+      }
+    },
+    "createdBy": {
+      "id": "687024d6a9b062fcf3849c48",
+      "name": "محمد السبيلة ",
+      "role": "KAP_EMPLOYEE",
+      "kapRole": "GOVERNMENT_INTEGRATION",
+      "mobile": "966550727019"
+    },
+    "assignments": {
+      "requestor": {
+        "user": {
+          "id": "6872ccacb73f3a72ef825176",
+          "name": "test-employee",
+          "role": "GOV_EMPLOYEE",
+          "department": "مكتب القايد ",
+          "mobile": "966550727069"
+        },
+        "assignedAt": "2025-07-12T21:01:23.354Z"
+      },
+      "operator": {
+        "user": {
+          "id": "6871566784ab3229b59e041a",
+          "name": "هاني ",
+          "role": "OP_EMPLOYEE",
+          "department": "المشاريع ",
+          "mobile": "966504860509"
+        },
+        "assignedAt": "2025-07-11T19:17:13.657Z"
+      }
+    },
+    "progress": [
+      {
+        "percentage": 20,
+        "observation": "تم استلام التذكره وجاري العمل عليه ",
+        "imageUrl": null,
+        "updatedBy": {
+          "name": "هاني ",
+          "role": "OP_EMPLOYEE",
+          "department": "المشاريع ",
+          "mobile": "966504860509"
+        },
+        "updatedAt": "2025-07-11T19:30:23.170Z"
+      }
+    ],
+    "kapNotes": [
+      {
+        "text": "نرجو التكرم بسرعه التنفيذ ",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "شرة تطوير الموانئ ",
+          "mobile": "966557530028"
+        },
+        "createdAt": "2025-07-11T19:32:55.855Z"
+      },
+      {
+        "text": "test ticket",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:04:02.883Z"
+      },
+      {
+        "text": "npo test",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:05:03.707Z"
+      },
+      {
+        "text": "test2 2",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:07:31.718Z"
+      },
+      {
+        "text": "how ar youe",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:10:33.749Z"
+      },
+      {
+        "text": "hello",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:12:11.779Z"
+      },
+      {
+        "text": "Hello How are you to going do that ",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:25:14.124Z"
+      },
+      {
+        "text": "Test Not how are you",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:38:09.567Z"
+      },
+      {
+        "text": "How are you and how are you",
+        "addedBy": {
+          "name": "محمد السبيلة ",
+          "role": "GOVERNMENT_INTEGRATION",
+          "mobile": "966550727019"
+        },
+        "targetOrg": {
+          "name": "حرس الحدود ",
+          "mobile": "966575299775"
+        },
+        "createdAt": "2025-07-12T20:45:07.222Z"
+      }
+    ],
+    "orgNotes": [],
+    "transferRequests": [],
+    "currentDepartmentProgress": 20
+  },
+  "message": "Ticket Found"
+}
