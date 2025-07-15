@@ -74,21 +74,32 @@ export const createTicket = async (req, res) => {
 
     // Step 2: If success, fetch necessary data and send SMS
     if (response.success && response.data) {
-      const ticket = response.data;
-      const ticketId = ticket._id;
-      const ticketNumber = ticket.ticketNumber || "N/A";
+      const ticketData = response.data;
+      const ticketId = ticketData._id;
+      const ticketNumber = ticketData.ticketNumber || "N/A";
 
-      // Find the OP_MANAGER for the operatorDepartment
-      const opManager = await User.findOne({
-        role: "OP_MANAGER",
-        department: operatorDepartment,
-      }).select("mobile");
+      // Extract operator organization from formatted ticket data
+      const operatorOrg = ticketData.operator?.org || null;
+      const operatorManager = ticketData.operator?.department?.manager || null;
 
-      if (opManager && opManager.mobile) {
-        const viewUrl = `${BASE_URL}/manage-op-tickets/view/${ticketId}`;
+      // Send SMS to operator organization if exists
+      if (operatorOrg && operatorOrg.mobile) {
+        const message = `📩 New ticket #${ticketNumber} created for your organization.`;
+
         await sendSms({
-          to: opManager.mobile,
-          message: `📩 New ticket #${ticketNumber} created for your department. View: ${viewUrl}`,
+          to: operatorOrg,
+          message: message,
+        });
+      }
+
+      // Send SMS to operator manager if exists
+      if (operatorManager && operatorManager.mobile) {
+        const operatorUrl = getRoleBasedUrl("OP_MANAGER", ticketId);
+        const message = `📩 New ticket #${ticketNumber} created for your department. View: ${operatorUrl}`;
+
+        await sendSms({
+          to: operatorManager,
+          message: message,
         });
       }
     }
@@ -463,8 +474,7 @@ async function handleTicketSMS({ actionType, ticketData, userId, data }) {
 
             // Send SMS to requestor organization if exists
             if (requestorOrg && requestorOrg.mobile) {
-              const requestorOrgUrl = getRoleBasedUrl("GOV_MANAGER", ticketId);
-              const message = baseMessage + requestorOrgUrl;
+              const message = baseMessage.replace(" View: ", ".");
 
               await sendSms({
                 to: requestorOrg,

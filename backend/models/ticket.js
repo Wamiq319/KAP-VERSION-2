@@ -494,18 +494,13 @@ ticketSchema.statics.createTicket = async function (ticketData) {
 
     const createdTicket = await this.create(newTicketData);
 
-    // ✅ Re-fetch the ticket with all relevant info populated
-    const detailedTicket = await this.findById(createdTicket._id)
-      .populate("createdBy", "name mobile role")
-      .populate("requestor.org", "name mobile")
-      .populate("requestor.department", "name")
-      .populate("operator.org", "name mobile")
-      .populate("operator.department", "name");
+    // ✅ Use getFormattedTicket for consistent response structure
+    const formattedTicket = await this.getFormattedTicket(createdTicket._id);
 
     return {
       success: true,
       message: "Ticket created successfully",
-      data: detailedTicket,
+      data: formattedTicket,
     };
   } catch (error) {
     console.error("Error in createTicket model:", error);
