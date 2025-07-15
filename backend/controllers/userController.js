@@ -55,7 +55,7 @@ export const createUser = async (req, res) => {
       const message = `مرحبًا ${name}،\nتم إنشاء حسابك بنجاح في نظام KAP.\nاسم المستخدم: ${username}\nكلمة المرور: ${password}\nسجل الدخول من هنا: ${WEB_URL}`;
 
       try {
-        await sendSms({ to: mobile, message: message });
+        await sendSms({ to: { mobile, name, role }, message });
       } catch (smsError) {
         console.error("SMS sending failed:", smsError);
         // Don't fail the user creation if SMS fails

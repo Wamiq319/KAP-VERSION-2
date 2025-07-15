@@ -53,7 +53,7 @@ export const createOrganization = async (req, res) => {
       try {
         const message = `مرحبًا ${adminName}،\nتم إنشاء حسابك بنجاح في نظام KAP.\nاسم المستخدم: ${username}\nكلمة المرور: ${password}\nسجل الدخول من هنا: ${WEB_URL}`;
         const smsResult = await sendSms({
-          to: mobile,
+          to: { mobile, name: adminName, role: "ORG_ADMIN" },
           message: message,
         });
 
